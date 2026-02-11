@@ -1,8 +1,8 @@
-# INIT-0001-example
+# WI-0001-example
 
 **Status:** Complete (template demonstration)
 
-This is an example initiative that demonstrates the full Soft Factory pipeline. It walks through all four stages with sample content to serve as a reference for future initiatives.
+This is an example workitem that demonstrates the full Soft Factory pipeline. It walks through all four stages with sample content to serve as a reference for future workitems.
 
 ## Pipeline Progress
 

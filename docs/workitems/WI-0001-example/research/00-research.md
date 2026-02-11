@@ -1,4 +1,4 @@
-# Research Brief: Example Initiative
+# Research Brief: Example Workitem
 
 ## Title
 Example Feature — User Greeting System
@@ -8,18 +8,18 @@ Implement a simple user greeting system that displays a personalized greeting me
 
 ## Scope Type
 ```
-scope_type: initiative
+scope_type: workitem
 ```
 
-## Related Initiative
-INIT-0001-example
+## Related Workitem
+WI-0001-example
 
 ## Existing Repo Context
 - This is a greenfield template repository with no existing application code
 - No prior ADRs or core-components exist
 
 ## External References
-- N/A (this is a demonstration initiative)
+- N/A (this is a demonstration workitem)
 
 ## Options Considered
 

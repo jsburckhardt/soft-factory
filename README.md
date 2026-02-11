@@ -27,15 +27,15 @@ Soft Factory enforces a four-stage, guardrailed workflow that makes every decisi
       README.md                      # Application-specific docs
     architecture/
       README.md                      # Architecture overview
-      decisions/
+      ADR/
         DECISION-LOG.md              # Decision log (ADRs + Core-Components)
         ADR-0001-template.md         # ADR template (do not edit directly)
       core-components/
         README.md                    # Active Core-Components
         CORE-COMPONENT-0001-template.md  # Core-Component template (do not edit)
-    initiatives/
-      README.md                      # Initiatives overview
-      INIT-####-slug/
+    workitems/
+      README.md                      # Workitems overview
+      WI-####-slug/
         README.md
         research/
           00-research.md
@@ -51,18 +51,18 @@ Soft Factory enforces a four-stage, guardrailed workflow that makes every decisi
 
 ## Key Concepts
 
-### Initiatives
-Feature- or delivery-scoped work. Each initiative follows the full pipeline and lives under `docs/initiatives/INIT-####-slug/`.
+### Workitems
+Feature- or delivery-scoped work. Each workitem follows the full pipeline and lives under `docs/workitems/WI-####-slug/`.
 
 ### ADRs (Architecture Decision Records)
-Global architectural decisions. They live under `docs/architecture/decisions/` and are tracked in `docs/architecture/decisions/DECISION-LOG.md`.
+Global architectural decisions. They live under `docs/architecture/ADR/` and are tracked in `docs/architecture/ADR/DECISION-LOG.md`.
 
 ### Core-Components
-Global, reusable, cross-cutting behavioral definitions. They live under `docs/architecture/core-components/` and are tracked in `docs/architecture/decisions/DECISION-LOG.md`.
+Global, reusable, cross-cutting behavioral definitions. They live under `docs/architecture/core-components/` and are tracked in `docs/architecture/ADR/DECISION-LOG.md`.
 
 ### Scope Classification
 Every research output must declare exactly one `scope_type`:
-- `initiative` — feature or delivery work
+- `workitem` — feature or delivery work
 - `architecture_decision` — a global architectural decision
 - `core_component` — a reusable cross-cutting concern
 
@@ -71,7 +71,7 @@ Every research output must declare exactly one `scope_type`:
 1. Use this repository as a template
 2. Read [`CONTRIBUTING.md`](CONTRIBUTING.md) for the full workflow
 3. Read [`agents.md`](agents.md) for agent definitions
-4. Start your first initiative under `docs/initiatives/`
+4. Start your first workitem under `docs/workitems/`
 
 ## Agents
 

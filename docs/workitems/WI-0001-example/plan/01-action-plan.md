@@ -1,4 +1,4 @@
-# Action Plan: INIT-0001-example
+# Action Plan: WI-0001-example
 
 ## Objective
 Implement a simple user greeting system to demonstrate the full Soft Factory pipeline.

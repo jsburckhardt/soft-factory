@@ -57,4 +57,4 @@ How is compliance with this component verified?
 
 ## Related ADRs
 
-- [ADR-####-slug](../decisions/ADR-####-slug.md)
+- [ADR-####-slug](../ADR/ADR-####-slug.md)

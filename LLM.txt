@@ -15,10 +15,10 @@ Every piece of work flows through these stages in order.
 
 ## Non-Negotiable Rules
 
-1. **ADRs are global.** They live in `docs/architecture/decisions/` — never inside an initiative folder.
-2. **Core-components are global.** They live in `docs/architecture/core-components/` — never inside an initiative folder.
-3. **The decision log must be updated.** Every new or modified ADR or core-component must be reflected in `docs/architecture/decisions/DECISION-LOG.md`.
-4. **Scope classification is mandatory.** Every research output must declare exactly one `scope_type`: `initiative`, `architecture_decision`, or `core_component`.
+1. **ADRs are global.** They live in `docs/architecture/ADR/` — never inside a workitem folder.
+2. **Core-components are global.** They live in `docs/architecture/core-components/` — never inside a workitem folder.
+3. **The decision log must be updated.** Every new or modified ADR or core-component must be reflected in `docs/architecture/ADR/DECISION-LOG.md`.
+4. **Scope classification is mandatory.** Every research output must declare exactly one `scope_type`: `workitem`, `architecture_decision`, or `core_component`.
 5. **Templates are read-only references.** Never edit template files directly — copy them within the same directory and rename.
 6. **No architectural decision exists without an ADR.** If it's not in an ADR, it's not decided.
 7. **No reusable cross-cutting behavior exists without a core-component.** If it's not a core-component, it's not a shared contract.
@@ -28,12 +28,12 @@ Every piece of work flows through these stages in order.
 
 | Template | Path |
 |----------|------|
-| ADR | `docs/architecture/decisions/ADR-0001-template.md` |
+| ADR | `docs/architecture/ADR/ADR-0001-template.md` |
 | Core-Component | `docs/architecture/core-components/CORE-COMPONENT-0001-template.md` |
-| Research Brief | Fields defined in `agents.md` and initiative `research/00-research.md` |
-| Action Plan | `docs/initiatives/<INIT-ID>/plan/01-action-plan.md` |
-| Task Breakdown | `docs/initiatives/<INIT-ID>/plan/02-task-breakdown.md` |
-| Test Plan | `docs/initiatives/<INIT-ID>/plan/03-test-plan.md` |
+| Research Brief | Fields defined in `agents.md` and workitem `research/00-research.md` |
+| Action Plan | `docs/workitems/<WI-ID>/plan/01-action-plan.md` |
+| Task Breakdown | `docs/workitems/<WI-ID>/plan/02-task-breakdown.md` |
+| Test Plan | `docs/workitems/<WI-ID>/plan/03-test-plan.md` |
 
 ## Repository Navigation
 
@@ -44,25 +44,25 @@ LLM.txt                → This file (model instructions)
 docs/
   application/         → Application-specific documentation
   architecture/
-    decisions/         → ADR template, active ADRs, and DECISION-LOG.md
-    core-components/   → Core-component template and active core-component documents
-  initiatives/         → Initiative folders (INIT-####-slug/)
-    <INIT-ID>/
-      research/        → Research briefs
-      plan/            → Action plans, task breakdowns, test plans
-      implementation/  → Implementation notes
-      artifacts/       → Supporting artifacts
+    ADR/               # ADR template, active ADRs, and DECISION-LOG.md
+    core-components/   # Core-component template and active core-component documents
+  workitems/           # Workitem folders (WI-####-slug/)
+    <WI-ID>/
+      research/        # Research briefs
+      plan/            # Action plans, task breakdowns, test plans
+      implementation/  # Implementation notes
+      artifacts/       # Supporting artifacts
 ```
 
 ## Naming Conventions
 
-- Initiatives: `INIT-####-short-slug` (e.g., `INIT-0007-auth-refresh`)
+- Workitems: `WI-####-short-slug` (e.g., `WI-0007-auth-refresh`)
 - ADRs: `ADR-####-short-slug.md` (e.g., `ADR-0002-use-postgres.md`)
 - Core-Components: `CORE-COMPONENT-####-short-slug.md` (e.g., `CORE-COMPONENT-0002-logging.md`)
 
 ## Agent Routing
 
 After classifying `scope_type` in the Research stage:
-- `initiative` → proceed through all four stages within the initiative folder
-- `architecture_decision` → create ADR(s) in global `decisions/`, then plan and implement
+- `workitem` → proceed through all four stages within the workitem folder
+- `architecture_decision` → create ADR(s) in global `ADR/`, then plan and implement
 - `core_component` → create core-component(s) in global `core-components/`, then plan and implement

@@ -1,7 +1,7 @@
-# Test Plan: INIT-0001-example
+# Test Plan: WI-0001-example
 
 ## Test Scope
-Validate the greeting function implemented as part of the example initiative.
+Validate the greeting function implemented as part of the example workitem.
 
 ## Unit Tests
 

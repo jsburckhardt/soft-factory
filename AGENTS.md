@@ -15,19 +15,19 @@ This document defines the agents that drive the Soft Factory pipeline. Each agen
 
 **Read Paths:**
 - `docs/` (all existing documentation)
-- `docs/architecture/decisions/` (existing ADRs)
+- `docs/architecture/ADR/` (existing ADRs)
 - `docs/architecture/core-components/` (existing core-components)
-- `docs/architecture/decisions/DECISION-LOG.md` (decision log)
+- `docs/architecture/ADR/DECISION-LOG.md` (decision log)
 - Application source code
 
 **Write Paths:**
-- `docs/initiatives/<INIT-ID>/research/00-research.md`
+- `docs/workitems/<WI-ID>/research/00-research.md`
 
 **Required Templates:**
 - Research Brief template (see Section 5.1 of the specification)
 
 **Guardrails:**
-- Must classify `scope_type` as exactly one of: `initiative`, `architecture_decision`, `core_component`
+- Must classify `scope_type` as exactly one of: `workitem`, `architecture_decision`, `core_component`
 - Must inspect existing repo code and docs before proposing new work
 - Must explicitly state if ADRs or core-components are required
 - Must propose ADR titles and core-component titles when applicable
@@ -44,29 +44,29 @@ This document defines the agents that drive the Soft Factory pipeline. Each agen
 - Codebase exploration
 
 **Read Paths:**
-- `docs/initiatives/<INIT-ID>/research/00-research.md` (research brief)
-- `docs/architecture/decisions/ADR-0001-template.md` (ADR template)
+- `docs/workitems/<WI-ID>/research/00-research.md` (research brief)
+- `docs/architecture/ADR/ADR-0001-template.md` (ADR template)
 - `docs/architecture/core-components/CORE-COMPONENT-0001-template.md` (core-component template)
-- `docs/architecture/decisions/DECISION-LOG.md` (decision log)
-- `docs/architecture/decisions/` (existing ADRs)
+- `docs/architecture/ADR/DECISION-LOG.md` (decision log)
+- `docs/architecture/ADR/` (existing ADRs)
 - `docs/architecture/core-components/` (existing core-components)
 
 **Write Paths:**
-- `docs/architecture/decisions/ADR-####-slug.md`
+- `docs/architecture/ADR/ADR-####-slug.md`
 - `docs/architecture/core-components/CORE-COMPONENT-####-slug.md`
-- `docs/architecture/decisions/DECISION-LOG.md`
-- `docs/initiatives/<INIT-ID>/plan/01-action-plan.md`
+- `docs/architecture/ADR/DECISION-LOG.md`
+- `docs/workitems/<WI-ID>/plan/01-action-plan.md`
 
 **Required Templates:**
-- `docs/architecture/decisions/ADR-0001-template.md`
+- `docs/architecture/ADR/ADR-0001-template.md`
 - `docs/architecture/core-components/CORE-COMPONENT-0001-template.md`
 
 **Guardrails:**
 - No architectural decision exists unless it is in an ADR
 - No reusable cross-cutting behavior exists unless it is a core-component
 - Every ADR or core-component change must update `DECISION-LOG.md`
-- ADRs and core-components are **global** — they are not scoped to an initiative
-- Must create a Plan of Attack (`01-action-plan.md`) for the initiative
+- ADRs and core-components are **global** — they are not scoped to a workitem
+- Must create a Plan of Attack (`01-action-plan.md`) for the workitem
 
 ---
 
@@ -79,14 +79,14 @@ This document defines the agents that drive the Soft Factory pipeline. Each agen
 - Codebase exploration
 
 **Read Paths:**
-- `docs/initiatives/<INIT-ID>/plan/01-action-plan.md` (action plan)
-- `docs/architecture/decisions/` (relevant ADRs)
+- `docs/workitems/<WI-ID>/plan/01-action-plan.md` (action plan)
+- `docs/architecture/ADR/` (relevant ADRs)
 - `docs/architecture/core-components/` (relevant core-components)
 - Application source code
 
 **Write Paths:**
-- `docs/initiatives/<INIT-ID>/plan/02-task-breakdown.md`
-- `docs/initiatives/<INIT-ID>/plan/03-test-plan.md`
+- `docs/workitems/<WI-ID>/plan/02-task-breakdown.md`
+- `docs/workitems/<WI-ID>/plan/03-test-plan.md`
 
 **Required Templates:**
 - Task Breakdown template (see Section 5.5)
@@ -110,15 +110,15 @@ This document defines the agents that drive the Soft Factory pipeline. Each agen
 - File creation
 
 **Read Paths:**
-- `docs/initiatives/<INIT-ID>/plan/` (all plan documents)
-- `docs/architecture/decisions/` (relevant ADRs)
+- `docs/workitems/<WI-ID>/plan/` (all plan documents)
+- `docs/architecture/ADR/` (relevant ADRs)
 - `docs/architecture/core-components/` (relevant core-components)
 - Application source code
 
 **Write Paths:**
 - Application source code (as specified by task breakdown)
 - Test files (as specified by test plan)
-- `docs/initiatives/<INIT-ID>/implementation/README.md` (implementation notes)
+- `docs/workitems/<WI-ID>/implementation/README.md` (implementation notes)
 
 **Required Templates:**
 - None (follows task breakdown and test plan)
