@@ -18,19 +18,19 @@ You MUST NOT skip any stage in the pipeline.
 PIPELINE_STAGES: YAML<<
 - id: research
   name: Research
-  agent: research-agent
+  agent: research
   purpose: Explore the problem space, classify scope, produce a research brief
 - id: architect
   name: Architect
-  agent: adr-agent
+  agent: adr
   purpose: Commit decisions via ADRs and core-components, produce an action plan
 - id: plan
   name: Plan
-  agent: planner-agent
+  agent: planner
   purpose: Break work into tasks with acceptance criteria and test plans
 - id: implement
   name: Implement
-  agent: implementer-agent
+  agent: implementer
   purpose: Execute tasks, write code and tests, verify against the plan
 - id: ship
   name: Ship
@@ -38,8 +38,47 @@ PIPELINE_STAGES: YAML<<
   purpose: Run tests, commit, push, and open a pull request for review
 >>
 AGENTS: YAML<<
-research-agent:
-  file: .github/agents/research-agent.agent.md
+bootstrap:
+  file: .github/agents/bootstrap.agent.md
+  purpose: Bootstrap a new project from the Soft Factory template by gathering project identity, tech stack, and cross-cutting concerns, then scaffolding the codebase and seeding architectural artifacts.
+  tools:
+    - codebase exploration and editing
+    - file creation and editing
+    - terminal execution
+  read_paths:
+    - docs/
+    - docs/architecture/ADR/ADR-0001-template.md
+    - docs/architecture/core-components/CORE-COMPONENT-0001-template.md
+    - docs/architecture/ADR/DECISION-LOG.md
+    - .devcontainer/devcontainer.json
+    - README.md
+    - AGENTS.md
+    - LLM.txt
+  write_paths:
+    - docs/architecture/ADR/ADR-####-slug.md
+    - docs/architecture/core-components/CORE-COMPONENT-####-slug.md
+    - docs/architecture/ADR/DECISION-LOG.md
+    - README.md
+    - docs/application/README.md
+    - AGENTS.md
+    - LLM.txt
+    - .devcontainer/devcontainer.json
+  templates:
+    - docs/architecture/ADR/ADR-0001-template.md
+    - docs/architecture/core-components/CORE-COMPONENT-0001-template.md
+  guardrails:
+    - must check whether the project has already been bootstrapped before proceeding
+    - must refuse to run if the project is already bootstrapped
+    - must gather project name, description, and goal from the user interactively
+    - must ask user to choose tech stack and identify cross-cutting concerns
+    - must scaffold the project using the appropriate init command
+    - must create an ADR for the tech stack decision
+    - must create a core-component file for each declared cross-cutting concern
+    - must update DECISION-LOG.md with all new ADRs and core-components
+    - must not set up CI/CD pipelines or infrastructure
+    - must not make feature-level decisions
+research:
+  file: .github/agents/research.agent.md
   purpose: Explore the problem space, classify scope, and produce a research brief that hands off cleanly to the Architect stage.
   tools:
     - web search and documentation lookup
@@ -61,8 +100,8 @@ research-agent:
     - explicitly state if ADRs or core-components are required
     - propose ADR titles and core-component titles when applicable
     - never make architectural decisions — only propose them
-adr-agent:
-  file: .github/agents/adr-agent.agent.md
+adr:
+  file: .github/agents/adr.agent.md
   purpose: Commit architectural decisions by creating ADRs and core-components, and update the decision registry.
   tools:
     - file creation and editing
@@ -88,8 +127,8 @@ adr-agent:
     - every ADR or core-component change must update DECISION-LOG.md
     - ADRs and core-components are global — not scoped to a workitem
     - must create a Plan of Attack (01-action-plan.md) for the workitem
-planner-agent:
-  file: .github/agents/planner-agent.agent.md
+planner:
+  file: .github/agents/planner.agent.md
   purpose: Transform intent into executable, testable work by producing a task breakdown and test plan.
   tools:
     - file creation and editing
@@ -110,8 +149,8 @@ planner-agent:
     - every task must have explicit test coverage requirements
     - tasks must reference relevant ADRs and core-components
     - must not deviate from decisions made in the Architect stage
-implementer-agent:
-  file: .github/agents/implementer-agent.agent.md
+implementer:
+  file: .github/agents/implementer.agent.md
   purpose: Execute tasks from the plan, produce code and tests, and verify implementation against the test plan.
   tools:
     - code generation and editing
@@ -155,6 +194,7 @@ ship-it:
   guardrails:
     - must not proceed if tests fail
     - must not push directly to main or master
+    - must create feature branches following pattern <type>/<WI-ID>-<short-slug> (e.g., feat/WI-0002-readme-cleanup)
     - must follow Conventional Commits for all commit messages and the PR title
     - must include Co-authored-by trailer on every commit
     - must not force-push or use --no-verify
@@ -204,23 +244,23 @@ RETURN: SCOPE_TYPE, WI_ID
 </process>
 
 <process id="research" name="Research stage">
-SET SCOPE_TYPE := <CLASSIFICATION> (from "research-agent" using USER_INPUT)
-SET WI_ID := <ID> (from "research-agent")
+SET SCOPE_TYPE := <CLASSIFICATION> (from "research" using USER_INPUT)
+SET WI_ID := <ID> (from "research")
 </process>
 
 <process id="architect" name="Architect stage">
-SET ADRS := <ADR_LIST> (from "adr-agent" using WI_ID, SCOPE_TYPE)
-SET CORE_COMPONENTS := <CC_LIST> (from "adr-agent" using WI_ID, SCOPE_TYPE)
-SET ACTION_PLAN := <PLAN> (from "adr-agent" using WI_ID)
+SET ADRS := <ADR_LIST> (from "adr" using WI_ID, SCOPE_TYPE)
+SET CORE_COMPONENTS := <CC_LIST> (from "adr" using WI_ID, SCOPE_TYPE)
+SET ACTION_PLAN := <PLAN> (from "adr" using WI_ID)
 </process>
 
 <process id="plan" name="Plan stage">
-SET TASK_BREAKDOWN := <TASKS> (from "planner-agent" using WI_ID, ACTION_PLAN)
-SET TEST_PLAN := <TESTS> (from "planner-agent" using WI_ID, TASK_BREAKDOWN)
+SET TASK_BREAKDOWN := <TASKS> (from "planner" using WI_ID, ACTION_PLAN)
+SET TEST_PLAN := <TESTS> (from "planner" using WI_ID, TASK_BREAKDOWN)
 </process>
 
 <process id="implement" name="Implement stage">
-SET RESULT := <OUTCOME> (from "implementer-agent" using WI_ID, TASK_BREAKDOWN, TEST_PLAN)
+SET RESULT := <OUTCOME> (from "implementer" using WI_ID, TASK_BREAKDOWN, TEST_PLAN)
 </process>
 
 <process id="ship" name="Ship stage">

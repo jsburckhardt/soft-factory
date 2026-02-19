@@ -7,7 +7,7 @@ tools:
   - edit/createFile
   - edit/createDirectory
   - search/fileSearch
-user-invokable: true
+user-invocable: true
 disable-model-invocation: false
 target: vscode
 ---

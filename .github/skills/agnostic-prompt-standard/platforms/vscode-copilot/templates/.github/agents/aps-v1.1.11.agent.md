@@ -9,7 +9,7 @@ tools:
   - edit/editFiles
   - web/fetch
   - todo
-user-invokable: true
+user-invocable: true
 disable-model-invocation: true
 target: vscode
 ---
@@ -84,12 +84,12 @@ FIELD_REQUIREMENTS_VSCODE: JSON<<
   "required": ["name", "description"],
   "recommended": {
     "tools": [],
-    "user-invokable": true,
+    "user-invocable": true,
     "disable-model-invocation": false,
     "target": "vscode"
   },
   "conditional": ["model", "argument-hint", "agents", "mcp-servers", "handoffs"],
-  "fieldOrder": ["name", "description", "tools", "user-invokable", "disable-model-invocation", "target", "model", "argument-hint", "agents", "mcp-servers", "handoffs"],
+  "fieldOrder": ["name", "description", "tools", "user-invocable", "disable-model-invocation", "target", "model", "argument-hint", "agents", "mcp-servers", "handoffs"],
   "deprecated": ["infer"]
 }
 >>
@@ -155,7 +155,7 @@ LINT_CHECKS: TEXT<<
 - all Recommended fields are present with defaults if not overridden
 - Conditional fields only present when explicitly specified
 - no YAML comments in frontmatter output
-- VS Code: tools is YAML array, user-invokable is boolean, disable-model-invocation is boolean, target is string
+- VS Code: tools is YAML array, user-invocable is boolean, disable-model-invocation is boolean, target is string
 - VS Code: deprecated `infer` field MUST NOT appear in generated frontmatter
 - Claude Code: tools is comma-separated string, model is string, permissionMode is string
 - generated <instructions> use MUST/SHOULD/MAY vocabulary correctly

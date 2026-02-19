@@ -23,7 +23,7 @@ You MUST detect the test runner automatically by inspecting project files (go.mo
 You MUST NOT proceed if any test fails; stop immediately and report the failures.
 You MUST check the current git branch before making changes.
 You MUST NOT push directly to main or master; always work on a feature branch.
-You MUST create a feature branch following the pattern wi/<WI-ID>/<short-slug> when on main or master.
+You MUST create a feature branch following the pattern <type>/<WI-ID>-<short-slug> (e.g., feat/WI-0002-readme-cleanup, fix/WI-0012-auth-bug) when on main or master, where <type> is a Conventional Commits type derived from the work being shipped.
 You MUST stay on the current branch if already on a feature branch.
 You MUST stage all changed and new files using git add while respecting .gitignore.
 You MUST NOT stage files unrelated to the current work item.
@@ -50,7 +50,7 @@ ADR_DIR: "docs/architecture/ADR"
 CORE_COMPONENT_DIR: "docs/architecture/core-components"
 AGENTS_MD_PATH: "AGENTS.md"
 WORKITEM_DIR: "docs/workitems"
-BRANCH_PATTERN: "wi/<WI-ID>/<SHORT_SLUG>"
+BRANCH_PATTERN: "<TYPE>/<WI-ID>-<SHORT_SLUG>"
 CO_AUTHOR_TRAILER: "Co-authored-by: github-copilot[bot] <175728472+github-copilot[bot]@users.noreply.github.com>"
 PROTECTED_BRANCHES: YAML<<
 - main

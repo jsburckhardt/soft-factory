@@ -1,5 +1,5 @@
 ---
-name: research-agent
+name: research
 description: "Explore the problem space, classify scope, and produce a research brief that hands off cleanly to the Architect stage."
 tools:
   - search/codebase
@@ -12,7 +12,7 @@ tools:
   - web/fetch
   - web/githubRepo
   - todo
-user-invokable: true
+user-invocable: true
 disable-model-invocation: false
 target: vscode
 ---
