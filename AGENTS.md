@@ -22,7 +22,7 @@ PIPELINE_STAGES: YAML<<
   purpose: Explore the problem space, classify scope, produce a research brief
 - id: architect
   name: Architect
-  agent: adr
+  agent: architect
   purpose: Commit decisions via ADRs and core-components, produce an action plan
 - id: plan
   name: Plan
@@ -75,6 +75,7 @@ bootstrap:
     - must create an ADR for the tech stack decision
     - must create a core-component file for each declared cross-cutting concern
     - must update DECISION-LOG.md with all new ADRs and core-components
+    - must record decision records in the Decisions section of DECISION-LOG.md for every ADR and core-component created
     - must not set up CI/CD pipelines or infrastructure
     - must not make feature-level decisions
 research:
@@ -100,8 +101,8 @@ research:
     - explicitly state if ADRs or core-components are required
     - propose ADR titles and core-component titles when applicable
     - never make architectural decisions — only propose them
-adr:
-  file: .github/agents/adr.agent.md
+architect:
+  file: .github/agents/architect.agent.md
   purpose: Commit architectural decisions by creating ADRs and core-components, and update the decision registry.
   tools:
     - file creation and editing
@@ -125,6 +126,8 @@ adr:
     - no architectural decision exists unless it is in an ADR
     - no reusable cross-cutting behavior exists unless it is a core-component
     - every ADR or core-component change must update DECISION-LOG.md
+    - every ADR or core-component must produce at least one decision record in the Decisions section of DECISION-LOG.md
+    - decision records are short actionable statements referencing their source ADR or core-component
     - ADRs and core-components are global — not scoped to a workitem
     - must create a Plan of Attack (01-action-plan.md) for the workitem
 planner:
@@ -249,9 +252,10 @@ SET WI_ID := <ID> (from "research")
 </process>
 
 <process id="architect" name="Architect stage">
-SET ADRS := <ADR_LIST> (from "adr" using WI_ID, SCOPE_TYPE)
-SET CORE_COMPONENTS := <CC_LIST> (from "adr" using WI_ID, SCOPE_TYPE)
-SET ACTION_PLAN := <PLAN> (from "adr" using WI_ID)
+SET ADRS := <ADR_LIST> (from "architect" using WI_ID, SCOPE_TYPE)
+SET CORE_COMPONENTS := <CC_LIST> (from "architect" using WI_ID, SCOPE_TYPE)
+SET DECISIONS := <DECISION_LIST> (from "architect" using ADRS, CORE_COMPONENTS)
+SET ACTION_PLAN := <PLAN> (from "architect" using WI_ID)
 </process>
 
 <process id="plan" name="Plan stage">
