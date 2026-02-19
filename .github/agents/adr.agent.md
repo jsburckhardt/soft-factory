@@ -1,5 +1,5 @@
 ---
-name: adr-agent
+name: adr
 description: "Commit architectural decisions by creating ADRs and core-components, and update the decision registry."
 tools:
   - search/codebase

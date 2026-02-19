@@ -1,5 +1,5 @@
 ---
-name: implementer-agent
+name: implementer
 description: "Execute tasks from the plan, produce code and tests, and verify implementation against the test plan."
 tools:
   - search/codebase

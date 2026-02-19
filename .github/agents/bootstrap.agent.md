@@ -19,7 +19,7 @@ disable-model-invocation: true
 target: vscode
 handoffs:
   - label: Start First Workitem
-    agent: research-agent
+    agent: research
     prompt: Research and classify the first workitem for this newly bootstrapped project.
     send: false
 ---
@@ -216,7 +216,7 @@ UPDATED_FILES: []
 <process id="bootstrap-router" name="Route bootstrap request">
 RUN `check-bootstrapped`
 IF IS_BOOTSTRAPPED is true:
-  RETURN: format="BOOTSTRAP_BLOCKED", reason="Project has already been bootstrapped", evidence=BOOTSTRAP_EVIDENCE, suggestion="Use the research-agent to start a new workitem instead"
+  RETURN: format="BOOTSTRAP_BLOCKED", reason="Project has already been bootstrapped", evidence=BOOTSTRAP_EVIDENCE, suggestion="Use the research to start a new workitem instead"
 IF PROJECT_NAME is empty:
   RUN `gather-project-info`
 SET ARTIFACT_LIST := <LIST> (from "Agent Inference" using LANGUAGE, CROSS_CUTTING_CONCERNS, NEXT_ADR_NUMBER, NEXT_CC_NUMBER)
@@ -230,7 +230,7 @@ IF CROSS_CUTTING_CONCERNS is not empty:
 RUN `update-decision-log`
 RUN `update-project-docs`
 RUN `tailor-devcontainer`
-RETURN: format="BOOTSTRAP_REPORT", project_name=PROJECT_NAME, project_description=PROJECT_DESCRIPTION, scaffold_output=SCAFFOLD_OUTPUT, adr_list=CREATED_ADRS, core_component_list=CREATED_CORE_COMPONENTS, files_updated=UPDATED_FILES, status="Bootstrapped", next_steps="Use the research-agent to start your first workitem"
+RETURN: format="BOOTSTRAP_REPORT", project_name=PROJECT_NAME, project_description=PROJECT_DESCRIPTION, scaffold_output=SCAFFOLD_OUTPUT, adr_list=CREATED_ADRS, core_component_list=CREATED_CORE_COMPONENTS, files_updated=UPDATED_FILES, status="Bootstrapped", next_steps="Use the research to start your first workitem"
 </process>
 
 <process id="check-bootstrapped" name="Check if project has already been bootstrapped">

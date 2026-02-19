@@ -18,19 +18,19 @@ You MUST NOT skip any stage in the pipeline.
 PIPELINE_STAGES: YAML<<
 - id: research
   name: Research
-  agent: research-agent
+  agent: research
   purpose: Explore the problem space, classify scope, produce a research brief
 - id: architect
   name: Architect
-  agent: adr-agent
+  agent: adr
   purpose: Commit decisions via ADRs and core-components, produce an action plan
 - id: plan
   name: Plan
-  agent: planner-agent
+  agent: planner
   purpose: Break work into tasks with acceptance criteria and test plans
 - id: implement
   name: Implement
-  agent: implementer-agent
+  agent: implementer
   purpose: Execute tasks, write code and tests, verify against the plan
 - id: ship
   name: Ship
@@ -77,8 +77,8 @@ bootstrap-agent:
     - must update DECISION-LOG.md with all new ADRs and core-components
     - must not set up CI/CD pipelines or infrastructure
     - must not make feature-level decisions
-research-agent:
-  file: .github/agents/research-agent.agent.md
+research:
+  file: .github/agents/research.agent.md
   purpose: Explore the problem space, classify scope, and produce a research brief that hands off cleanly to the Architect stage.
   tools:
     - web search and documentation lookup
@@ -100,8 +100,8 @@ research-agent:
     - explicitly state if ADRs or core-components are required
     - propose ADR titles and core-component titles when applicable
     - never make architectural decisions — only propose them
-adr-agent:
-  file: .github/agents/adr-agent.agent.md
+adr:
+  file: .github/agents/adr.agent.md
   purpose: Commit architectural decisions by creating ADRs and core-components, and update the decision registry.
   tools:
     - file creation and editing
@@ -127,8 +127,8 @@ adr-agent:
     - every ADR or core-component change must update DECISION-LOG.md
     - ADRs and core-components are global — not scoped to a workitem
     - must create a Plan of Attack (01-action-plan.md) for the workitem
-planner-agent:
-  file: .github/agents/planner-agent.agent.md
+planner:
+  file: .github/agents/planner.agent.md
   purpose: Transform intent into executable, testable work by producing a task breakdown and test plan.
   tools:
     - file creation and editing
@@ -149,8 +149,8 @@ planner-agent:
     - every task must have explicit test coverage requirements
     - tasks must reference relevant ADRs and core-components
     - must not deviate from decisions made in the Architect stage
-implementer-agent:
-  file: .github/agents/implementer-agent.agent.md
+implementer:
+  file: .github/agents/implementer.agent.md
   purpose: Execute tasks from the plan, produce code and tests, and verify implementation against the test plan.
   tools:
     - code generation and editing
@@ -244,23 +244,23 @@ RETURN: SCOPE_TYPE, WI_ID
 </process>
 
 <process id="research" name="Research stage">
-SET SCOPE_TYPE := <CLASSIFICATION> (from "research-agent" using USER_INPUT)
-SET WI_ID := <ID> (from "research-agent")
+SET SCOPE_TYPE := <CLASSIFICATION> (from "research" using USER_INPUT)
+SET WI_ID := <ID> (from "research")
 </process>
 
 <process id="architect" name="Architect stage">
-SET ADRS := <ADR_LIST> (from "adr-agent" using WI_ID, SCOPE_TYPE)
-SET CORE_COMPONENTS := <CC_LIST> (from "adr-agent" using WI_ID, SCOPE_TYPE)
-SET ACTION_PLAN := <PLAN> (from "adr-agent" using WI_ID)
+SET ADRS := <ADR_LIST> (from "adr" using WI_ID, SCOPE_TYPE)
+SET CORE_COMPONENTS := <CC_LIST> (from "adr" using WI_ID, SCOPE_TYPE)
+SET ACTION_PLAN := <PLAN> (from "adr" using WI_ID)
 </process>
 
 <process id="plan" name="Plan stage">
-SET TASK_BREAKDOWN := <TASKS> (from "planner-agent" using WI_ID, ACTION_PLAN)
-SET TEST_PLAN := <TESTS> (from "planner-agent" using WI_ID, TASK_BREAKDOWN)
+SET TASK_BREAKDOWN := <TASKS> (from "planner" using WI_ID, ACTION_PLAN)
+SET TEST_PLAN := <TESTS> (from "planner" using WI_ID, TASK_BREAKDOWN)
 </process>
 
 <process id="implement" name="Implement stage">
-SET RESULT := <OUTCOME> (from "implementer-agent" using WI_ID, TASK_BREAKDOWN, TEST_PLAN)
+SET RESULT := <OUTCOME> (from "implementer" using WI_ID, TASK_BREAKDOWN, TEST_PLAN)
 </process>
 
 <process id="ship" name="Ship stage">

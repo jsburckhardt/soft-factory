@@ -1,5 +1,5 @@
 ---
-name: research-agent
+name: research
 description: "Explore the problem space, classify scope, and produce a research brief that hands off cleanly to the Architect stage."
 tools:
   - search/codebase

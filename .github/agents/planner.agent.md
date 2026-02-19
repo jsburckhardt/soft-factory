@@ -1,5 +1,5 @@
 ---
-name: planner-agent
+name: planner
 description: "Transform intent into executable, testable work by producing a task breakdown and test plan."
 tools:
   - search/codebase
