@@ -27,11 +27,11 @@ tools:
 # Prefer "Claude Opus 4.5 (copilot)" or "Claude Sonnet 4 (copilot)" for best performance unless user specifies otherwise.
 model: Claude Opus 4.5 (copilot)
 
-# user-invokable: Controls whether the agent appears in the agents dropdown in
+# user-invocable: Controls whether the agent appears in the agents dropdown in
 # chat. Set to false to create agents only accessible as subagents or
 # programmatically. Defaults to true.
 # Replaces the deprecated `infer` attribute (see Deprecation Notice below).
-user-invokable: true
+user-invocable: true
 
 # disable-model-invocation: Prevents the agent from being invoked as a subagent
 # by other agents. Set to true when agents should only be triggered explicitly by
@@ -70,15 +70,15 @@ handoffs:
 
 ## Deprecation Notice
 
-The `infer` frontmatter attribute is **deprecated** as of VS Code 1.109 (January 2026). Use `user-invokable` and `disable-model-invocation` instead for more granular control over agent invocability. See the [VS Code 1.109 release notes](https://code.visualstudio.com/updates/v1_109#_control-how-custom-agents-are-invoked) and [subagents documentation](https://code.visualstudio.com/docs/copilot/agents/subagents) for details.
+The `infer` frontmatter attribute is **deprecated** as of VS Code 1.109 (January 2026). Use `user-invocable` and `disable-model-invocation` instead for more granular control over agent invocability. See the [VS Code 1.109 release notes](https://code.visualstudio.com/updates/v1_109#_control-how-custom-agents-are-invoked) and [subagents documentation](https://code.visualstudio.com/docs/copilot/agents/subagents) for details.
 
 **Migration guide:**
 
 | Old (`infer`) | New equivalent |
 |---|---|
-| `infer: true` (head agent) | `user-invokable: true` + `disable-model-invocation: true` |
-| `infer: true` (subagent) | `user-invokable: false` + `disable-model-invocation: false` |
-| `infer: false` | `user-invokable: false` + `disable-model-invocation: true` |
+| `infer: true` (head agent) | `user-invocable: true` + `disable-model-invocation: true` |
+| `infer: true` (subagent) | `user-invocable: false` + `disable-model-invocation: false` |
+| `infer: false` | `user-invocable: false` + `disable-model-invocation: true` |
 
 ## Field Requirements & Defaults
 
@@ -91,7 +91,7 @@ The `infer` frontmatter attribute is **deprecated** as of VS Code 1.109 (January
 | `name` | Required | — | Must be provided; no default |
 | `description` | Required | — | Must be provided; no default |
 | `tools` | Recommended | `[]` | Empty array if no tools needed; YAML array syntax |
-| `user-invokable` | Recommended | `true` | Set to `false` for subagent-only agents |
+| `user-invocable` | Recommended | `true` | Set to `false` for subagent-only agents |
 | `disable-model-invocation` | Recommended | `false` | Set to `true` for user-only agents |
 | `target` | Recommended | `vscode` | Include explicitly for clarity |
 | `model` | Conditional | *(omit)* | Only include if specific model required; omit to use user's selected model. Accepts a string or prioritized array |
@@ -208,7 +208,7 @@ tools:
 name: my-agent
 description: "Brief description of what this agent does."
 tools: []
-user-invokable: true
+user-invocable: true
 disable-model-invocation: false
 target: vscode
 ---
@@ -224,7 +224,7 @@ tools:
   - read
   - edit
   - execute
-user-invokable: true
+user-invocable: true
 disable-model-invocation: false
 target: vscode
 ---
@@ -240,7 +240,7 @@ tools:
   - search/changes
   - read/readFile
   - read/problems
-user-invokable: true
+user-invocable: true
 disable-model-invocation: false
 target: vscode
 ---
@@ -258,7 +258,7 @@ tools:
   - execute/runTests
   - execute/runInTerminal
   - execute/getTerminalOutput
-user-invokable: true
+user-invocable: true
 disable-model-invocation: false
 target: vscode
 ---
@@ -273,7 +273,7 @@ tools:
   - search
   - read
   - todo
-user-invokable: true
+user-invocable: true
 disable-model-invocation: true
 target: vscode
 handoffs:
@@ -284,7 +284,7 @@ handoffs:
 ---
 ```
 
-### Subagent (Not User-Invokable)
+### Subagent (Not user-invocable)
 ```yaml
 ---
 name: internal-helper
@@ -292,7 +292,7 @@ description: "Internal helper agent invoked only by other agents."
 tools:
   - search/codebase
   - read/readFile
-user-invokable: false
+user-invocable: false
 disable-model-invocation: false
 target: vscode
 ---
@@ -307,7 +307,7 @@ tools:
   - search
   - read
   - todo
-user-invokable: true
+user-invocable: true
 disable-model-invocation: true
 target: vscode
 model:
@@ -325,7 +325,7 @@ tools:
   - search
   - read
   - agent
-user-invokable: true
+user-invocable: true
 disable-model-invocation: true
 target: vscode
 agents:
@@ -339,5 +339,5 @@ agents:
 - If you see "Unexpected indentation" diagnostics, keep `description` as a **single-line** string
 - The function name (snake_case) is what the model actually calls at runtime — you don't need to specify it
 - Chat mentions use `#` prefix (e.g., `#codebase`, `#problems`)
-- The `infer` attribute is deprecated — use `user-invokable` and `disable-model-invocation` instead
+- The `infer` attribute is deprecated — use `user-invocable` and `disable-model-invocation` instead
 - Explicitly listing an agent in the `agents` array overrides that agent's `disable-model-invocation: true` setting
