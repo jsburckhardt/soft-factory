@@ -194,6 +194,7 @@ ship-it:
   guardrails:
     - must not proceed if tests fail
     - must not push directly to main or master
+    - must create feature branches following pattern <type>/<WI-ID>-<short-slug> (e.g., feat/WI-0002-readme-cleanup)
     - must follow Conventional Commits for all commit messages and the PR title
     - must include Co-authored-by trailer on every commit
     - must not force-push or use --no-verify
