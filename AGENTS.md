@@ -38,6 +38,45 @@ PIPELINE_STAGES: YAML<<
   purpose: Run tests, commit, push, and open a pull request for review
 >>
 AGENTS: YAML<<
+bootstrap-agent:
+  file: .github/agents/bootstrap.agent.md
+  purpose: Bootstrap a new project from the Soft Factory template by gathering project identity, tech stack, and cross-cutting concerns, then scaffolding the codebase and seeding architectural artifacts.
+  tools:
+    - codebase exploration and editing
+    - file creation and editing
+    - terminal execution
+  read_paths:
+    - docs/
+    - docs/architecture/ADR/ADR-0001-template.md
+    - docs/architecture/core-components/CORE-COMPONENT-0001-template.md
+    - docs/architecture/ADR/DECISION-LOG.md
+    - .devcontainer/devcontainer.json
+    - README.md
+    - AGENTS.md
+    - LLM.txt
+  write_paths:
+    - docs/architecture/ADR/ADR-####-slug.md
+    - docs/architecture/core-components/CORE-COMPONENT-####-slug.md
+    - docs/architecture/ADR/DECISION-LOG.md
+    - README.md
+    - docs/application/README.md
+    - AGENTS.md
+    - LLM.txt
+    - .devcontainer/devcontainer.json
+  templates:
+    - docs/architecture/ADR/ADR-0001-template.md
+    - docs/architecture/core-components/CORE-COMPONENT-0001-template.md
+  guardrails:
+    - must check whether the project has already been bootstrapped before proceeding
+    - must refuse to run if the project is already bootstrapped
+    - must gather project name, description, and goal from the user interactively
+    - must ask user to choose tech stack and identify cross-cutting concerns
+    - must scaffold the project using the appropriate init command
+    - must create an ADR for the tech stack decision
+    - must create a core-component file for each declared cross-cutting concern
+    - must update DECISION-LOG.md with all new ADRs and core-components
+    - must not set up CI/CD pipelines or infrastructure
+    - must not make feature-level decisions
 research-agent:
   file: .github/agents/research-agent.agent.md
   purpose: Explore the problem space, classify scope, and produce a research brief that hands off cleanly to the Architect stage.
