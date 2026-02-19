@@ -12,7 +12,8 @@ tools:
   - web/fetch
   - web/githubRepo
   - todo
-infer: true
+user-invokable: true
+disable-model-invocation: false
 target: vscode
 ---
 

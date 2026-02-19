@@ -11,7 +11,8 @@ tools:
   - edit/createFile
   - edit/editFiles
   - todo
-infer: true
+user-invokable: true
+disable-model-invocation: false
 target: vscode
 ---
 
