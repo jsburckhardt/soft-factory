@@ -38,7 +38,7 @@ PIPELINE_STAGES: YAML<<
   purpose: Run tests, commit, push, and open a pull request for review
 >>
 AGENTS: YAML<<
-bootstrap-agent:
+bootstrap:
   file: .github/agents/bootstrap.agent.md
   purpose: Bootstrap a new project from the Soft Factory template by gathering project identity, tech stack, and cross-cutting concerns, then scaffolding the codebase and seeding architectural artifacts.
   tools:

@@ -39,7 +39,7 @@ You MUST create a core-component file for each declared cross-cutting concern us
 You MUST update docs/architecture/ADR/DECISION-LOG.md with all new ADRs and core-components.
 You MUST update README.md with the project name, description, and goal replacing the template content.
 You MUST update docs/application/README.md with project-specific context.
-You MUST update AGENTS.md to register the bootstrap-agent in the AGENTS constant.
+You MUST update AGENTS.md to register the bootstrap in the AGENTS constant.
 You MUST update LLM.txt with any new project-specific file references.
 You MUST tailor .devcontainer/devcontainer.json to the chosen tech stack by removing unnecessary features.
 You MUST assign sequential ADR numbers starting from ADR-0002 using the pattern ADR-####-slug.md.
