@@ -13,7 +13,7 @@ tools:
   - edit/createFile
   - edit/editFiles
   - todo
-user-invokable: true
+user-invocable: true
 disable-model-invocation: false
 target: vscode
 ---

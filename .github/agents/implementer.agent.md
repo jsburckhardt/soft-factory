@@ -16,7 +16,7 @@ tools:
   - execute/runTests
   - execute/testFailure
   - todo
-user-invokable: true
+user-invocable: true
 disable-model-invocation: false
 target: vscode
 ---

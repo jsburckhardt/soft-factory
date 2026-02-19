@@ -12,7 +12,7 @@ tools:
   - web/fetch
   - web/githubRepo
   - todo
-user-invokable: true
+user-invocable: true
 disable-model-invocation: false
 target: vscode
 ---
