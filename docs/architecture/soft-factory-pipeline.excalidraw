@@ -26,7 +26,7 @@
       "version": 1,
       "versionNonce": 1000,
       "isDeleted": false,
-      "boundElements": null,
+      "boundElements": [],
       "updated": 1700000000000,
       "link": null,
       "locked": false,
@@ -40,7 +40,6 @@
       "autoResize": true,
       "lineHeight": 1.25
     },
-
     {
       "id": "input-box",
       "type": "rectangle",
@@ -59,14 +58,22 @@
       "groupIds": [],
       "frameId": null,
       "index": "a1",
-      "roundness": { "type": 3 },
+      "roundness": {
+        "type": 3
+      },
       "seed": 1001,
       "version": 1,
       "versionNonce": 1001,
       "isDeleted": false,
       "boundElements": [
-        { "type": "text", "id": "input-text" },
-        { "type": "arrow", "id": "arrow-input-research" }
+        {
+          "type": "text",
+          "id": "input-text"
+        },
+        {
+          "type": "arrow",
+          "id": "arrow-input-research"
+        }
       ],
       "updated": 1700000000000,
       "link": null,
@@ -95,7 +102,7 @@
       "version": 1,
       "versionNonce": 1002,
       "isDeleted": false,
-      "boundElements": null,
+      "boundElements": [],
       "updated": 1700000000000,
       "link": null,
       "locked": false,
@@ -109,7 +116,6 @@
       "autoResize": true,
       "lineHeight": 1.25
     },
-
     {
       "id": "arrow-input-research",
       "type": "arrow",
@@ -128,24 +134,44 @@
       "groupIds": [],
       "frameId": null,
       "index": "a3",
-      "roundness": { "type": 2 },
+      "roundness": {
+        "type": 2
+      },
       "seed": 1003,
       "version": 1,
       "versionNonce": 1003,
       "isDeleted": false,
-      "boundElements": null,
+      "boundElements": [],
       "updated": 1700000000000,
       "link": null,
       "locked": false,
-      "points": [[0, 0], [0, 40]],
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          40
+        ]
+      ],
       "lastCommittedPoint": null,
-      "startBinding": { "elementId": "input-box", "focus": 0, "gap": 5, "fixedPoint": null },
-      "endBinding": { "elementId": "research-box", "focus": 0, "gap": 5, "fixedPoint": null },
+      "startBinding": {
+        "elementId": "input-box",
+        "focus": 0,
+        "gap": 5,
+        "fixedPoint": null
+      },
+      "endBinding": {
+        "elementId": "research-box",
+        "focus": 0,
+        "gap": 5,
+        "fixedPoint": null
+      },
       "startArrowhead": null,
       "endArrowhead": "arrow",
       "elbowed": false
     },
-
     {
       "id": "research-box",
       "type": "rectangle",
@@ -164,14 +190,22 @@
       "groupIds": [],
       "frameId": null,
       "index": "a4",
-      "roundness": { "type": 3 },
+      "roundness": {
+        "type": 3
+      },
       "seed": 1004,
       "version": 1,
       "versionNonce": 1004,
       "isDeleted": false,
       "boundElements": [
-        { "type": "arrow", "id": "arrow-input-research" },
-        { "type": "arrow", "id": "arrow-research-architect" }
+        {
+          "type": "arrow",
+          "id": "arrow-input-research"
+        },
+        {
+          "type": "arrow",
+          "id": "arrow-research-architect"
+        }
       ],
       "updated": 1700000000000,
       "link": null,
@@ -200,7 +234,7 @@
       "version": 1,
       "versionNonce": 1005,
       "isDeleted": false,
-      "boundElements": null,
+      "boundElements": [],
       "updated": 1700000000000,
       "link": null,
       "locked": false,
@@ -237,7 +271,7 @@
       "version": 1,
       "versionNonce": 1006,
       "isDeleted": false,
-      "boundElements": null,
+      "boundElements": [],
       "updated": 1700000000000,
       "link": null,
       "locked": false,
@@ -274,7 +308,7 @@
       "version": 1,
       "versionNonce": 1007,
       "isDeleted": false,
-      "boundElements": null,
+      "boundElements": [],
       "updated": 1700000000000,
       "link": null,
       "locked": false,
@@ -288,7 +322,6 @@
       "autoResize": true,
       "lineHeight": 1.25
     },
-
     {
       "id": "research-output-box",
       "type": "rectangle",
@@ -307,12 +340,14 @@
       "groupIds": [],
       "frameId": null,
       "index": "a8",
-      "roundness": { "type": 3 },
+      "roundness": {
+        "type": 3
+      },
       "seed": 1008,
       "version": 1,
       "versionNonce": 1008,
       "isDeleted": false,
-      "boundElements": null,
+      "boundElements": [],
       "updated": 1700000000000,
       "link": null,
       "locked": false
@@ -340,7 +375,7 @@
       "version": 1,
       "versionNonce": 1009,
       "isDeleted": false,
-      "boundElements": null,
+      "boundElements": [],
       "updated": 1700000000000,
       "link": null,
       "locked": false,
@@ -354,7 +389,6 @@
       "autoResize": true,
       "lineHeight": 1.25
     },
-
     {
       "id": "arrow-research-architect",
       "type": "arrow",
@@ -373,24 +407,44 @@
       "groupIds": [],
       "frameId": null,
       "index": "aA",
-      "roundness": { "type": 2 },
+      "roundness": {
+        "type": 2
+      },
       "seed": 1010,
       "version": 1,
       "versionNonce": 1010,
       "isDeleted": false,
-      "boundElements": null,
+      "boundElements": [],
       "updated": 1700000000000,
       "link": null,
       "locked": false,
-      "points": [[0, 0], [0, 50]],
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          50
+        ]
+      ],
       "lastCommittedPoint": null,
-      "startBinding": { "elementId": "research-box", "focus": 0, "gap": 5, "fixedPoint": null },
-      "endBinding": { "elementId": "architect-box", "focus": 0, "gap": 5, "fixedPoint": null },
+      "startBinding": {
+        "elementId": "research-box",
+        "focus": 0,
+        "gap": 5,
+        "fixedPoint": null
+      },
+      "endBinding": {
+        "elementId": "architect-box",
+        "focus": 0,
+        "gap": 5,
+        "fixedPoint": null
+      },
       "startArrowhead": null,
       "endArrowhead": "arrow",
       "elbowed": false
     },
-
     {
       "id": "architect-box",
       "type": "rectangle",
@@ -409,15 +463,26 @@
       "groupIds": [],
       "frameId": null,
       "index": "aB",
-      "roundness": { "type": 3 },
+      "roundness": {
+        "type": 3
+      },
       "seed": 1011,
       "version": 1,
       "versionNonce": 1011,
       "isDeleted": false,
       "boundElements": [
-        { "type": "arrow", "id": "arrow-research-architect" },
-        { "type": "arrow", "id": "arrow-architect-plan" },
-        { "type": "arrow", "id": "arrow-deviation-back" }
+        {
+          "type": "arrow",
+          "id": "arrow-research-architect"
+        },
+        {
+          "type": "arrow",
+          "id": "arrow-architect-plan"
+        },
+        {
+          "type": "arrow",
+          "id": "arrow-deviation-back"
+        }
       ],
       "updated": 1700000000000,
       "link": null,
@@ -446,7 +511,7 @@
       "version": 1,
       "versionNonce": 1012,
       "isDeleted": false,
-      "boundElements": null,
+      "boundElements": [],
       "updated": 1700000000000,
       "link": null,
       "locked": false,
@@ -483,7 +548,7 @@
       "version": 1,
       "versionNonce": 1013,
       "isDeleted": false,
-      "boundElements": null,
+      "boundElements": [],
       "updated": 1700000000000,
       "link": null,
       "locked": false,
@@ -520,7 +585,7 @@
       "version": 1,
       "versionNonce": 1014,
       "isDeleted": false,
-      "boundElements": null,
+      "boundElements": [],
       "updated": 1700000000000,
       "link": null,
       "locked": false,
@@ -534,7 +599,6 @@
       "autoResize": true,
       "lineHeight": 1.25
     },
-
     {
       "id": "architect-output-box",
       "type": "rectangle",
@@ -553,12 +617,14 @@
       "groupIds": [],
       "frameId": null,
       "index": "aF",
-      "roundness": { "type": 3 },
+      "roundness": {
+        "type": 3
+      },
       "seed": 1015,
       "version": 1,
       "versionNonce": 1015,
       "isDeleted": false,
-      "boundElements": null,
+      "boundElements": [],
       "updated": 1700000000000,
       "link": null,
       "locked": false
@@ -586,7 +652,7 @@
       "version": 1,
       "versionNonce": 1016,
       "isDeleted": false,
-      "boundElements": null,
+      "boundElements": [],
       "updated": 1700000000000,
       "link": null,
       "locked": false,
@@ -600,7 +666,6 @@
       "autoResize": true,
       "lineHeight": 1.25
     },
-
     {
       "id": "arrow-architect-plan",
       "type": "arrow",
@@ -619,24 +684,44 @@
       "groupIds": [],
       "frameId": null,
       "index": "aH",
-      "roundness": { "type": 2 },
+      "roundness": {
+        "type": 2
+      },
       "seed": 1017,
       "version": 1,
       "versionNonce": 1017,
       "isDeleted": false,
-      "boundElements": null,
+      "boundElements": [],
       "updated": 1700000000000,
       "link": null,
       "locked": false,
-      "points": [[0, 0], [0, 50]],
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          50
+        ]
+      ],
       "lastCommittedPoint": null,
-      "startBinding": { "elementId": "architect-box", "focus": 0, "gap": 5, "fixedPoint": null },
-      "endBinding": { "elementId": "plan-box", "focus": 0, "gap": 5, "fixedPoint": null },
+      "startBinding": {
+        "elementId": "architect-box",
+        "focus": 0,
+        "gap": 5,
+        "fixedPoint": null
+      },
+      "endBinding": {
+        "elementId": "plan-box",
+        "focus": 0,
+        "gap": 5,
+        "fixedPoint": null
+      },
       "startArrowhead": null,
       "endArrowhead": "arrow",
       "elbowed": false
     },
-
     {
       "id": "plan-box",
       "type": "rectangle",
@@ -655,14 +740,22 @@
       "groupIds": [],
       "frameId": null,
       "index": "aI",
-      "roundness": { "type": 3 },
+      "roundness": {
+        "type": 3
+      },
       "seed": 1018,
       "version": 1,
       "versionNonce": 1018,
       "isDeleted": false,
       "boundElements": [
-        { "type": "arrow", "id": "arrow-architect-plan" },
-        { "type": "arrow", "id": "arrow-plan-implement" }
+        {
+          "type": "arrow",
+          "id": "arrow-architect-plan"
+        },
+        {
+          "type": "arrow",
+          "id": "arrow-plan-implement"
+        }
       ],
       "updated": 1700000000000,
       "link": null,
@@ -691,7 +784,7 @@
       "version": 1,
       "versionNonce": 1019,
       "isDeleted": false,
-      "boundElements": null,
+      "boundElements": [],
       "updated": 1700000000000,
       "link": null,
       "locked": false,
@@ -728,7 +821,7 @@
       "version": 1,
       "versionNonce": 1020,
       "isDeleted": false,
-      "boundElements": null,
+      "boundElements": [],
       "updated": 1700000000000,
       "link": null,
       "locked": false,
@@ -765,7 +858,7 @@
       "version": 1,
       "versionNonce": 1021,
       "isDeleted": false,
-      "boundElements": null,
+      "boundElements": [],
       "updated": 1700000000000,
       "link": null,
       "locked": false,
@@ -779,7 +872,6 @@
       "autoResize": true,
       "lineHeight": 1.25
     },
-
     {
       "id": "plan-output-box",
       "type": "rectangle",
@@ -798,12 +890,14 @@
       "groupIds": [],
       "frameId": null,
       "index": "aM",
-      "roundness": { "type": 3 },
+      "roundness": {
+        "type": 3
+      },
       "seed": 1022,
       "version": 1,
       "versionNonce": 1022,
       "isDeleted": false,
-      "boundElements": null,
+      "boundElements": [],
       "updated": 1700000000000,
       "link": null,
       "locked": false
@@ -831,7 +925,7 @@
       "version": 1,
       "versionNonce": 1023,
       "isDeleted": false,
-      "boundElements": null,
+      "boundElements": [],
       "updated": 1700000000000,
       "link": null,
       "locked": false,
@@ -845,7 +939,6 @@
       "autoResize": true,
       "lineHeight": 1.25
     },
-
     {
       "id": "arrow-plan-implement",
       "type": "arrow",
@@ -864,24 +957,44 @@
       "groupIds": [],
       "frameId": null,
       "index": "aO",
-      "roundness": { "type": 2 },
+      "roundness": {
+        "type": 2
+      },
       "seed": 1024,
       "version": 1,
       "versionNonce": 1024,
       "isDeleted": false,
-      "boundElements": null,
+      "boundElements": [],
       "updated": 1700000000000,
       "link": null,
       "locked": false,
-      "points": [[0, 0], [0, 50]],
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          50
+        ]
+      ],
       "lastCommittedPoint": null,
-      "startBinding": { "elementId": "plan-box", "focus": 0, "gap": 5, "fixedPoint": null },
-      "endBinding": { "elementId": "implement-box", "focus": 0, "gap": 5, "fixedPoint": null },
+      "startBinding": {
+        "elementId": "plan-box",
+        "focus": 0,
+        "gap": 5,
+        "fixedPoint": null
+      },
+      "endBinding": {
+        "elementId": "implement-box",
+        "focus": 0,
+        "gap": 5,
+        "fixedPoint": null
+      },
       "startArrowhead": null,
       "endArrowhead": "arrow",
       "elbowed": false
     },
-
     {
       "id": "implement-box",
       "type": "rectangle",
@@ -900,15 +1013,26 @@
       "groupIds": [],
       "frameId": null,
       "index": "aP",
-      "roundness": { "type": 3 },
+      "roundness": {
+        "type": 3
+      },
       "seed": 1025,
       "version": 1,
       "versionNonce": 1025,
       "isDeleted": false,
       "boundElements": [
-        { "type": "arrow", "id": "arrow-plan-implement" },
-        { "type": "arrow", "id": "arrow-implement-output" },
-        { "type": "arrow", "id": "arrow-deviation-back" }
+        {
+          "type": "arrow",
+          "id": "arrow-plan-implement"
+        },
+        {
+          "type": "arrow",
+          "id": "arrow-implement-output"
+        },
+        {
+          "type": "arrow",
+          "id": "arrow-deviation-back"
+        }
       ],
       "updated": 1700000000000,
       "link": null,
@@ -937,7 +1061,7 @@
       "version": 1,
       "versionNonce": 1026,
       "isDeleted": false,
-      "boundElements": null,
+      "boundElements": [],
       "updated": 1700000000000,
       "link": null,
       "locked": false,
@@ -974,7 +1098,7 @@
       "version": 1,
       "versionNonce": 1027,
       "isDeleted": false,
-      "boundElements": null,
+      "boundElements": [],
       "updated": 1700000000000,
       "link": null,
       "locked": false,
@@ -1011,7 +1135,7 @@
       "version": 1,
       "versionNonce": 1028,
       "isDeleted": false,
-      "boundElements": null,
+      "boundElements": [],
       "updated": 1700000000000,
       "link": null,
       "locked": false,
@@ -1025,7 +1149,6 @@
       "autoResize": true,
       "lineHeight": 1.25
     },
-
     {
       "id": "implement-output-box",
       "type": "rectangle",
@@ -1044,13 +1167,20 @@
       "groupIds": [],
       "frameId": null,
       "index": "aT",
-      "roundness": { "type": 3 },
+      "roundness": {
+        "type": 3
+      },
       "seed": 1029,
-      "version": 1,
-      "versionNonce": 1029,
+      "version": 2,
+      "versionNonce": 779593006,
       "isDeleted": false,
-      "boundElements": null,
-      "updated": 1700000000000,
+      "boundElements": [
+        {
+          "id": "arrow-deviation-from",
+          "type": "arrow"
+        }
+      ],
+      "updated": 1770710241178,
       "link": null,
       "locked": false
     },
@@ -1077,7 +1207,7 @@
       "version": 1,
       "versionNonce": 1030,
       "isDeleted": false,
-      "boundElements": null,
+      "boundElements": [],
       "updated": 1700000000000,
       "link": null,
       "locked": false,
@@ -1091,7 +1221,6 @@
       "autoResize": true,
       "lineHeight": 1.25
     },
-
     {
       "id": "arrow-implement-output",
       "type": "arrow",
@@ -1110,24 +1239,44 @@
       "groupIds": [],
       "frameId": null,
       "index": "aV",
-      "roundness": { "type": 2 },
+      "roundness": {
+        "type": 2
+      },
       "seed": 1031,
       "version": 1,
       "versionNonce": 1031,
       "isDeleted": false,
-      "boundElements": null,
+      "boundElements": [],
       "updated": 1700000000000,
       "link": null,
       "locked": false,
-      "points": [[0, 0], [0, 40]],
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          40
+        ]
+      ],
       "lastCommittedPoint": null,
-      "startBinding": { "elementId": "implement-box", "focus": 0, "gap": 5, "fixedPoint": null },
-      "endBinding": { "elementId": "output-box", "focus": 0, "gap": 5, "fixedPoint": null },
+      "startBinding": {
+        "elementId": "implement-box",
+        "focus": 0,
+        "gap": 5,
+        "fixedPoint": null
+      },
+      "endBinding": {
+        "elementId": "output-box",
+        "focus": 0,
+        "gap": 5,
+        "fixedPoint": null
+      },
       "startArrowhead": null,
       "endArrowhead": "arrow",
       "elbowed": false
     },
-
     {
       "id": "output-box",
       "type": "rectangle",
@@ -1146,14 +1295,22 @@
       "groupIds": [],
       "frameId": null,
       "index": "aW",
-      "roundness": { "type": 3 },
+      "roundness": {
+        "type": 3
+      },
       "seed": 1032,
       "version": 1,
       "versionNonce": 1032,
       "isDeleted": false,
       "boundElements": [
-        { "type": "text", "id": "output-text" },
-        { "type": "arrow", "id": "arrow-implement-output" }
+        {
+          "type": "text",
+          "id": "output-text"
+        },
+        {
+          "type": "arrow",
+          "id": "arrow-implement-output"
+        }
       ],
       "updated": 1700000000000,
       "link": null,
@@ -1182,7 +1339,7 @@
       "version": 1,
       "versionNonce": 1033,
       "isDeleted": false,
-      "boundElements": null,
+      "boundElements": [],
       "updated": 1700000000000,
       "link": null,
       "locked": false,
@@ -1196,7 +1353,6 @@
       "autoResize": true,
       "lineHeight": 1.25
     },
-
     {
       "id": "deviation-box",
       "type": "rectangle",
@@ -1215,15 +1371,26 @@
       "groupIds": [],
       "frameId": null,
       "index": "aY",
-      "roundness": { "type": 3 },
+      "roundness": {
+        "type": 3
+      },
       "seed": 1034,
       "version": 1,
       "versionNonce": 1034,
       "isDeleted": false,
       "boundElements": [
-        { "type": "text", "id": "deviation-text" },
-        { "type": "arrow", "id": "arrow-deviation-from" },
-        { "type": "arrow", "id": "arrow-deviation-back" }
+        {
+          "type": "text",
+          "id": "deviation-text"
+        },
+        {
+          "type": "arrow",
+          "id": "arrow-deviation-from"
+        },
+        {
+          "type": "arrow",
+          "id": "arrow-deviation-back"
+        }
       ],
       "updated": 1700000000000,
       "link": null,
@@ -1252,7 +1419,7 @@
       "version": 1,
       "versionNonce": 1035,
       "isDeleted": false,
-      "boundElements": null,
+      "boundElements": [],
       "updated": 1700000000000,
       "link": null,
       "locked": false,
@@ -1266,14 +1433,13 @@
       "autoResize": true,
       "lineHeight": 1.25
     },
-
     {
       "id": "arrow-deviation-from",
       "type": "arrow",
       "x": 820,
       "y": 1110,
-      "width": 160,
-      "height": 370,
+      "width": 162,
+      "height": 321,
       "angle": 0,
       "strokeColor": "#e03131",
       "backgroundColor": "transparent",
@@ -1285,24 +1451,46 @@
       "groupIds": [],
       "frameId": null,
       "index": "b0",
-      "roundness": { "type": 2 },
+      "roundness": {
+        "type": 2
+      },
       "seed": 1036,
-      "version": 1,
-      "versionNonce": 1036,
+      "version": 25,
+      "versionNonce": 98871406,
       "isDeleted": false,
-      "boundElements": null,
-      "updated": 1700000000000,
+      "boundElements": [],
+      "updated": 1770848758390,
       "link": null,
       "locked": false,
-      "points": [[0, 0], [160, 0], [160, -370]],
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          160,
+          0
+        ],
+        [
+          162,
+          -321
+        ]
+      ],
       "lastCommittedPoint": null,
-      "startBinding": { "elementId": "implement-box", "focus": 0, "gap": 5, "fixedPoint": null },
-      "endBinding": { "elementId": "deviation-box", "focus": 0, "gap": 5, "fixedPoint": null },
+      "startBinding": {
+        "elementId": "implement-output-box",
+        "focus": 0,
+        "gap": 20
+      },
+      "endBinding": {
+        "elementId": "deviation-box",
+        "focus": -0.022995649471722807,
+        "gap": 9
+      },
       "startArrowhead": null,
       "endArrowhead": "arrow",
       "elbowed": false
     },
-
     {
       "id": "arrow-deviation-back",
       "type": "arrow",
@@ -1321,24 +1509,48 @@
       "groupIds": [],
       "frameId": null,
       "index": "b1",
-      "roundness": { "type": 2 },
+      "roundness": {
+        "type": 2
+      },
       "seed": 1037,
       "version": 1,
       "versionNonce": 1037,
       "isDeleted": false,
-      "boundElements": null,
+      "boundElements": [],
       "updated": 1700000000000,
       "link": null,
       "locked": false,
-      "points": [[0, 0], [0, -120], [-160, -120]],
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          -120
+        ],
+        [
+          -160,
+          -120
+        ]
+      ],
       "lastCommittedPoint": null,
-      "startBinding": { "elementId": "deviation-box", "focus": 0, "gap": 5, "fixedPoint": null },
-      "endBinding": { "elementId": "architect-box", "focus": 0, "gap": 5, "fixedPoint": null },
+      "startBinding": {
+        "elementId": "deviation-box",
+        "focus": 0,
+        "gap": 5,
+        "fixedPoint": null
+      },
+      "endBinding": {
+        "elementId": "architect-box",
+        "focus": 0,
+        "gap": 5,
+        "fixedPoint": null
+      },
       "startArrowhead": null,
       "endArrowhead": "arrow",
       "elbowed": false
     },
-
     {
       "id": "deviation-label",
       "type": "text",
@@ -1362,7 +1574,7 @@
       "version": 1,
       "versionNonce": 1038,
       "isDeleted": false,
-      "boundElements": null,
+      "boundElements": [],
       "updated": 1700000000000,
       "link": null,
       "locked": false,
@@ -1376,7 +1588,6 @@
       "autoResize": true,
       "lineHeight": 1.25
     },
-
     {
       "id": "global-label",
       "type": "text",
@@ -1400,7 +1611,7 @@
       "version": 1,
       "versionNonce": 1039,
       "isDeleted": false,
-      "boundElements": null,
+      "boundElements": [],
       "updated": 1700000000000,
       "link": null,
       "locked": false,
@@ -1432,16 +1643,27 @@
       "groupIds": [],
       "frameId": null,
       "index": "b4",
-      "roundness": { "type": 2 },
+      "roundness": {
+        "type": 2
+      },
       "seed": 1040,
       "version": 1,
       "versionNonce": 1040,
       "isDeleted": false,
-      "boundElements": null,
+      "boundElements": [],
       "updated": 1700000000000,
       "link": null,
       "locked": false,
-      "points": [[0, 0], [0, 140]],
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          140
+        ]
+      ],
       "lastCommittedPoint": null,
       "startBinding": null,
       "endBinding": null,
