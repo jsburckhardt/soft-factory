@@ -1,0 +1,78 @@
+{
+    "name": "soft-factory",
+    "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+    // "runArgs": [
+    //     "--network","host"
+    // ],
+    // "forwardPorts": [12346],
+    "features": {
+        "ghcr.io/devcontainers/features/common-utils:2": {
+            "configureZshAsDefaultShell": true,
+            "installOhMyZsh": true,
+            "installOhMyZshConfig": true
+        },
+        "ghcr.io/devcontainers/features/docker-outside-of-docker": {},
+        "ghcr.io/devcontainers/features/python": {},
+        "ghcr.io/devcontainers/features/node": {
+            "version": "lts"
+        },
+        "ghcr.io/devcontainers/features/go:1": {
+            "version": "latest"
+        },
+        "ghcr.io/devcontainers/features/azure-cli:1": {},
+        "ghcr.io/jsburckhardt/devcontainer-features/uv:1": {
+            "shellautocompletion": true,
+            "version": "latest"
+        },
+        "ghcr.io/stuartleeks/dev-container-features/shell-history": {},
+        "ghcr.io/jsburckhardt/devcontainer-features/opencode:latest": {},
+        "ghcr.io/jsburckhardt/devcontainer-features/just": {},
+        "ghcr.io/devcontainers/features/github-cli": {},
+        "ghcr.io/devcontainers/features/copilot-cli": {},
+        "ghcr.io/rosstaco/devcontainer-features/copilot-persistence:1": {}
+    },
+    "customizations": {
+        "vscode": {
+            "settings": {
+                "chat.agent.maxRequests": 2000,
+                "files.insertFinalNewline": true,
+                "files.trimTrailingWhitespace": true,
+                "editor.tabSize": 4,
+                // "python.defaultInterpreterPath": "/home/vscode/.venv/bin/python",
+                "files.autoSave": "onWindowChange",
+                "chat.customAgentInSubagent.enabled": true
+            },
+            "extensions": [
+                "GitHub.vscode-github-actions",
+                "ms-azuretools.azure-dev",
+                "ms-azuretools.vscode-bicep",
+                "ms-azuretools.vscode-docker",
+                "njpwerner.autodocstring",
+                "redhat.vscode-yaml",
+                "shardulm94.trailing-spaces",
+                "tamasfe.even-better-toml",
+                "yzhang.markdown-all-in-one",
+                "bierner.markdown-mermaid",
+                "eamodio.gitlens"
+            ]
+        }
+    },
+    // "postCreateCommand": "bash ./.devcontainer/setupEnv.sh",
+    // "containerEnv": {
+    //     "DISPLAY": "dummy",
+    //     "PYTHONUNBUFFERED": "True",
+        // "UV_LINK_MODE": "copy",
+        // "UV_PROJECT_ENVIRONMENT": "/home/vscode/.venv",
+        // "PYTHONPATH": "/workspaces/101-copilot-sdd/src:${PYTHONPATH}"
+    // },
+    "remoteUser": "vscode",
+    "hostRequirements": {
+        "memory": "4gb"
+    },
+    "remoteEnv": {
+        "HOST_PROJECT_PATH": "${localWorkspaceFolder}"
+    },
+    "mounts": [
+        "source=${env:HOME}${env:USERPROFILE}/.ssh,target=/home/vscode/.ssh,type=bind,consistency=cached"
+    ]
+}

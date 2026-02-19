@@ -1,0 +1,27 @@
+AGENTS.md                                                   — Agent definitions, roles, tools, guardrails
+CONTRIBUTING.md                                             — Human contribution guide
+LLM.txt                                                     — This file; repo map for AI agents
+README.md                                                   — Project overview
+.devcontainer/devcontainer.json                             — Dev container configuration
+.github/agents/adr-agent.agent.md                           — Architect agent (ADRs, core-components, action plans)
+.github/agents/aps-v1.1.11.agent.md                         — APS prompt generator agent
+.github/agents/excali.agent.md                              — Excalidraw diagram agent
+.github/agents/implementer-agent.agent.md                   — Implementer agent (code, tests, verification)
+.github/agents/planner-agent.agent.md                       — Planner agent (task breakdown, test plans)
+.github/agents/research-agent.agent.md                      — Research agent (exploration, scope classification)
+docs/README.md                                              — Docs directory index
+docs/application/README.md                                  — Application-specific documentation
+docs/architecture/README.md                                 — Architecture documentation index
+docs/architecture/soft-factory-pipeline.excalidraw          — Pipeline diagram source
+docs/architecture/ADR/ADR-0001-template.md                  — ADR template (read-only, copy to create new)
+docs/architecture/ADR/DECISION-LOG.md                       — Registry of all ADR and core-component decisions
+docs/architecture/core-components/CORE-COMPONENT-0001-template.md — Core-component template (read-only, copy to create new)
+docs/architecture/core-components/README.md                 — Core-components index
+docs/workitems/README.md                                    — Workitems index and naming conventions
+docs/workitems/WI-0001-example/README.md                    — Example workitem overview
+docs/workitems/WI-0001-example/artifacts/README.md          — Supporting artifacts for the workitem
+docs/workitems/WI-0001-example/implementation/README.md     — Implementation notes
+docs/workitems/WI-0001-example/plan/01-action-plan.md       — Action plan (from Architect stage)
+docs/workitems/WI-0001-example/plan/02-task-breakdown.md    — Task breakdown with acceptance criteria
+docs/workitems/WI-0001-example/plan/03-test-plan.md         — Test plan with coverage requirements
+docs/workitems/WI-0001-example/research/00-research.md      — Research brief (scope classification, findings)
