@@ -3,7 +3,7 @@ CONTRIBUTING.md                                             — Human contributi
 LLM.txt                                                     — This file; repo map for AI agents
 README.md                                                   — Project overview
 .devcontainer/devcontainer.json                             — Dev container configuration
-.github/agents/adr.agent.md                           — Architect agent (ADRs, core-components, action plans)
+.github/agents/architect.agent.md                      — Architect agent (ADRs, core-components, action plans)
 .github/agents/aps-v1.1.11.agent.md                         — APS prompt generator agent
 .github/agents/excali.agent.md                              — Excalidraw diagram agent
 .github/agents/implementer.agent.md                   — Implementer agent (code, tests, verification)

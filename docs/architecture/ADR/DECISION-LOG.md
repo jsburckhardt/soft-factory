@@ -13,3 +13,11 @@ This file is the single registry of all architectural decisions and core-compone
 | ID | Title | Status | Date |
 |----|-------|--------|------|
 | _No core-components yet. Copy `CORE-COMPONENT-0001-template.md` from `../core-components/` and rename it._ | | | |
+
+## Decisions
+
+Short, actionable statements derived from ADRs and core-components. More than one decision can originate from a single source.
+
+| # | Decision | Source | Date |
+|---|----------|--------|------|
+| _No decisions yet._ | | | |
