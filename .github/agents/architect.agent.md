@@ -142,11 +142,11 @@ CREATED_DECISIONS: []
 </runtime>
 
 <triggers>
-<trigger event="user_message" target="adr-router" />
+<trigger event="user_message" target="architect-router" />
 </triggers>
 
 <processes>
-<process id="adr-router" name="Route ADR request">
+<process id="architect-router" name="Route ADR request">
 IF CURRENT_WI_ID is empty:
   RUN `load-context`
 RUN `create-artifacts`
