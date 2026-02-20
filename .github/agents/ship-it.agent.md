@@ -38,7 +38,7 @@ You MUST verify the branch is clean with no uncommitted changes after all commit
 You MUST NOT force-push or use --no-verify.
 You MUST push the feature branch to the remote origin.
 You MUST use the GitHub CLI (gh pr create) to create a pull request.
-You MUST assign the PR to copilot for review using the --reviewer flag.
+You MUST assign the PR to Copilot for review using the --reviewer flag.
 You MUST stop and instruct the user to authenticate if the gh CLI is not authenticated.
 You MUST summarize what was done, reference the work item ID, and list all ADRs and core-components in the PR body.
 You SHOULD update documentation (README files, doc references) when implementation changes warrant it.
