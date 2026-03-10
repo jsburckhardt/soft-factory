@@ -38,6 +38,45 @@ PIPELINE_STAGES: YAML<<
   purpose: Run tests, commit, push, and open a pull request for review
 >>
 AGENTS: YAML<<
+onboard-repo:
+  file: .github/agents/onboard-repo.agent.md
+  purpose: Introduce the Soft Factory engineering flow into an existing repository by analysing its codebase, inferring architectural decisions already embedded in the code, scaffolding the documentation infrastructure, and seeding the first work item with a full repository-understanding brief.
+  tools:
+    - codebase exploration and reading
+    - file creation and editing
+    - web fetch
+  read_paths:
+    - README.md
+    - docs/
+    - docs/architecture/ADR/ADR-0001-template.md
+    - docs/architecture/core-components/CORE-COMPONENT-0001-template.md
+    - docs/architecture/ADR/DECISION-LOG.md
+    - AGENTS.md
+    - LLM.txt
+    - application source code
+  write_paths:
+    - docs/architecture/ADR/ADR-####-slug.md
+    - docs/architecture/core-components/CORE-COMPONENT-####-slug.md
+    - docs/architecture/ADR/DECISION-LOG.md
+    - docs/workitems/WI-0001-repository-understanding/research/00-research.md
+    - README.md
+    - AGENTS.md
+    - LLM.txt
+  templates:
+    - docs/architecture/ADR/ADR-0001-template.md
+    - docs/architecture/core-components/CORE-COMPONENT-0001-template.md
+  guardrails:
+    - must check whether the project is already onboarded before proceeding
+    - must refuse to run if the project already has the Soft Factory engineering flow
+    - must analyse the existing codebase to infer tech stack and architectural decisions
+    - must infer cross-cutting concerns from the existing source code
+    - must create ADRs for existing architectural decisions starting from ADR-0002
+    - must create core-component files for existing cross-cutting concerns starting from CORE-COMPONENT-0002
+    - must update DECISION-LOG.md with all new ADRs and core-components
+    - must record decision records in the Decisions section of DECISION-LOG.md for every ADR and core-component created
+    - must create WI-0001-repository-understanding research brief
+    - must not make new feature-level decisions
+    - must not scaffold or modify application source code
 bootstrap:
   file: .github/agents/bootstrap.agent.md
   purpose: Bootstrap a new project from the Soft Factory template by gathering project identity, tech stack, and cross-cutting concerns, then scaffolding the codebase and seeding architectural artifacts.
