@@ -12,9 +12,11 @@ You MUST NOT edit template files directly — copy them within the same director
 You MUST return to the Architect stage if implementation diverges from an ADR or core-component.
 You MUST inspect existing repo code and documentation before proposing new work.
 You MUST NOT skip any stage in the pipeline.
+You MUST update the APS version badge in README.md and the APS_BADGE constant when the APS skill is upgraded.
 </instructions>
 
 <constants>
+APS_BADGE: "[![APS version](https://img.shields.io/badge/APS-v1.1.16-blue?logo=github)](https://github.com/chris-buckley/agnostic-prompt-standard/releases/tag/v1.1.16)"
 PIPELINE_STAGES: YAML<<
 - id: research
   name: Research
@@ -264,6 +266,26 @@ core_components: "CORE-COMPONENT-####-short-slug.md"
 >>
 </constants>
 
+<formats>
+</formats>
+
+<runtime>
+SCOPE_TYPE: ""
+WI_ID: ""
+ADRS: []
+CORE_COMPONENTS: []
+DECISIONS: []
+ACTION_PLAN: ""
+TASK_BREAKDOWN: ""
+TEST_PLAN: ""
+RESULT: ""
+SHIP_RESULT: ""
+</runtime>
+
+<triggers>
+<trigger event="user_message" target="pipeline-route" />
+</triggers>
+
 <processes>
 <process id="pipeline-route" name="Route work through the pipeline based on scope classification">
 RUN `research`
@@ -286,27 +308,31 @@ RETURN: SCOPE_TYPE, WI_ID
 </process>
 
 <process id="research" name="Research stage">
-SET SCOPE_TYPE := <CLASSIFICATION> (from "research" using USER_INPUT)
-SET WI_ID := <ID> (from "research")
+SET SCOPE_TYPE := <CLASSIFICATION> (from "Agent Inference" using USER_INPUT)
+SET WI_ID := <ID> (from "Agent Inference")
 </process>
 
 <process id="architect" name="Architect stage">
-SET ADRS := <ADR_LIST> (from "architect" using WI_ID, SCOPE_TYPE)
-SET CORE_COMPONENTS := <CC_LIST> (from "architect" using WI_ID, SCOPE_TYPE)
-SET DECISIONS := <DECISION_LIST> (from "architect" using ADRS, CORE_COMPONENTS)
-SET ACTION_PLAN := <PLAN> (from "architect" using WI_ID)
+SET ADRS := <ADR_LIST> (from "Agent Inference" using WI_ID, SCOPE_TYPE)
+SET CORE_COMPONENTS := <CC_LIST> (from "Agent Inference" using WI_ID, SCOPE_TYPE)
+SET DECISIONS := <DECISION_LIST> (from "Agent Inference" using ADRS, CORE_COMPONENTS)
+SET ACTION_PLAN := <PLAN> (from "Agent Inference" using WI_ID)
 </process>
 
 <process id="plan" name="Plan stage">
-SET TASK_BREAKDOWN := <TASKS> (from "planner" using WI_ID, ACTION_PLAN)
-SET TEST_PLAN := <TESTS> (from "planner" using WI_ID, TASK_BREAKDOWN)
+SET TASK_BREAKDOWN := <TASKS> (from "Agent Inference" using WI_ID, ACTION_PLAN)
+SET TEST_PLAN := <TESTS> (from "Agent Inference" using WI_ID, TASK_BREAKDOWN)
 </process>
 
 <process id="implement" name="Implement stage">
-SET RESULT := <OUTCOME> (from "implementer" using WI_ID, TASK_BREAKDOWN, TEST_PLAN)
+SET RESULT := <OUTCOME> (from "Agent Inference" using WI_ID, TASK_BREAKDOWN, TEST_PLAN)
 </process>
 
 <process id="ship" name="Ship stage">
-SET SHIP_RESULT := <OUTCOME> (from "ship-it" using WI_ID)
+SET SHIP_RESULT := <OUTCOME> (from "Agent Inference" using WI_ID)
 </process>
 </processes>
+
+<input>
+USER_INPUT is the work item description, scope classification, or pipeline routing request.
+</input>

@@ -6,14 +6,12 @@ tools:
   - search/fileSearch
   - search/textSearch
   - read/readFile
-  - read/listDir
   - read/problems
   - edit/createDirectory
   - edit/createFile
   - edit/editFiles
   - execute/runInTerminal
   - execute/getTerminalOutput
-  - execute/runTests
   - execute/testFailure
   - todo
 user-invocable: true
@@ -85,6 +83,7 @@ RELEVANT_ADRS: []
 RELEVANT_CORE_COMPONENTS: []
 COMPLETED_TASKS: []
 IMPLEMENTATION_LOG: []
+TEST_COMMAND: ""
 </runtime>
 
 <triggers>
@@ -124,8 +123,9 @@ SET CODE_CHANGES := <CHANGES> (from "Agent Inference" using TASK_SPEC, RELEVANT_
 </process>
 
 <process id="verify-task" name="Run tests to verify the implemented task">
-USE `execute/runTests`
-CAPTURE TEST_OUTPUT from `execute/runTests`
+SET TEST_COMMAND := <COMMAND> (from "Agent Inference" using TASK_BREAKDOWN, CURRENT_TASK_ID)
+USE `execute/runInTerminal` where: command=TEST_COMMAND
+CAPTURE TEST_OUTPUT from `execute/runInTerminal`
 SET TEST_PASSED := <RESULT> (from "Agent Inference" using TEST_OUTPUT, TEST_PLAN, CURRENT_TASK_ID)
 IF TEST_PASSED is false:
   USE `execute/testFailure`

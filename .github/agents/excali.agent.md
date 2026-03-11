@@ -278,11 +278,11 @@ NEXT_INDEX: "a0"
 <processes>
 <process id="router" name="Route Request">
 IF DIAGRAM_DESCRIPTION contains "existing" OR DIAGRAM_DESCRIPTION contains "sample":
-  RUN `analyze_existing`
-RUN `generate_diagram`
+  RUN `analyze-existing`
+RUN `generate-diagram`
 </process>
 
-<process id="analyze_existing" name="Analyze Existing Excalidraw Files">
+<process id="analyze-existing" name="Analyze Existing Excalidraw Files">
 USE `search/fileSearch` where: pattern="**/*.excalidraw"
 FOREACH file in results:
   USE `read/readFile` where: filePath=file
@@ -290,7 +290,7 @@ FOREACH file in results:
 RETURN: patterns for consistent styling
 </process>
 
-<process id="generate_diagram" name="Generate Excalidraw Diagram">
+<process id="generate-diagram" name="Generate Excalidraw Diagram">
 SET LAYOUT_TYPE := <TYPE> (from "Agent Inference" using DIAGRAM_DESCRIPTION)
 SET REQUIRED_ELEMENTS := <ELEMENTS> (from "Agent Inference" using DIAGRAM_DESCRIPTION)
 SET RELATIONSHIPS := <RELS> (from "Agent Inference" using DIAGRAM_DESCRIPTION)
