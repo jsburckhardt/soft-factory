@@ -12,9 +12,11 @@ You MUST NOT edit template files directly — copy them within the same director
 You MUST return to the Architect stage if implementation diverges from an ADR or core-component.
 You MUST inspect existing repo code and documentation before proposing new work.
 You MUST NOT skip any stage in the pipeline.
+You MUST update the APS version badge in README.md when the APS skill is upgraded.
 </instructions>
 
 <constants>
+APS_BADGE: "[![APS version](https://img.shields.io/github/v/release/chris-buckley/agnostic-prompt-standard?label=APS&logo=github)](https://github.com/chris-buckley/agnostic-prompt-standard/releases)"
 PIPELINE_STAGES: YAML<<
 - id: research
   name: Research
