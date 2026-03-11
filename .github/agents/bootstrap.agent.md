@@ -6,7 +6,6 @@ tools:
   - search/fileSearch
   - search/textSearch
   - read/readFile
-  - read/listDir
   - edit/createDirectory
   - edit/createFile
   - edit/editFiles

@@ -7,7 +7,6 @@ tools:
   - search/textSearch
   - search/usages
   - read/readFile
-  - read/listDir
   - read/problems
   - edit/createDirectory
   - edit/createFile

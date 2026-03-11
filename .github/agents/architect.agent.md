@@ -6,7 +6,6 @@ tools:
   - search/fileSearch
   - search/textSearch
   - read/readFile
-  - read/listDir
   - edit/createDirectory
   - edit/createFile
   - edit/editFiles
@@ -189,8 +188,8 @@ USE `read/readFile` where: filePath=DECISION_LOG_PATH
 CAPTURE CURRENT_LOG from `read/readFile`
 SET UPDATED_LOG := <LOG> (from "Agent Inference" using CURRENT_LOG, CREATED_ADRS, CREATED_CORE_COMPONENTS, CREATED_DECISIONS)
 USE `edit/editFiles` where: filePath=DECISION_LOG_PATH
-NOTE: Append ADR rows to the ADRs table, core-component rows to the Core-Components table, and decision records to the Decisions table.
-NOTE: Each ADR or core-component MUST produce at least one decision record as a short actionable statement.
+TELL "Append ADR rows to the ADRs table, core-component rows to the Core-Components table, and decision records to the Decisions table." level=brief
+TELL "Each ADR or core-component MUST produce at least one decision record as a short actionable statement." level=brief
 </process>
 
 <process id="create-action-plan" name="Create the action plan for the workitem">

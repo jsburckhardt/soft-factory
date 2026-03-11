@@ -7,7 +7,6 @@ tools:
   - search/textSearch
   - search/changes
   - read/readFile
-  - read/listDir
   - edit/editFiles
   - edit/createFile
   - execute/runInTerminal
