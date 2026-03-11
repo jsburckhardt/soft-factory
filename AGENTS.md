@@ -16,7 +16,7 @@ You MUST update the APS version badge in README.md when the APS skill is upgrade
 </instructions>
 
 <constants>
-APS_BADGE: "[![APS version](https://img.shields.io/github/v/release/chris-buckley/agnostic-prompt-standard?label=APS&logo=github)](https://github.com/chris-buckley/agnostic-prompt-standard/releases)"
+APS_BADGE: "[![APS version](https://img.shields.io/badge/APS-v1.1.16-blue?logo=github)](https://github.com/chris-buckley/agnostic-prompt-standard/releases/tag/v1.1.16)"
 PIPELINE_STAGES: YAML<<
 - id: research
   name: Research

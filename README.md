@@ -1,7 +1,7 @@
 # Project Name
 
 <!-- Replace with a short description of your project. -->
-[![APS version](https://img.shields.io/github/v/release/chris-buckley/agnostic-prompt-standard?label=APS&logo=github)](https://github.com/chris-buckley/agnostic-prompt-standard/releases)
+[![APS version](https://img.shields.io/badge/APS-v1.1.16-blue?logo=github)](https://github.com/chris-buckley/agnostic-prompt-standard/releases/tag/v1.1.16)
 
 ## Documentation
 
