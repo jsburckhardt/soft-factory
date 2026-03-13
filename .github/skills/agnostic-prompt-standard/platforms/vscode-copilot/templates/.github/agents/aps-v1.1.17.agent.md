@@ -1,6 +1,6 @@
 ---
-name: APS v1.1.16 Agent
-description: "Generate APS v1.1.16 .agent.md or .prompt.md files: detect artifact type from user intent, load APS+VS Code adapter, extract intent, then generate+write+lint. Author: Christopher Buckley. Co-authors: Juan Burckhardt, Anastasiya Smirnova. URL: https://github.com/chris-buckley/agnostic-prompt-standard"
+name: APS v1.1.17 Agent
+description: "Generate APS v1.1.17 .agent.md or .prompt.md files: detect artifact type from user intent, load APS+VS Code adapter, extract intent, then generate+write+lint. Author: Christopher Buckley. Co-authors: Juan Burckhardt, Anastasiya Smirnova. URL: https://github.com/chris-buckley/agnostic-prompt-standard"
 tools:
   - execute/runInTerminal
   - read/readFile
@@ -406,8 +406,8 @@ RETURN: format="OUT_V1", agent_name=AGENT_SLUG, file_path=FILE_PATH, lint=LINT, 
 
 <process id="init" name="Init+Load Skill">
 SET SESSION_INIT := true (from "Agent Inference")
-USE `read/readFile` where: filePath=SKILL_PATH
-CAPTURE SKILL_CONTENT from `read/readFile`
+READ file at SKILL_PATH or SKILL_PATH_ALT
+CAPTURE SKILL_CONTENT from read result
 </process>
 
 <process id="ask-platform" name="Ask Target Platform">
@@ -422,8 +422,8 @@ IF TARGET_PLATFORM is not empty:
 <process id="load-platform" name="Load Platform Adapter">
 SET PLATFORM_CONFIG := <CONFIG> (from "Agent Inference" using TARGET_PLATFORM, PLATFORMS)
 SET ADAPTOR_PATH := <PATH> (from "Agent Inference" using PLATFORMS_BASE, PLATFORM_CONFIG.adaptorPath)
-USE `read/readFile` where: filePath=ADAPTOR_PATH
-CAPTURE ADAPTOR_CONTENT from `read/readFile`
+READ file at ADAPTOR_PATH (fallback to PLATFORMS_BASE_ALT if not found)
+CAPTURE ADAPTOR_CONTENT from read result
 SET FRONTMATTER_TEMPLATE := <FORMATS_SECTION> (from "Agent Inference" using ADAPTOR_CONTENT)
 SET ADAPTER_TOOLS := <TOOLS_CONSTANT> (from "Agent Inference" using ADAPTOR_CONTENT)
 IF TARGET_PLATFORM = "claude-code":
@@ -455,11 +455,11 @@ SET LINT_CLEAN := <IS_CLEAN> (from "Agent Inference" using LINT)
 <process id="load-skill-builder" name="Load Skill Builder">
 SET SKILL_BASE := <BASE_DIR> (from "Agent Inference" using SKILL_PATH)
 SET BUILD_PROCESS_PATH := <PATH> (from "Agent Inference" using SKILL_BASE, SKILL_AUTHORING.build_process)
-USE `read/readFile` where: filePath=BUILD_PROCESS_PATH
-CAPTURE BUILD_SKILL_CONTENT from `read/readFile`
+READ file at BUILD_PROCESS_PATH
+CAPTURE BUILD_SKILL_CONTENT from read result
 SET GUIDE_PATH := <PATH> (from "Agent Inference" using SKILL_BASE, SKILL_AUTHORING.guide)
-USE `read/readFile` where: filePath=GUIDE_PATH
-CAPTURE GUIDE_CONTENT from `read/readFile`
+READ file at GUIDE_PATH
+CAPTURE GUIDE_CONTENT from read result
 SET TEMPLATE_PATH := <PATH> (from "Agent Inference" using SKILL_BASE, SKILL_AUTHORING.template)
 TELL "Skill builder loaded. Following build-skill process workflow." level=brief
 </process>

@@ -1,5 +1,7 @@
 # Documentation
 
+[![APS version](https://img.shields.io/badge/APS-v1.1.17-blue)](https://github.com/chris-buckley/agnostic-prompt-standard/releases/tag/v1.1.17)
+
 This directory contains all project documentation organized by category.
 
 ## Structure
