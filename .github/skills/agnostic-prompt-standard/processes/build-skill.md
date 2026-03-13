@@ -207,10 +207,10 @@ TELL "Context initialization complete" level=brief
 
 <process id="elicit-domain" name="Elicit Domain">
 TELL "Gathering skill requirements" level=brief
-SET SKILL_DOMAIN := <DOMAIN> (from "Agent Inference" using USER_INPUT)
-SET SKILL_PURPOSE := <PURPOSE> (from "Agent Inference" using USER_INPUT)
-SET SKILL_ID := <ID> (from "Agent Inference" using USER_INPUT, NAMING_RULES)
-SET SOURCE_MODE := <MODE> (from "Agent Inference" using USER_INPUT, SOURCE_MODES)
+SET SKILL_DOMAIN := "" (from "Agent Inference")
+SET SKILL_PURPOSE := "" (from "Agent Inference")
+SET SKILL_ID := "" (from "Agent Inference")
+SET SOURCE_MODE := "" (from "Agent Inference")
 IF SOURCE_MODE = "from-docs":
   TELL "Reading source documents" level=brief
   SET DOC_PATHS := "" (from "Agent Inference")
@@ -233,10 +233,10 @@ TELL "Domain elicitation complete" level=brief
 TELL "Planning skill structure" level=brief
 USE `Read` where: path=TEMPLATE_REL_PATH + "SKILL.md"
 CAPTURE TEMPLATE from `Read`
-SET PLANNED_FILES := [] (from "Agent Inference" using SKILL_ID, DIRECTORY_STRUCTURE, SOURCE_MODE)
+SET PLANNED_FILES := "" (from "Agent Inference")
 SET PLANNED_STRUCTURE := "" (from "Agent Inference")
-SET PLAN_APPROVED := true (from "Agent Inference")
 RETURN: format="SKILL_PLAN_V1", dir_tree=PLANNED_STRUCTURE, domain=SKILL_DOMAIN, file_list=PLANNED_FILES, mode=SOURCE_MODE, purpose=SKILL_PURPOSE, skill_name=SKILL_ID
+SET PLAN_APPROVED := true (from "Agent Inference")
 </process>
 
 <process id="generate-skill" name="Generate Skill">
@@ -257,17 +257,16 @@ TELL "File generation complete" level=brief
 TELL "Validating generated skill" level=brief
 SET ISSUES := "" (from "Agent Inference")
 SET OVERALL := "pass" (from "Agent Inference")
-SET FILE_RESULTS := [] (from "Agent Inference")
 FOREACH FILE IN PLANNED_FILES:
   USE `Read` where: path=FILE
   CAPTURE CONTENT from `Read`
-  SET FILE_STATUS := <STATUS> (from "Agent Inference" using CONTENT, VALIDATION_CHECKLIST)
-  SET FILE_ISSUES := <ISSUES> (from "Agent Inference" using CONTENT, VALIDATION_CHECKLIST)
-  SET FILE_RESULTS := FILE_RESULTS + [{"path": FILE, "status": FILE_STATUS, "issues": FILE_ISSUES}] (from "Agent Inference")
+  SET FILE_STATUS := "pass" (from "Agent Inference")
+  SET FILE_ISSUES := "" (from "Agent Inference")
+  RETURN: format="SKILL_FILE_V1", file_path=FILE, issues=FILE_ISSUES, validation_status=FILE_STATUS
   IF FILE_STATUS != "pass":
     SET OVERALL := FILE_STATUS (from "Agent Inference")
 SET VALIDATION_RESULT := OVERALL (from "Agent Inference")
-RETURN: format="SKILL_SUMMARY_V1", files_created=PLANNED_FILES, next_steps=ISSUES, overall_status=OVERALL, skill_name=SKILL_ID, validation_details=FILE_RESULTS
+RETURN: format="SKILL_SUMMARY_V1", files_created=PLANNED_FILES, next_steps=ISSUES, overall_status=OVERALL, skill_name=SKILL_ID, validation_details=ISSUES
 </process>
 </processes>
 
