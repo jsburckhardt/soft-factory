@@ -1,6 +1,6 @@
 ---
-name: ship-it
-description: "Ship completed work from the local workspace into a reviewable pull request — runs tests, creates commits, pushes, and opens a PR."
+name: verifier
+description: "Own the Verify stage of the RPIV pipeline — run tests, validate implementation, create commits following Conventional Commits, push, and open a PR assigned to Copilot for review."
 tools:
   - search/codebase
   - search/fileSearch
@@ -18,11 +18,11 @@ target: vscode
 
 <instructions>
 You MUST run the project test suite and confirm all tests pass before proceeding with any git operations.
-You MUST detect the test runner automatically by inspecting project files (go.mod, package.json, pytest.ini, pyproject.toml, Makefile, etc.).
+You MUST detect the test runner automatically by inspecting project files.
 You MUST NOT proceed if any test fails; stop immediately and report the failures.
 You MUST check the current git branch before making changes.
 You MUST NOT push directly to main or master; always work on a feature branch.
-You MUST create a feature branch following the pattern <type>/<WI-ID>-<short-slug> (e.g., feat/WI-0002-readme-cleanup, fix/WI-0012-auth-bug) when on main or master, where <type> is a Conventional Commits type derived from the work being shipped.
+You MUST create a feature branch following the pattern <type>/<WI-ID>-<short-slug> when on main or master.
 You MUST stay on the current branch if already on a feature branch.
 You MUST stage all changed and new files using git add while respecting .gitignore.
 You MUST NOT stage files unrelated to the current work item.
@@ -40,7 +40,7 @@ You MUST use the GitHub CLI (gh pr create) to create a pull request.
 You MUST assign the PR to Copilot for review using the --reviewer flag.
 You MUST stop and instruct the user to authenticate if the gh CLI is not authenticated.
 You MUST summarize what was done, reference the work item ID, and list all ADRs and core-components in the PR body.
-You SHOULD update documentation (README files, doc references) when implementation changes warrant it.
+You SHOULD update documentation when implementation changes warrant it.
 </instructions>
 
 <constants>
@@ -70,8 +70,8 @@ TEST_RUNNER_SIGNALS: YAML<<
 </constants>
 
 <formats>
-<format id="SHIP_REPORT" name="Ship Report" purpose="Summarize all shipping actions taken for a work item.">
-## Ship Report — <WI_ID>
+<format id="VERIFY_REPORT" name="Verify Report" purpose="Summarize all verification and shipping actions taken for a work item.">
+## Verify Report — <WI_ID>
 
 **Branch:** <BRANCH_NAME>
 **PR:** <PR_URL>
@@ -88,17 +88,17 @@ TEST_RUNNER_SIGNALS: YAML<<
 ### Status
 <STATUS>
 WHERE:
-- <WI_ID> is String.
-- <BRANCH_NAME> is String.
-- <PR_URL> is URI.
-- <COMMIT_LIST> is Markdown.
 - <ADR_CC_LIST> is Markdown.
-- <TEST_SUMMARY> is String.
+- <BRANCH_NAME> is String.
+- <COMMIT_LIST> is Markdown.
+- <PR_URL> is URI.
 - <STATUS> is String.
+- <TEST_SUMMARY> is String.
+- <WI_ID> is String.
 </format>
 
-<format id="SHIP_ERROR" name="Ship Error" purpose="Report a blocking error that prevents shipping.">
-## Ship Blocked — <WI_ID>
+<format id="VERIFY_ERROR" name="Verify Error" purpose="Report a blocking error that prevents verification or shipping.">
+## Verify Blocked — <WI_ID>
 
 **Stage:** <STAGE>
 **Error:** <ERROR_MESSAGE>
@@ -109,11 +109,11 @@ WHERE:
 ### Suggested Fix
 <FIX>
 WHERE:
-- <WI_ID> is String.
-- <STAGE> is String.
-- <ERROR_MESSAGE> is String.
 - <DETAILS> is Markdown.
+- <ERROR_MESSAGE> is String.
 - <FIX> is String.
+- <STAGE> is String.
+- <WI_ID> is String.
 </format>
 </formats>
 
@@ -135,18 +135,18 @@ GH_AUTHENTICATED: false
 </runtime>
 
 <triggers>
-<trigger event="user_message" target="ship-router" />
+<trigger event="user_message" target="verify-router" />
 </triggers>
 
 <processes>
-<process id="ship-router" name="Route shipping request">
+<process id="verify-router" name="Route verification request">
 RUN `detect-context`
 RUN `run-tests`
 IF TEST_PASSED is false:
-  RETURN: format="SHIP_ERROR", wi_id=WI_ID, stage="Tests", error_message="Test suite failed", details=TEST_OUTPUT, fix="Fix failing tests before shipping"
+  RETURN: format="VERIFY_ERROR", wi_id=WI_ID, stage="Tests", error_message="Test suite failed", details=TEST_OUTPUT, fix="Fix failing tests before shipping"
 RUN `check-gh-auth`
 IF GH_AUTHENTICATED is false:
-  RETURN: format="SHIP_ERROR", wi_id=WI_ID, stage="Authentication", error_message="GitHub CLI not authenticated", details="gh auth status failed", fix="Run 'gh auth login' to authenticate"
+  RETURN: format="VERIFY_ERROR", wi_id=WI_ID, stage="Authentication", error_message="GitHub CLI not authenticated", details="gh auth status failed", fix="Run 'gh auth login' to authenticate"
 RUN `prepare-branch`
 RUN `detect-changes`
 RUN `commit-implementation`
@@ -158,7 +158,7 @@ RUN `update-docs`
 RUN `verify-clean`
 RUN `push-branch`
 RUN `create-pr`
-RETURN: format="SHIP_REPORT", wi_id=WI_ID, branch_name=BRANCH_NAME, pr_url=PR_URL, commit_list=COMMITS, adr_cc_list=ADR_CHANGES, test_summary=TEST_OUTPUT, status="Shipped"
+RETURN: format="VERIFY_REPORT", wi_id=WI_ID, branch_name=BRANCH_NAME, pr_url=PR_URL, commit_list=COMMITS, adr_cc_list=ADR_CHANGES, test_summary=TEST_OUTPUT, status="Verified and shipped"
 </process>
 
 <process id="detect-context" name="Detect work item ID, slug, and test runner">
@@ -246,7 +246,7 @@ IF DOCS_NEEDED is true:
 USE `execute/runInTerminal` where: command="git status --porcelain"
 CAPTURE STATUS_OUTPUT from `execute/runInTerminal`
 IF STATUS_OUTPUT is not empty:
-  RETURN: format="SHIP_ERROR", wi_id=WI_ID, stage="Verify Clean", error_message="Uncommitted changes remain", details=STATUS_OUTPUT, fix="Stage and commit remaining changes"
+  RETURN: format="VERIFY_ERROR", wi_id=WI_ID, stage="Verify Clean", error_message="Uncommitted changes remain", details=STATUS_OUTPUT, fix="Stage and commit remaining changes"
 </process>
 
 <process id="push-branch" name="Push the feature branch to remote origin">
@@ -264,5 +264,5 @@ SET PR_URL := <URL> (from "Agent Inference" using PR_OUTPUT)
 </processes>
 
 <input>
-USER_INPUT is the work item ID (e.g., WI-0042) and optionally any shipping instructions or overrides.
+USER_INPUT is the work item ID (e.g., WI-0042) and optionally any verification instructions or overrides.
 </input>

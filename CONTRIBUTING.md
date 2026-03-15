@@ -5,7 +5,7 @@ This project uses a staged pipeline to move from idea to production code. Every 
 ## Pipeline Overview
 
 ```
-Research → Architect → Plan → Implement
+Research → Plan → Implement → Verify
 ```
 
 Each stage has clear inputs, outputs, and artifact locations. No stage may be skipped.
@@ -34,25 +34,30 @@ Each stage has clear inputs, outputs, and artifact locations. No stage may be sk
 - Identify whether ADRs or core-components are needed
 - Reference existing ADRs and core-components
 
-## Stage 2 — Architect
+## Stage 2 — Plan
 
+- Read the research brief before creating any architectural artifacts
 - Create ADRs in `docs/architecture/ADR/` using the ADR template
 - Create core-components in `docs/architecture/core-components/` using the core-component template
 - Update `docs/architecture/ADR/DECISION-LOG.md` with every new ADR or core-component
 - Write `plan/01-action-plan.md` with the chosen approach
-
-## Stage 3 — Plan
-
 - Write `plan/02-task-breakdown.md` with acceptance criteria for every task
 - Write `plan/03-test-plan.md` with full test coverage requirements
 - Reference relevant ADRs and core-components in every task
 
-## Stage 4 — Implement
+## Stage 3 — Implement
 
 - Execute tasks from the task breakdown
 - Write tests as specified in the test plan
 - Document implementation notes in `implementation/README.md`
-- Deviations from ADRs or core-components require returning to the Architect stage
+- Deviations from ADRs or core-components require returning to the Plan stage
+
+## Stage 4 — Verify
+
+- Run the full test suite and confirm all tests pass
+- Create logical, atomic commits following Conventional Commits
+- Push to a feature branch and open a pull request
+- Assign the PR to Copilot for review
 
 ## Where Artifacts Belong
 
@@ -78,4 +83,4 @@ Each stage has clear inputs, outputs, and artifact locations. No stage may be sk
 - Every PR must reference the workitem it belongs to
 - ADRs and core-components must be reviewed before implementation begins
 - All tests from the test plan must pass
-- Implementation must not deviate from approved ADRs or core-components without going back through the Architect stage
+- Implementation must not deviate from approved ADRs or core-components without going back through the Plan stage

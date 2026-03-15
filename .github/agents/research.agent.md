@@ -1,6 +1,6 @@
 ---
 name: research
-description: "Explore the problem space, classify scope, and produce a research brief that hands off cleanly to the Architect stage."
+description: "Explore the problem space, classify scope, and produce a research brief that hands off cleanly to the Plan stage."
 tools:
   - search/codebase
   - search/fileSearch
@@ -54,7 +54,7 @@ SCOPE_TYPES: YAML<<
 </constants>
 
 <formats>
-<format id="RESEARCH_BRIEF" name="Research Brief" purpose="Structured output for the research brief summarizing scope classification and handoff to Architect.">
+<format id="RESEARCH_BRIEF" name="Research Brief" purpose="Structured output for the research brief summarizing scope classification and handoff to Plan.">
 # Research Brief: <TITLE>
 
 ## Scope Classification
