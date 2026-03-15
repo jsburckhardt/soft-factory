@@ -1,6 +1,6 @@
 # Workitems
 
-This directory contains all workitems. Each workitem follows the Research → Architect → Plan → Implement pipeline.
+This directory contains all workitems. Each workitem follows the Research → Plan → Implement → Verify pipeline.
 
 ## Creating a New Workitem
 

@@ -8,7 +8,7 @@ This directory contains all project documentation organized by category.
 |-----------|---------|
 | `application/` | Application-specific documentation (API docs, user guides, etc.) |
 | `architecture/` | Architectural decisions, core-components, and templates |
-| `workitems/` | Workitem-scoped work following the Research → Architect → Plan → Implement pipeline |
+| `workitems/` | Workitem-scoped work following the Research → Plan → Implement → Verify pipeline |
 
 ## Conventions
 

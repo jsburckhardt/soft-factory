@@ -257,13 +257,15 @@ SET NEXT_CORE_COMPONENT_NUMBER := <NUM> (from "Agent Inference" using EXISTING_C
 <process id="create-architecture-artifacts" name="Create ADRs and core-components from research brief">
 SET ADR_CONTENT := <CONTENT> (from "Agent Inference" using RESEARCH_BRIEF, ADR_TEMPLATE, NEXT_ADR_NUMBER)
 IF ADR_CONTENT is not empty:
+  SET ADR_FILE_PATH := <PATH> (from "Agent Inference" using ADR_DIR, NEXT_ADR_NUMBER, ADR_PATTERN)
   USE `edit/createDirectory` where: dirPath=ADR_DIR
-  USE `edit/createFile` where: content=ADR_CONTENT, filePath="<ADR_FILE_PATH>"
+  USE `edit/createFile` where: content=ADR_CONTENT, filePath=ADR_FILE_PATH
   SET CREATED_ADRS := CREATED_ADRS + [ADR_FILE_PATH] (from "Agent Inference")
 SET CORE_COMPONENT_CONTENT := <CONTENT> (from "Agent Inference" using RESEARCH_BRIEF, CORE_COMPONENT_TEMPLATE, NEXT_CORE_COMPONENT_NUMBER)
 IF CORE_COMPONENT_CONTENT is not empty:
+  SET CORE_COMPONENT_FILE_PATH := <PATH> (from "Agent Inference" using CORE_COMPONENT_DIR, NEXT_CORE_COMPONENT_NUMBER, CORE_COMPONENT_PATTERN)
   USE `edit/createDirectory` where: dirPath=CORE_COMPONENT_DIR
-  USE `edit/createFile` where: content=CORE_COMPONENT_CONTENT, filePath="<CORE_COMPONENT_FILE_PATH>"
+  USE `edit/createFile` where: content=CORE_COMPONENT_CONTENT, filePath=CORE_COMPONENT_FILE_PATH
   SET CREATED_CORE_COMPONENTS := CREATED_CORE_COMPONENTS + [CORE_COMPONENT_FILE_PATH] (from "Agent Inference")
 SET CREATED_DECISIONS := <DECISIONS> (from "Agent Inference" using CREATED_ADRS, CREATED_CORE_COMPONENTS, DECISION_GUIDANCE)
 SET ARCHITECTURE_COMPLETE := true (from "Agent Inference")

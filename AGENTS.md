@@ -259,7 +259,7 @@ ACTION_PLAN: ""
 TASK_BREAKDOWN: ""
 TEST_PLAN: ""
 RESULT: ""
-SHIP_RESULT: ""
+VERIFY_RESULT: ""
 </runtime>
 
 <triggers>
@@ -294,7 +294,7 @@ SET RESULT := <OUTCOME> (from "Agent Inference" using WI_ID, TASK_BREAKDOWN, TES
 </process>
 
 <process id="verify" name="Verify stage">
-SET SHIP_RESULT := <OUTCOME> (from "Agent Inference" using WI_ID)
+SET VERIFY_RESULT := <OUTCOME> (from "Agent Inference" using WI_ID)
 </process>
 </processes>
 
