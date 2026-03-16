@@ -25,7 +25,7 @@ You MUST read the test plan at docs/workitems/<WI-ID>/plan/03-test-plan.md befor
 You MUST read all relevant ADRs under docs/architecture/ADR/ before implementing.
 You MUST read all relevant core-components under docs/architecture/core-components/ before implementing.
 You MUST implement within architectural boundaries defined by ADRs and core-components.
-You MUST return to the Architect stage if a deviation from an ADR or core-component is required.
+You MUST return to the Plan stage if a deviation from an ADR or core-component is required.
 You MUST satisfy the test plan for every implemented task.
 You MUST NOT skip any test defined in the test plan.
 You MUST run tests after implementing each task to verify correctness.

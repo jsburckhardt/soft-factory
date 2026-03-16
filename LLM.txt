@@ -3,11 +3,11 @@ CONTRIBUTING.md                                             — Human contributi
 LLM.txt                                                     — This file; repo map for AI agents
 README.md                                                   — Project overview
 .devcontainer/devcontainer.json                             — Dev container configuration
-.github/agents/architect.agent.md                      — Architect agent (ADRs, core-components, action plans)
-.github/agents/aps-v1.1.11.agent.md                         — APS prompt generator agent
+.github/agents/aps-v1.1.17.agent.md                         — APS prompt generator agent
 .github/agents/excali.agent.md                              — Excalidraw diagram agent
+.github/agents/verifier.agent.md                      — Verifier agent (test validation, commits, PR creation)
 .github/agents/implementer.agent.md                   — Implementer agent (code, tests, verification)
-.github/agents/planner.agent.md                       — Planner agent (task breakdown, test plans)
+.github/agents/planner.agent.md                       — Planner agent (ADRs, core-components, action plans, task breakdown, test plans)
 .github/agents/research.agent.md                      — Research agent (exploration, scope classification)
 docs/README.md                                              — Docs directory index
 docs/application/README.md                                  — Application-specific documentation
@@ -21,7 +21,7 @@ docs/workitems/README.md                                    — Workitems index 
 docs/workitems/WI-0001-example/README.md                    — Example workitem overview
 docs/workitems/WI-0001-example/artifacts/README.md          — Supporting artifacts for the workitem
 docs/workitems/WI-0001-example/implementation/README.md     — Implementation notes
-docs/workitems/WI-0001-example/plan/01-action-plan.md       — Action plan (from Architect stage)
+docs/workitems/WI-0001-example/plan/01-action-plan.md       — Action plan (from Plan stage)
 docs/workitems/WI-0001-example/plan/02-task-breakdown.md    — Task breakdown with acceptance criteria
 docs/workitems/WI-0001-example/plan/03-test-plan.md         — Test plan with coverage requirements
 docs/workitems/WI-0001-example/research/00-research.md      — Research brief (scope classification, findings)

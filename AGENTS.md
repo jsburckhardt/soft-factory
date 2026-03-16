@@ -1,7 +1,7 @@
 # Agents — Soft Factory Pipeline Specification
 
 <instructions>
-Every piece of work MUST flow through exactly five stages in order: Research, Architect, Plan, Implement, Ship.
+Every piece of work MUST flow through exactly four stages in order: Research, Plan, Implement, Verify.
 You MUST classify scope_type as exactly one of: workitem, architecture_decision, core_component.
 You MUST NOT create an architectural decision outside of an ADR document.
 You MUST NOT create reusable cross-cutting behavior outside of a core-component document.
@@ -9,7 +9,7 @@ You MUST update docs/architecture/ADR/DECISION-LOG.md for every ADR or core-comp
 You MUST treat ADRs as global artifacts stored in docs/architecture/ADR/ — never inside a workitem folder.
 You MUST treat core-components as global artifacts stored in docs/architecture/core-components/ — never inside a workitem folder.
 You MUST NOT edit template files directly — copy them within the same directory and rename.
-You MUST return to the Architect stage if implementation diverges from an ADR or core-component.
+You MUST return to the Plan stage if implementation diverges from an ADR or core-component.
 You MUST inspect existing repo code and documentation before proposing new work.
 You MUST NOT skip any stage in the pipeline.
 You MUST update the APS version badge in README.md and the APS_BADGE constant when the APS skill is upgraded.
@@ -22,21 +22,17 @@ PIPELINE_STAGES: YAML<<
   name: Research
   agent: research
   purpose: Explore the problem space, classify scope, produce a research brief
-- id: architect
-  name: Architect
-  agent: architect
-  purpose: Commit decisions via ADRs and core-components, produce an action plan
 - id: plan
   name: Plan
   agent: planner
-  purpose: Break work into tasks with acceptance criteria and test plans
+  purpose: Commit architectural decisions via ADRs and core-components, then produce the action plan, task breakdown, and test plan
 - id: implement
   name: Implement
   agent: implementer
   purpose: Execute tasks, write code and tests, verify against the plan
-- id: ship
-  name: Ship
-  agent: ship-it
+- id: verify
+  name: Verify
+  agent: verifier
   purpose: Run tests, commit, push, and open a pull request for review
 >>
 AGENTS: YAML<<
@@ -121,7 +117,7 @@ bootstrap:
     - must not make feature-level decisions
 research:
   file: .github/agents/research.agent.md
-  purpose: Explore the problem space, classify scope, and produce a research brief that hands off cleanly to the Architect stage.
+  purpose: Explore the problem space, classify scope, and produce a research brief that hands off cleanly to the Plan stage.
   tools:
     - web search and documentation lookup
     - codebase exploration (grep, glob, file reading)
@@ -142,12 +138,12 @@ research:
     - explicitly state if ADRs or core-components are required
     - propose ADR titles and core-component titles when applicable
     - never make architectural decisions — only propose them
-architect:
-  file: .github/agents/architect.agent.md
-  purpose: Commit architectural decisions by creating ADRs and core-components, and update the decision registry.
+planner:
+  file: .github/agents/planner.agent.md
+  purpose: Own the Plan stage — read the research brief, commit architectural decisions via ADRs and core-components, then produce the action plan, task breakdown, and test plan.
   tools:
+    - codebase exploration (grep, glob, file reading)
     - file creation and editing
-    - codebase exploration
   read_paths:
     - docs/workitems/<WI-ID>/research/00-research.md
     - docs/architecture/ADR/ADR-0001-template.md
@@ -155,44 +151,28 @@ architect:
     - docs/architecture/ADR/DECISION-LOG.md
     - docs/architecture/ADR/
     - docs/architecture/core-components/
+    - application source code
   write_paths:
     - docs/architecture/ADR/ADR-####-slug.md
     - docs/architecture/core-components/CORE-COMPONENT-####-slug.md
     - docs/architecture/ADR/DECISION-LOG.md
     - docs/workitems/<WI-ID>/plan/01-action-plan.md
+    - docs/workitems/<WI-ID>/plan/02-task-breakdown.md
+    - docs/workitems/<WI-ID>/plan/03-test-plan.md
   templates:
     - docs/architecture/ADR/ADR-0001-template.md
     - docs/architecture/core-components/CORE-COMPONENT-0001-template.md
+    - Task Breakdown (Section 5.5)
+    - Test Plan (Section 5.6)
   guardrails:
     - no architectural decision exists unless it is in an ADR
     - no reusable cross-cutting behavior exists unless it is a core-component
     - every ADR or core-component change must update DECISION-LOG.md
-    - every ADR or core-component must produce at least one decision record in the Decisions section of DECISION-LOG.md
-    - decision records are short actionable statements referencing their source ADR or core-component
+    - every ADR or core-component must produce at least one decision record
     - ADRs and core-components are global — not scoped to a workitem
-    - must create a Plan of Attack (01-action-plan.md) for the workitem
-planner:
-  file: .github/agents/planner.agent.md
-  purpose: Transform intent into executable, testable work by producing a task breakdown and test plan.
-  tools:
-    - file creation and editing
-    - codebase exploration
-  read_paths:
-    - docs/workitems/<WI-ID>/plan/01-action-plan.md
-    - docs/architecture/ADR/
-    - docs/architecture/core-components/
-    - application source code
-  write_paths:
-    - docs/workitems/<WI-ID>/plan/02-task-breakdown.md
-    - docs/workitems/<WI-ID>/plan/03-test-plan.md
-  templates:
-    - Task Breakdown (Section 5.5)
-    - Test Plan (Section 5.6)
-  guardrails:
     - every task must have acceptance criteria
     - every task must have explicit test coverage requirements
     - tasks must reference relevant ADRs and core-components
-    - must not deviate from decisions made in the Architect stage
 implementer:
   file: .github/agents/implementer.agent.md
   purpose: Execute tasks from the plan, produce code and tests, and verify implementation against the test plan.
@@ -212,12 +192,12 @@ implementer:
   templates: []
   guardrails:
     - must implement within architectural boundaries defined by ADRs and core-components
-    - deviations from ADRs or core-components require returning to the Architect stage
+    - deviations from ADRs or core-components require returning to the Plan stage
     - implementation must satisfy the test plan
     - must not skip tests defined in the test plan
-ship-it:
-  file: .github/agents/ship-it.agent.md
-  purpose: Ship completed work — run tests, create commits following Conventional Commits, push, and open a PR assigned to Copilot for review.
+verifier:
+  file: .github/agents/verifier.agent.md
+  purpose: Verify completed work — run tests, create commits following Conventional Commits, push, and open a PR assigned to Copilot for review.
   tools:
     - terminal execution (git, gh, test runners)
     - file reading and editing
@@ -238,7 +218,7 @@ ship-it:
   guardrails:
     - must not proceed if tests fail
     - must not push directly to main or master
-    - must create feature branches following pattern <type>/<WI-ID>-<short-slug> (e.g., feat/WI-0002-readme-cleanup)
+    - must create feature branches following pattern <type>/<WI-ID>-<short-slug>
     - must follow Conventional Commits for all commit messages and the PR title
     - must include Co-authored-by trailer on every commit
     - must not force-push or use --no-verify
@@ -279,7 +259,7 @@ ACTION_PLAN: ""
 TASK_BREAKDOWN: ""
 TEST_PLAN: ""
 RESULT: ""
-SHIP_RESULT: ""
+VERIFY_RESULT: ""
 </runtime>
 
 <triggers>
@@ -287,23 +267,11 @@ SHIP_RESULT: ""
 </triggers>
 
 <processes>
-<process id="pipeline-route" name="Route work through the pipeline based on scope classification">
+<process id="pipeline-route" name="Route work through the RPIV pipeline">
 RUN `research`
-IF SCOPE_TYPE = "workitem":
-  RUN `architect`
-  RUN `plan`
-  RUN `implement`
-  RUN `ship`
-IF SCOPE_TYPE = "architecture_decision":
-  RUN `architect`
-  RUN `plan`
-  RUN `implement`
-  RUN `ship`
-IF SCOPE_TYPE = "core_component":
-  RUN `architect`
-  RUN `plan`
-  RUN `implement`
-  RUN `ship`
+RUN `plan`
+RUN `implement`
+RUN `verify`
 RETURN: SCOPE_TYPE, WI_ID
 </process>
 
@@ -312,14 +280,11 @@ SET SCOPE_TYPE := <CLASSIFICATION> (from "Agent Inference" using USER_INPUT)
 SET WI_ID := <ID> (from "Agent Inference")
 </process>
 
-<process id="architect" name="Architect stage">
+<process id="plan" name="Plan stage">
 SET ADRS := <ADR_LIST> (from "Agent Inference" using WI_ID, SCOPE_TYPE)
 SET CORE_COMPONENTS := <CC_LIST> (from "Agent Inference" using WI_ID, SCOPE_TYPE)
 SET DECISIONS := <DECISION_LIST> (from "Agent Inference" using ADRS, CORE_COMPONENTS)
 SET ACTION_PLAN := <PLAN> (from "Agent Inference" using WI_ID)
-</process>
-
-<process id="plan" name="Plan stage">
 SET TASK_BREAKDOWN := <TASKS> (from "Agent Inference" using WI_ID, ACTION_PLAN)
 SET TEST_PLAN := <TESTS> (from "Agent Inference" using WI_ID, TASK_BREAKDOWN)
 </process>
@@ -328,8 +293,8 @@ SET TEST_PLAN := <TESTS> (from "Agent Inference" using WI_ID, TASK_BREAKDOWN)
 SET RESULT := <OUTCOME> (from "Agent Inference" using WI_ID, TASK_BREAKDOWN, TEST_PLAN)
 </process>
 
-<process id="ship" name="Ship stage">
-SET SHIP_RESULT := <OUTCOME> (from "Agent Inference" using WI_ID)
+<process id="verify" name="Verify stage">
+SET VERIFY_RESULT := <OUTCOME> (from "Agent Inference" using WI_ID)
 </process>
 </processes>
 
