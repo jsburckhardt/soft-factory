@@ -10,6 +10,8 @@ tools:
   - read/problems
   - web/fetch
   - web/githubRepo
+  - edit/createDirectory
+  - edit/createFile
   - todo
 user-invocable: true
 disable-model-invocation: false
