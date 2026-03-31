@@ -76,14 +76,14 @@ SCOPE_TYPES: YAML<<
 ## Risks and Open Questions
 <RISKS>
 WHERE:
-- <TITLE> is String.
-- <SCOPE_TYPE> is String.
-- <WI_ID> is String.
-- <PROBLEM_STATEMENT> is Markdown.
 - <EXISTING_CONTEXT> is Markdown.
+- <PROBLEM_STATEMENT> is Markdown.
 - <PROPOSED_ADRS> is Markdown.
 - <PROPOSED_CORE_COMPONENTS> is Markdown.
 - <RISKS> is Markdown.
+- <SCOPE_TYPE> is String.
+- <TITLE> is String.
+- <WI_ID> is String.
 </format>
 </formats>
 

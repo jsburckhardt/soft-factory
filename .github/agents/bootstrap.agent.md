@@ -119,16 +119,16 @@ TECH_STACK_INIT: YAML<<
 ## Files to Update
 <UPDATE_LIST>
 WHERE:
-- <PROJECT_NAME> is String.
+- <ARTIFACT_LIST> is Markdown.
+- <CROSS_CUTTING_LIST> is Markdown.
+- <FRAMEWORK> is String.
+- <INIT_COMMAND> is String.
+- <LANGUAGE> is String.
+- <PACKAGE_MANAGER> is String.
 - <PROJECT_DESCRIPTION> is String.
 - <PROJECT_GOAL> is String.
-- <LANGUAGE> is String.
-- <FRAMEWORK> is String.
-- <PACKAGE_MANAGER> is String.
+- <PROJECT_NAME> is String.
 - <TEST_RUNNER> is String.
-- <INIT_COMMAND> is String.
-- <CROSS_CUTTING_LIST> is Markdown.
-- <ARTIFACT_LIST> is Markdown.
 - <UPDATE_LIST> is Markdown.
 </format>
 
@@ -157,14 +157,14 @@ WHERE:
 ## Next Steps
 <NEXT_STEPS>
 WHERE:
-- <PROJECT_NAME> is String.
-- <PROJECT_DESCRIPTION> is String.
-- <SCAFFOLD_OUTPUT> is Markdown.
 - <ADR_LIST> is Markdown.
 - <CORE_COMPONENT_LIST> is Markdown.
 - <FILES_UPDATED> is Markdown.
-- <STATUS> is String.
 - <NEXT_STEPS> is Markdown.
+- <PROJECT_DESCRIPTION> is String.
+- <PROJECT_NAME> is String.
+- <SCAFFOLD_OUTPUT> is Markdown.
+- <STATUS> is String.
 </format>
 
 <format id="BOOTSTRAP_BLOCKED" name="Bootstrap Blocked" purpose="Report that bootstrap cannot proceed because the project is already bootstrapped.">
@@ -178,8 +178,8 @@ WHERE:
 ### Suggestion
 <SUGGESTION>
 WHERE:
-- <REASON> is String.
 - <EVIDENCE> is Markdown.
+- <REASON> is String.
 - <SUGGESTION> is String.
 </format>
 </formats>
