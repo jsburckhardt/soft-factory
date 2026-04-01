@@ -148,14 +148,14 @@ CROSS_CUTTING_SIGNALS: YAML<<
 ## Risks and Gaps
 <RISKS>
 WHERE:
-- <PROJECT_NAME> is String.
-- <PROJECT_DESCRIPTION> is String.
-- <TECH_STACK> is String.
+- <ARTIFACT_LIST> is Markdown.
 - <DISCOVERED_ADRS> is Markdown.
 - <DISCOVERED_CONCERNS> is Markdown.
-- <ARTIFACT_LIST> is Markdown.
-- <UPDATE_LIST> is Markdown.
+- <PROJECT_DESCRIPTION> is String.
+- <PROJECT_NAME> is String.
 - <RISKS> is Markdown.
+- <TECH_STACK> is String.
+- <UPDATE_LIST> is Markdown.
 </format>
 
 <format id="ONBOARD_REPORT" name="Onboarding Report" purpose="Summarise all actions taken during repository onboarding.">
@@ -185,14 +185,14 @@ WHERE:
 ## Next Steps
 <NEXT_STEPS>
 WHERE:
-- <PROJECT_NAME> is String.
-- <PROJECT_DESCRIPTION> is String.
-- <TECH_STACK> is String.
 - <ADR_LIST> is Markdown.
 - <CORE_COMPONENT_LIST> is Markdown.
 - <FILES_UPDATED> is Markdown.
-- <STATUS> is String.
 - <NEXT_STEPS> is Markdown.
+- <PROJECT_DESCRIPTION> is String.
+- <PROJECT_NAME> is String.
+- <STATUS> is String.
+- <TECH_STACK> is String.
 </format>
 
 <format id="ONBOARD_BLOCKED" name="Onboarding Blocked" purpose="Report that onboarding cannot proceed because the repository is already onboarded.">
@@ -206,8 +206,8 @@ WHERE:
 ### Suggestion
 <SUGGESTION>
 WHERE:
-- <REASON> is String.
 - <EVIDENCE> is Markdown.
+- <REASON> is String.
 - <SUGGESTION> is String.
 </format>
 </formats>

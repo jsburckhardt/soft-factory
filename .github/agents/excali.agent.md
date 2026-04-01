@@ -284,10 +284,12 @@ RUN `generate-diagram`
 
 <process id="analyze-existing" name="Analyze Existing Excalidraw Files">
 USE `search/fileSearch` where: pattern="**/*.excalidraw"
-FOREACH file in results:
+CAPTURE EXISTING_FILES from `search/fileSearch`
+FOREACH file IN EXISTING_FILES:
   USE `read/readFile` where: filePath=file
-  CAPTURE structure patterns and styling conventions
-RETURN: patterns for consistent styling
+  CAPTURE FILE_CONTENT from `read/readFile`
+SET STYLE_PATTERNS := <PATTERNS> (from "Agent Inference" using FILE_CONTENT)
+RETURN: STYLE_PATTERNS
 </process>
 
 <process id="generate-diagram" name="Generate Excalidraw Diagram">

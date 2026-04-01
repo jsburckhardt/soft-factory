@@ -62,15 +62,15 @@ CORE_COMPONENT_DIR: "docs/architecture/core-components"
 ### Notes
 <NOTES>
 WHERE:
+- <CHANGES_SUMMARY> is Markdown.
+- <FILES_CHANGED> is String.
+- <NOTES> is Markdown.
+- <STATUS> is String.
 - <TASK_ID> is String.
 - <TASK_TITLE> is String.
-- <STATUS> is String.
-- <FILES_CHANGED> is String.
-- <TESTS_PASSED> is Integer.
-- <TESTS_FAILED> is Integer.
-- <CHANGES_SUMMARY> is Markdown.
 - <TEST_RESULTS> is Markdown.
-- <NOTES> is Markdown.
+- <TESTS_FAILED> is Integer.
+- <TESTS_PASSED> is Integer.
 </format>
 </formats>
 
