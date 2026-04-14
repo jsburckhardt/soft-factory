@@ -225,6 +225,32 @@ verifier:
     - must not modify application source code
     - must verify the branch is clean after all commits
     - must assign the PR to Copilot for review
+dt-coach:
+  file: .github/agents/dt-coach.agent.md
+  purpose: Guide teams through the 9-method Design Thinking framework to discover real problems and validate solutions before entering the RPIV pipeline.
+  tools:
+    - codebase exploration and reading
+    - file creation and editing
+    - web search
+  read_paths:
+    - docs/design-thinking/
+    - docs/architecture/ADR/ADR-0002-adopt-hve-design-thinking.md
+    - docs/architecture/ADR/ADR-0003-dt-artifact-storage.md
+    - docs/architecture/core-components/CORE-COMPONENT-0002-confidence-markers.md
+    - .copilot-tracking/dt/<WI-ID>/coaching-state.md
+    - docs/workitems/<WI-ID>/research/00-research.md
+  write_paths:
+    - .copilot-tracking/dt/<WI-ID>/coaching-state.md
+    - .copilot-tracking/dt/<WI-ID>/method-*/
+    - docs/workitems/<WI-ID>/artifacts/dt-handoff.md
+  guardrails:
+    - must follow Think/Speak/Empower coaching philosophy
+    - must never prescribe solutions — only guide discovery
+    - must enforce space-appropriate fidelity (rough in Problem, scrappy in Solution, functional in Validation)
+    - must produce handoff artifacts with confidence markers when exiting to RPIV
+    - must store session state in .copilot-tracking/dt/<WI-ID>/
+    - must commit handoff artifacts to docs/workitems/<WI-ID>/artifacts/dt-handoff.md
+    - must not reference .github/instructions/ files
 >>
 TEMPLATE_PATHS: YAML<<
 adr: docs/architecture/ADR/ADR-0001-template.md
