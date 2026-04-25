@@ -263,9 +263,9 @@ RUN `create-tech-stack-adr`
 IF CROSS_CUTTING_CONCERNS is not empty:
   RUN `create-core-components`
 RUN `update-decision-log`
+RUN `configure-verification`
 RUN `update-project-docs`
 RUN `tailor-devcontainer`
-RUN `configure-verification`
 RETURN: format="BOOTSTRAP_REPORT", project_name=PROJECT_NAME, project_description=PROJECT_DESCRIPTION, scaffold_output=SCAFFOLD_OUTPUT, adr_list=CREATED_ADRS, core_component_list=CREATED_CORE_COMPONENTS, files_updated=UPDATED_FILES, verification_summary=VERIFICATION_COMMANDS, status="Bootstrapped", next_steps="Use the research to start your first workitem"
 </process>
 

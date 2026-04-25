@@ -220,9 +220,9 @@ verifier:
     - README.md
   templates: []
   guardrails:
-    - must not proceed if any verification step fails (test, lint, build, format check, type check)
+    - must not proceed if any configured or auto-detected verification step fails
     - must load verification commands from .github/soft-factory/verification.yml when present
-    - must fall back to auto-detecting test runner from project files when verification config is absent
+    - must fall back to auto-detecting applicable verification steps from project files when verification config is absent
     - must not push directly to main or master
     - must create feature branches following pattern <type>/<WI-ID>-<short-slug>
     - must follow Conventional Commits for all commit messages and the PR title
