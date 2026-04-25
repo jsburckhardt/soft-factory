@@ -100,6 +100,7 @@ bootstrap:
     - AGENTS.md
     - LLM.txt
     - .devcontainer/devcontainer.json
+    - .github/soft-factory/verification.yml
   templates:
     - docs/architecture/ADR/ADR-0001-template.md
     - docs/architecture/core-components/CORE-COMPONENT-0001-template.md
@@ -113,6 +114,8 @@ bootstrap:
     - must create a core-component file for each declared cross-cutting concern
     - must update DECISION-LOG.md with all new ADRs and core-components
     - must record decision records in the Decisions section of DECISION-LOG.md for every ADR and core-component created
+    - must configure project verification commands and write .github/soft-factory/verification.yml
+    - must ask user to confirm or customize proposed verification commands
     - must not set up CI/CD pipelines or infrastructure
     - must not make feature-level decisions
 research:
@@ -208,6 +211,7 @@ verifier:
     - docs/architecture/core-components/
     - AGENTS.md
     - docs/workitems/<WI-ID>/
+    - .github/soft-factory/verification.yml
     - application source code and test files
   write_paths:
     - docs/architecture/ADR/DECISION-LOG.md
@@ -216,7 +220,9 @@ verifier:
     - README.md
   templates: []
   guardrails:
-    - must not proceed if tests fail
+    - must not proceed if any verification step fails (test, lint, build, format check, type check)
+    - must load verification commands from .github/soft-factory/verification.yml when present
+    - must fall back to auto-detecting test runner from project files when verification config is absent
     - must not push directly to main or master
     - must create feature branches following pattern <type>/<WI-ID>-<short-slug>
     - must follow Conventional Commits for all commit messages and the PR title
