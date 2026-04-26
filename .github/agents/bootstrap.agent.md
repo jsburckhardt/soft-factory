@@ -43,6 +43,8 @@ You MUST update LLM.txt with any new project-specific file references.
 You MUST tailor .devcontainer/devcontainer.json to the chosen tech stack by removing unnecessary features.
 You MUST assign sequential ADR numbers starting from ADR-0002 using the pattern ADR-####-slug.md.
 You MUST assign sequential core-component numbers starting from CORE-COMPONENT-0002 using the pattern CORE-COMPONENT-####-slug.md.
+You MUST configure project verification commands and write them to `.github/soft-factory/verification.yml`.
+You MUST ask the user to confirm or customize the proposed verification commands before writing the config.
 You MUST NOT set up CI/CD pipelines or infrastructure.
 You MUST NOT make feature-level decisions; only foundational project decisions.
 You MUST NOT skip any user confirmation before writing files.
@@ -64,6 +66,7 @@ APP_DOCS_PATH: "docs/application/README.md"
 LLM_TXT_PATH: "LLM.txt"
 DEVCONTAINER_PATH: ".devcontainer/devcontainer.json"
 BOOTSTRAP_MARKER: "ADR-0002"
+VERIFICATION_CONFIG_PATH: ".github/soft-factory/verification.yml"
 TECH_STACK_INIT: YAML<<
 - language: python
   commands:
@@ -71,26 +74,50 @@ TECH_STACK_INIT: YAML<<
     - uv sync
   package_manager: uv
   test_runner: pytest
+  verification_defaults:
+    test: uv run pytest
+    lint: uv run ruff check .
+    format_check: uv run ruff format --check .
+    type_check: uv run mypy .
 - language: node
   commands:
     - npm init -y
   package_manager: npm
   test_runner: jest
+  verification_defaults:
+    test: npm test
+    lint: npm run lint
+    build: npm run build
+    format_check: npx prettier --check .
 - language: go
   commands:
     - go mod init
   package_manager: go
   test_runner: go test
+  verification_defaults:
+    test: go test ./...
+    lint: go vet ./...
+    build: go build ./...
+    format_check: gofmt -l .
 - language: rust
   commands:
     - cargo init
   package_manager: cargo
   test_runner: cargo test
+  verification_defaults:
+    test: cargo test
+    lint: cargo clippy -- -D warnings
+    build: cargo build
+    format_check: cargo fmt -- --check
 - language: dotnet
   commands:
     - dotnet new console
   package_manager: nuget
   test_runner: dotnet test
+  verification_defaults:
+    test: dotnet test
+    lint: dotnet format --verify-no-changes
+    build: dotnet build
 >>
 </constants>
 
@@ -113,6 +140,9 @@ TECH_STACK_INIT: YAML<<
 ## Cross-Cutting Concerns
 <CROSS_CUTTING_LIST>
 
+## Verification Commands
+<VERIFICATION_COMMANDS>
+
 ## Artifacts to Create
 <ARTIFACT_LIST>
 
@@ -130,6 +160,7 @@ WHERE:
 - <PROJECT_NAME> is String.
 - <TEST_RUNNER> is String.
 - <UPDATE_LIST> is Markdown.
+- <VERIFICATION_COMMANDS> is Markdown.
 </format>
 
 <format id="BOOTSTRAP_REPORT" name="Bootstrap Report" purpose="Summarize all actions taken during project bootstrap.">
@@ -151,6 +182,9 @@ WHERE:
 ## Files Updated
 <FILES_UPDATED>
 
+## Verification Config
+<VERIFICATION_SUMMARY>
+
 ## Status
 <STATUS>
 
@@ -165,6 +199,7 @@ WHERE:
 - <PROJECT_NAME> is String.
 - <SCAFFOLD_OUTPUT> is Markdown.
 - <STATUS> is String.
+- <VERIFICATION_SUMMARY> is Markdown.
 </format>
 
 <format id="BOOTSTRAP_BLOCKED" name="Bootstrap Blocked" purpose="Report that bootstrap cannot proceed because the project is already bootstrapped.">
@@ -205,6 +240,7 @@ NEXT_CC_NUMBER: 2
 CREATED_ADRS: []
 CREATED_CORE_COMPONENTS: []
 UPDATED_FILES: []
+VERIFICATION_COMMANDS: {}
 </runtime>
 
 <triggers>
@@ -221,15 +257,16 @@ IF PROJECT_NAME is empty:
 SET ARTIFACT_LIST := <LIST> (from "Agent Inference" using LANGUAGE, CROSS_CUTTING_CONCERNS, NEXT_ADR_NUMBER, NEXT_CC_NUMBER)
 SET UPDATE_LIST := <LIST> (from "Agent Inference" using README_PATH, APP_DOCS_PATH, AGENTS_MD_PATH, LLM_TXT_PATH, DEVCONTAINER_PATH, DECISION_LOG_PATH)
 IF INFO_CONFIRMED is false:
-  RETURN: format="BOOTSTRAP_SUMMARY", project_name=PROJECT_NAME, project_description=PROJECT_DESCRIPTION, project_goal=PROJECT_GOAL, language=LANGUAGE, framework=FRAMEWORK, package_manager=PACKAGE_MANAGER, test_runner=TEST_RUNNER, init_command=INIT_COMMAND, cross_cutting_list=CROSS_CUTTING_CONCERNS, artifact_list=ARTIFACT_LIST, update_list=UPDATE_LIST
+  RETURN: format="BOOTSTRAP_SUMMARY", project_name=PROJECT_NAME, project_description=PROJECT_DESCRIPTION, project_goal=PROJECT_GOAL, language=LANGUAGE, framework=FRAMEWORK, package_manager=PACKAGE_MANAGER, test_runner=TEST_RUNNER, init_command=INIT_COMMAND, cross_cutting_list=CROSS_CUTTING_CONCERNS, artifact_list=ARTIFACT_LIST, update_list=UPDATE_LIST, verification_commands=VERIFICATION_COMMANDS
 RUN `scaffold-project`
 RUN `create-tech-stack-adr`
 IF CROSS_CUTTING_CONCERNS is not empty:
   RUN `create-core-components`
 RUN `update-decision-log`
+RUN `configure-verification`
 RUN `update-project-docs`
 RUN `tailor-devcontainer`
-RETURN: format="BOOTSTRAP_REPORT", project_name=PROJECT_NAME, project_description=PROJECT_DESCRIPTION, scaffold_output=SCAFFOLD_OUTPUT, adr_list=CREATED_ADRS, core_component_list=CREATED_CORE_COMPONENTS, files_updated=UPDATED_FILES, status="Bootstrapped", next_steps="Use the research to start your first workitem"
+RETURN: format="BOOTSTRAP_REPORT", project_name=PROJECT_NAME, project_description=PROJECT_DESCRIPTION, scaffold_output=SCAFFOLD_OUTPUT, adr_list=CREATED_ADRS, core_component_list=CREATED_CORE_COMPONENTS, files_updated=UPDATED_FILES, verification_summary=VERIFICATION_COMMANDS, status="Bootstrapped", next_steps="Use the research to start your first workitem"
 </process>
 
 <process id="check-bootstrapped" name="Check if project has already been bootstrapped">
@@ -252,6 +289,7 @@ SET PACKAGE_MANAGER := <PM> (from "Agent Inference" using USER_INPUT, TECH_STACK
 SET TEST_RUNNER := <TR> (from "Agent Inference" using USER_INPUT, TECH_STACK_INIT)
 SET INIT_COMMAND := <CMD> (from "Agent Inference" using LANGUAGE, TECH_STACK_INIT)
 SET CROSS_CUTTING_CONCERNS := <CONCERNS> (from "Agent Inference" using USER_INPUT)
+SET VERIFICATION_COMMANDS := <DEFAULTS> (from "Agent Inference" using LANGUAGE, TECH_STACK_INIT, TEST_RUNNER)
 </process>
 
 <process id="scaffold-project" name="Initialize the project using the chosen tech stack">
@@ -318,6 +356,13 @@ CAPTURE CURRENT_DEVCONTAINER from `read/readFile`
 SET UPDATED_DEVCONTAINER := <CONTENT> (from "Agent Inference" using CURRENT_DEVCONTAINER, LANGUAGE, FRAMEWORK, PACKAGE_MANAGER)
 USE `edit/editFiles` where: filePath=DEVCONTAINER_PATH
 SET UPDATED_FILES := UPDATED_FILES + [DEVCONTAINER_PATH] (from "Agent Inference")
+</process>
+
+<process id="configure-verification" name="Write project verification config file">
+USE `edit/createDirectory` where: dirPath=".github/soft-factory"
+SET VERIFICATION_YAML := <CONTENT> (from "Agent Inference" using VERIFICATION_COMMANDS)
+USE `edit/createFile` where: content=VERIFICATION_YAML, filePath=VERIFICATION_CONFIG_PATH
+SET UPDATED_FILES := UPDATED_FILES + [VERIFICATION_CONFIG_PATH] (from "Agent Inference")
 </process>
 </processes>
 

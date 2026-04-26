@@ -17,9 +17,10 @@ target: vscode
 ---
 
 <instructions>
-You MUST run the project test suite and confirm all tests pass before proceeding with any git operations.
-You MUST detect the test runner automatically by inspecting project files.
-You MUST NOT proceed if any test fails; stop immediately and report the failures.
+You MUST run all configured project verification steps and confirm all checks pass before proceeding with any git operations.
+You MUST load verification commands from `.github/soft-factory/verification.yml` when it exists.
+You MUST fall back to auto-detecting and running all applicable verification steps from project files when verification config is absent.
+You MUST NOT proceed if any configured or auto-detected verification step fails; stop immediately and report which step failed.
 You MUST check the current git branch before making changes.
 You MUST NOT push directly to main or master; always work on a feature branch.
 You MUST create a feature branch following the pattern <type>/<WI-ID>-<short-slug> when on main or master.
@@ -49,6 +50,7 @@ ADR_DIR: "docs/architecture/ADR"
 CORE_COMPONENT_DIR: "docs/architecture/core-components"
 AGENTS_MD_PATH: "AGENTS.md"
 WORKITEM_DIR: "docs/workitems"
+VERIFICATION_CONFIG_PATH: ".github/soft-factory/verification.yml"
 BRANCH_PATTERN: "<TYPE>/<WI-ID>-<SHORT_SLUG>"
 CO_AUTHOR_TRAILER: "Co-authored-by: github-copilot[bot] <175728472+github-copilot[bot]@users.noreply.github.com>"
 PROTECTED_BRANCHES: YAML<<
@@ -82,8 +84,8 @@ TEST_RUNNER_SIGNALS: YAML<<
 ### ADRs / Core-Components Referenced
 <ADR_CC_LIST>
 
-### Test Results
-<TEST_SUMMARY>
+### Verification Results
+<VERIFICATION_SUMMARY>
 
 ### Status
 <STATUS>
@@ -93,7 +95,7 @@ WHERE:
 - <COMMIT_LIST> is Markdown.
 - <PR_URL> is URI.
 - <STATUS> is String.
-- <TEST_SUMMARY> is String.
+- <VERIFICATION_SUMMARY> is Markdown.
 - <WI_ID> is String.
 </format>
 
@@ -122,9 +124,9 @@ WI_ID: ""
 SHORT_SLUG: ""
 BRANCH_NAME: ""
 CURRENT_BRANCH: ""
-TEST_RUNNER: ""
-TEST_OUTPUT: ""
-TEST_PASSED: false
+VERIFICATION_COMMANDS: {}
+VERIFICATION_RESULTS: []
+VERIFICATION_PASSED: false
 CHANGED_FILES: []
 COMMITS: []
 PR_URL: ""
@@ -141,9 +143,10 @@ GH_AUTHENTICATED: false
 <processes>
 <process id="verify-router" name="Route verification request">
 RUN `detect-context`
-RUN `run-tests`
-IF TEST_PASSED is false:
-  RETURN: format="VERIFY_ERROR", wi_id=WI_ID, stage="Tests", error_message="Test suite failed", details=TEST_OUTPUT, fix="Fix failing tests before shipping"
+RUN `load-verification-config`
+RUN `run-verification`
+IF VERIFICATION_PASSED is false:
+  RETURN: format="VERIFY_ERROR", wi_id=WI_ID, stage="Verification", error_message="Verification failed", details=VERIFICATION_RESULTS, fix="Fix failing verification steps before shipping"
 RUN `check-gh-auth`
 IF GH_AUTHENTICATED is false:
   RETURN: format="VERIFY_ERROR", wi_id=WI_ID, stage="Authentication", error_message="GitHub CLI not authenticated", details="gh auth status failed", fix="Run 'gh auth login' to authenticate"
@@ -158,21 +161,37 @@ RUN `update-docs`
 RUN `verify-clean`
 RUN `push-branch`
 RUN `create-pr`
-RETURN: format="VERIFY_REPORT", wi_id=WI_ID, branch_name=BRANCH_NAME, pr_url=PR_URL, commit_list=COMMITS, adr_cc_list=ADR_CHANGES, test_summary=TEST_OUTPUT, status="Verified and shipped"
+SET ADR_CC_LIST := <MERGED_LIST> (from "Agent Inference" using ADR_CHANGES, CC_CHANGES)
+RETURN: format="VERIFY_REPORT", wi_id=WI_ID, branch_name=BRANCH_NAME, pr_url=PR_URL, commit_list=COMMITS, adr_cc_list=ADR_CC_LIST, verification_summary=VERIFICATION_RESULTS, status="Verified and shipped"
 </process>
 
-<process id="detect-context" name="Detect work item ID, slug, and test runner">
+<process id="detect-context" name="Detect work item ID and slug">
 SET WI_ID := <ID> (from "Agent Inference" using USER_INPUT, WORKITEM_DIR)
 SET SHORT_SLUG := <SLUG> (from "Agent Inference" using WI_ID, WORKITEM_DIR)
-USE `search/fileSearch` where: pattern="go.mod,package.json,pytest.ini,pyproject.toml,Makefile"
-CAPTURE PROJECT_FILES from `search/fileSearch`
-SET TEST_RUNNER := <COMMAND> (from "Agent Inference" using PROJECT_FILES, TEST_RUNNER_SIGNALS)
 </process>
 
-<process id="run-tests" name="Execute the project test suite">
-USE `execute/runInTerminal` where: command=TEST_RUNNER
-CAPTURE TEST_OUTPUT from `execute/runInTerminal`
-SET TEST_PASSED := <RESULT> (from "Agent Inference" using TEST_OUTPUT)
+<process id="load-verification-config" name="Load verification commands from config file or fall back to auto-detection">
+USE `search/fileSearch` where: pattern=VERIFICATION_CONFIG_PATH
+CAPTURE CONFIG_EXISTS from `search/fileSearch`
+IF CONFIG_EXISTS is not empty:
+  USE `read/readFile` where: filePath=VERIFICATION_CONFIG_PATH
+  CAPTURE CONFIG_CONTENT from `read/readFile`
+  SET VERIFICATION_COMMANDS := <STEP_LIST> (from "Agent Inference" using CONFIG_CONTENT; normalize to a list of {category, command} objects)
+ELSE:
+  USE `search/fileSearch` where: pattern="go.mod,package.json,pytest.ini,pyproject.toml,Makefile"
+  CAPTURE PROJECT_FILES from `search/fileSearch`
+  SET VERIFICATION_COMMANDS := <STEP_LIST> (from "Agent Inference" using PROJECT_FILES, TEST_RUNNER_SIGNALS; normalize to a list of {category, command} objects populating at least the test category)
+</process>
+
+<process id="run-verification" name="Execute all configured verification steps and track results per category">
+SET VERIFICATION_PASSED := true (from "Agent Inference")
+FOREACH step IN VERIFICATION_COMMANDS:
+  USE `execute/runInTerminal` where: command=step.command
+  CAPTURE STEP_OUTPUT from `execute/runInTerminal`
+  SET STEP_PASSED := <RESULT> (from "Agent Inference" using STEP_OUTPUT)
+  SET VERIFICATION_RESULTS := VERIFICATION_RESULTS + [{category: step.category, command: step.command, passed: STEP_PASSED, output: STEP_OUTPUT}] (from "Agent Inference")
+  IF STEP_PASSED is false:
+    SET VERIFICATION_PASSED := false (from "Agent Inference")
 </process>
 
 <process id="check-gh-auth" name="Verify GitHub CLI authentication">
