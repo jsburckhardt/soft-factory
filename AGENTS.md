@@ -114,6 +114,7 @@ bootstrap:
     - must scaffold the project using the appropriate init command
     - must create an ADR for the tech stack decision
     - must create a core-component file for each declared cross-cutting concern
+    - must create a development standards core-component covering coding conventions, commit standards, and testing practices
     - must update DECISION-LOG.md with all new ADRs and core-components
     - must record decision records in the Decisions section of DECISION-LOG.md for every ADR and core-component created
     - must configure project verification commands and write .github/soft-factory/verification.yml
