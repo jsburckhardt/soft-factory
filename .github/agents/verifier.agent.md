@@ -276,7 +276,8 @@ CAPTURE PUSH_OUTPUT from `execute/runInTerminal`
 <process id="create-pr" name="Create a pull request using the GitHub CLI">
 SET PR_TITLE := <TITLE> (from "Agent Inference" using ISSUE_NUMBER, SHORT_SLUG)
 SET PR_BODY := <BODY> (from "Agent Inference" using ISSUE_NUMBER, COMMITS, ADR_CHANGES, CC_CHANGES)
-USE `execute/runInTerminal` where: command="gh pr create --title '<PR_TITLE>' --body '<PR_BODY>' --reviewer Copilot"
+USE `edit/createFile` where: content=PR_BODY, filePath="/tmp/pr-body.md"
+USE `execute/runInTerminal` where: command="gh pr create --title '<PR_TITLE>' --body-file /tmp/pr-body.md --reviewer Copilot"
 CAPTURE PR_OUTPUT from `execute/runInTerminal`
 SET PR_URL := <URL> (from "Agent Inference" using PR_OUTPUT)
 </process>

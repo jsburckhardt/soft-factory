@@ -9,6 +9,7 @@ tools:
   - read/problems
   - execute/runInTerminal
   - execute/getTerminalOutput
+  - edit/createDirectory
   - agent/runSubagent
   - todo
   - agent

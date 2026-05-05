@@ -319,7 +319,8 @@ SET UPDATED_FILES := UPDATED_FILES + [DECISION_LOG_PATH] (from "Agent Inference"
 
 <process id="create-first-issue" name="Create the first GitHub issue and its research brief">
 SET ISSUE_BODY := <BODY> (from "Agent Inference" using PROJECT_NAME, PROJECT_DESCRIPTION, TECH_STACK, DISCOVERED_ADRS, DISCOVERED_CONCERNS, RISKS)
-USE `execute/runInTerminal` where: command="gh issue create --title 'Repository Understanding' --body '<ISSUE_BODY>'"
+USE `edit/createFile` where: content=ISSUE_BODY, filePath="/tmp/issue-body.md"
+USE `execute/runInTerminal` where: command="gh issue create --title 'Repository Understanding' --body-file /tmp/issue-body.md"
 CAPTURE ISSUE_OUTPUT from `execute/runInTerminal`
 SET FIRST_ISSUE_NUMBER := <NUMBER> (from "Agent Inference" using ISSUE_OUTPUT)
 SET BRIEF_CONTENT := <CONTENT> (from "Agent Inference" using FIRST_ISSUE_NUMBER, PROJECT_NAME, PROJECT_DESCRIPTION, TECH_STACK, DISCOVERED_ADRS, DISCOVERED_CONCERNS, CREATED_ADRS, CREATED_CORE_COMPONENTS, RISKS)
