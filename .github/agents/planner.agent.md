@@ -89,7 +89,7 @@ Good examples:
   - "Use Next.js App Router for all page routing" (ADR-0002)
   - "Adopt PostgreSQL as the primary data store" (ADR-0002)
   - "Require all API handlers to validate input with Zod schemas" (CORE-COMPONENT-0003)
-  - "Enforce Conventional Commits on every commit message" (CORE-COMPONENT-0004)
+  - "Enforce Conventional Commits on every commit message" (CORE-COMPONENT-0002)
   - "Prohibit direct database access outside the repository layer" (ADR-0005)
 
 Bad examples (do NOT write these):

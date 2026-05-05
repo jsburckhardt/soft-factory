@@ -12,7 +12,7 @@ This file is the single registry of all architectural decisions and core-compone
 
 | ID | Title | Status | Date |
 |----|-------|--------|------|
-| _No core-components yet. Copy `CORE-COMPONENT-0001-template.md` from `../core-components/` and rename it._ | | | |
+| CORE-COMPONENT-0002 | Commit Standards | Adopted | 2026-05-05 |
 
 ## Decisions
 
@@ -20,4 +20,6 @@ Short, actionable statements derived from ADRs and core-components. More than on
 
 | # | Decision | Source | Date |
 |---|----------|--------|------|
-| _No decisions yet._ | | | |
+| 1 | Enforce Conventional Commits v1.0.0 on every commit message | CORE-COMPONENT-0002 | 2026-05-05 |
+| 2 | Require Conventional Commits format on PR titles | CORE-COMPONENT-0002 | 2026-05-05 |
+| 3 | Require Co-authored-by trailer on all AI-authored commits | CORE-COMPONENT-0002 | 2026-05-05 |
