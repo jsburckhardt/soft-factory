@@ -18,7 +18,7 @@ All git commits in any repository using the Soft Factory template. This applies 
 - All commit messages MUST follow the [Conventional Commits v1.0.0](https://www.conventionalcommits.org/en/v1.0.0/) specification.
 - The commit message format is: `<type>[optional scope]: <description>`
 - The type MUST be one of: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`, `revert`.
-- The description MUST be lowercase, imperative mood, and no period at the end.
+- The description MUST use imperative mood with no period at the end.
 - The scope SHOULD identify the area of the codebase affected (e.g., `auth`, `api`, `docs`).
 - Breaking changes MUST include `BREAKING CHANGE:` in the commit footer or `!` after the type/scope.
 - AI-authored commits MUST include a `Co-authored-by` trailer.
@@ -29,7 +29,7 @@ All git commits in any repository using the Soft Factory template. This applies 
 
 ### Expectations
 - Every commit on a feature branch follows this format.
-- The verifier agent enforces this before pushing.
+- The verifier agent authors commits in this format but does not run automated validation.
 - Squash merges use the PR title as the commit message.
 
 ## Rationale
@@ -51,7 +51,7 @@ BREAKING CHANGE: /users endpoint no longer exists, use /accounts instead.
 
 chore: upgrade APS skill to v1.2.2
 
-Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>
+Co-authored-by: github-copilot[bot] <175728472+github-copilot[bot]@users.noreply.github.com>
 ```
 
 ## Integration Guidelines
@@ -71,7 +71,7 @@ Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>
 
 ## Enforcement
 
-- [x] Automated checks — the verifier agent validates commit messages before push.
+- [ ] Automated checks — not currently enforced; the verifier agent authors compliant commits but does not validate.
 - [x] Code review checklist — PR titles are reviewed for Conventional Commits compliance.
 - [ ] Test coverage requirements — not applicable.
 
