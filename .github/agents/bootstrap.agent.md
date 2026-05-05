@@ -214,7 +214,7 @@ DEV_STANDARDS: YAML<<
 <CROSS_CUTTING_LIST>
 
 ## Development Standards
-<CODING_STANDARDS_SUMMARY>
+<DEVELOPMENT_STANDARDS_SUMMARY>
 
 ## Verification Commands
 <VERIFICATION_COMMANDS>
@@ -226,8 +226,8 @@ DEV_STANDARDS: YAML<<
 <UPDATE_LIST>
 WHERE:
 - <ARTIFACT_LIST> is Markdown.
-- <CODING_STANDARDS_SUMMARY> is Markdown.
 - <CROSS_CUTTING_LIST> is Markdown.
+- <DEVELOPMENT_STANDARDS_SUMMARY> is Markdown.
 - <FRAMEWORK> is String.
 - <INIT_COMMAND> is String.
 - <LANGUAGE> is String.
@@ -306,7 +306,8 @@ PACKAGE_MANAGER: ""
 TEST_RUNNER: ""
 INIT_COMMAND: ""
 CROSS_CUTTING_CONCERNS: []
-CODING_STANDARDS: {}
+DEVELOPMENT_STANDARDS: {}
+DEVELOPMENT_STANDARDS_SUMMARY: ""
 IS_BOOTSTRAPPED: false
 BOOTSTRAP_EVIDENCE: ""
 INFO_CONFIRMED: false
@@ -334,8 +335,9 @@ IF PROJECT_NAME is empty:
   RUN `gather-project-info`
 SET ARTIFACT_LIST := <LIST> (from "Agent Inference" using LANGUAGE, CROSS_CUTTING_CONCERNS, NEXT_ADR_NUMBER, NEXT_CC_NUMBER)
 SET UPDATE_LIST := <LIST> (from "Agent Inference" using README_PATH, APP_DOCS_PATH, AGENTS_MD_PATH, LLM_TXT_PATH, DEVCONTAINER_PATH, DECISION_LOG_PATH)
+SET DEVELOPMENT_STANDARDS_SUMMARY := <SUMMARY> (from "Agent Inference" using DEVELOPMENT_STANDARDS, LANGUAGE)
 IF INFO_CONFIRMED is false:
-  RETURN: format="BOOTSTRAP_SUMMARY", project_name=PROJECT_NAME, project_description=PROJECT_DESCRIPTION, project_goal=PROJECT_GOAL, language=LANGUAGE, framework=FRAMEWORK, package_manager=PACKAGE_MANAGER, test_runner=TEST_RUNNER, init_command=INIT_COMMAND, cross_cutting_list=CROSS_CUTTING_CONCERNS, artifact_list=ARTIFACT_LIST, update_list=UPDATE_LIST, verification_commands=VERIFICATION_COMMANDS
+  RETURN: format="BOOTSTRAP_SUMMARY", project_name=PROJECT_NAME, project_description=PROJECT_DESCRIPTION, project_goal=PROJECT_GOAL, language=LANGUAGE, framework=FRAMEWORK, package_manager=PACKAGE_MANAGER, test_runner=TEST_RUNNER, init_command=INIT_COMMAND, cross_cutting_list=CROSS_CUTTING_CONCERNS, development_standards_summary=DEVELOPMENT_STANDARDS_SUMMARY, artifact_list=ARTIFACT_LIST, update_list=UPDATE_LIST, verification_commands=VERIFICATION_COMMANDS
 RUN `scaffold-project`
 RUN `create-tech-stack-adr`
 IF CROSS_CUTTING_CONCERNS is not empty:
@@ -368,7 +370,7 @@ SET PACKAGE_MANAGER := <PM> (from "Agent Inference" using USER_INPUT, TECH_STACK
 SET TEST_RUNNER := <TR> (from "Agent Inference" using USER_INPUT, TECH_STACK_INIT)
 SET INIT_COMMAND := <CMD> (from "Agent Inference" using LANGUAGE, TECH_STACK_INIT)
 SET CROSS_CUTTING_CONCERNS := <CONCERNS> (from "Agent Inference" using USER_INPUT)
-SET CODING_STANDARDS := <STANDARDS> (from "Agent Inference" using LANGUAGE, DEV_STANDARDS, USER_INPUT)
+SET DEVELOPMENT_STANDARDS := <STANDARDS> (from "Agent Inference" using LANGUAGE, DEV_STANDARDS, USER_INPUT)
 SET VERIFICATION_COMMANDS := <DEFAULTS> (from "Agent Inference" using LANGUAGE, TECH_STACK_INIT, TEST_RUNNER)
 </process>
 
@@ -402,17 +404,18 @@ FOREACH concern IN CROSS_CUTTING_CONCERNS:
 <process id="create-development-standards" name="Create the development standards core-component">
 USE `read/readFile` where: filePath=CORE_COMPONENT_TEMPLATE_PATH
 CAPTURE CC_TEMPLATE from `read/readFile`
-SET DEV_STD_CONTENT := <CONTENT> (from "Agent Inference" using CC_TEMPLATE, CODING_STANDARDS, LANGUAGE, NEXT_CC_NUMBER, CREATED_ADRS)
+SET DEV_STD_CONTENT := <CONTENT> (from "Agent Inference" using CC_TEMPLATE, DEVELOPMENT_STANDARDS, LANGUAGE, NEXT_CC_NUMBER, CREATED_ADRS)
 SET DEV_STD_FILE := <PATH> (from "Agent Inference" using CORE_COMPONENT_DIR, NEXT_CC_NUMBER, "development-standards")
 USE `edit/createFile` where: content=DEV_STD_CONTENT, filePath=DEV_STD_FILE
 SET CREATED_CORE_COMPONENTS := CREATED_CORE_COMPONENTS + [DEV_STD_FILE] (from "Agent Inference")
+SET DEV_STD_DECISIONS := <DECISIONS> (from "Agent Inference" using DEVELOPMENT_STANDARDS, NEXT_CC_NUMBER)
 SET NEXT_CC_NUMBER := NEXT_CC_NUMBER + 1 (from "Agent Inference")
 </process>
 
 <process id="update-decision-log" name="Update DECISION-LOG.md with all new ADRs and core-components">
 USE `read/readFile` where: filePath=DECISION_LOG_PATH
 CAPTURE CURRENT_LOG from `read/readFile`
-SET UPDATED_LOG := <LOG> (from "Agent Inference" using CURRENT_LOG, CREATED_ADRS, CREATED_CORE_COMPONENTS)
+SET UPDATED_LOG := <LOG> (from "Agent Inference" using CURRENT_LOG, CREATED_ADRS, CREATED_CORE_COMPONENTS, DEV_STD_DECISIONS)
 USE `edit/editFiles` where: filePath=DECISION_LOG_PATH
 SET UPDATED_FILES := UPDATED_FILES + [DECISION_LOG_PATH] (from "Agent Inference")
 </process>
