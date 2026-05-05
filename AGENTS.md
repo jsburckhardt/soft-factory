@@ -5,9 +5,9 @@ Every piece of work MUST flow through exactly four stages in order: Research, Pl
 You MUST classify scope_type as exactly one of: issue, architecture_decision, core_component.
 You MUST NOT create an architectural decision outside of an ADR document.
 You MUST NOT create reusable cross-cutting behavior outside of a core-component document.
-You MUST update docs/architecture/ADR/DECISION-LOG.md for every ADR or core-component change.
-You MUST treat ADRs as global artifacts stored in docs/architecture/ADR/ — never inside an issue documentation folder.
-You MUST treat core-components as global artifacts stored in docs/architecture/core-components/ — never inside an issue documentation folder.
+You MUST update project/architecture/ADR/DECISION-LOG.md for every ADR or core-component change.
+You MUST treat ADRs as global artifacts stored in project/architecture/ADR/ — never inside an issue documentation folder.
+You MUST treat core-components as global artifacts stored in project/architecture/core-components/ — never inside an issue documentation folder.
 You MUST NOT edit template files directly — copy them within the same directory and rename.
 You MUST return to the Plan stage if implementation diverges from an ADR or core-component.
 You MUST inspect existing repo code and documentation before proposing new work.
@@ -47,23 +47,24 @@ onboard-repo:
   read_paths:
     - README.md
     - docs/
-    - docs/architecture/ADR/ADR-0001-template.md
-    - docs/architecture/core-components/CORE-COMPONENT-0001-template.md
-    - docs/architecture/ADR/DECISION-LOG.md
+    - project/
+    - project/architecture/ADR/ADR-0001-template.md
+    - project/architecture/core-components/CORE-COMPONENT-0001-template.md
+    - project/architecture/ADR/DECISION-LOG.md
     - AGENTS.md
     - LLM.txt
     - application source code
   write_paths:
-    - docs/architecture/ADR/ADR-####-slug.md
-    - docs/architecture/core-components/CORE-COMPONENT-####-slug.md
-    - docs/architecture/ADR/DECISION-LOG.md
-    - docs/issues/<ISSUE_NUMBER>/research/00-research.md
+    - project/architecture/ADR/ADR-####-slug.md
+    - project/architecture/core-components/CORE-COMPONENT-####-slug.md
+    - project/architecture/ADR/DECISION-LOG.md
+    - project/issues/<ISSUE_NUMBER>/research/00-research.md
     - README.md
     - AGENTS.md
     - LLM.txt
   templates:
-    - docs/architecture/ADR/ADR-0001-template.md
-    - docs/architecture/core-components/CORE-COMPONENT-0001-template.md
+    - project/architecture/ADR/ADR-0001-template.md
+    - project/architecture/core-components/CORE-COMPONENT-0001-template.md
   guardrails:
     - must check whether the project is already onboarded before proceeding
     - must refuse to run if the project already has the Soft Factory engineering flow
@@ -86,26 +87,27 @@ bootstrap:
     - GitHub CLI (gh)
   read_paths:
     - docs/
-    - docs/architecture/ADR/ADR-0001-template.md
-    - docs/architecture/core-components/CORE-COMPONENT-0001-template.md
-    - docs/architecture/ADR/DECISION-LOG.md
+    - project/
+    - project/architecture/ADR/ADR-0001-template.md
+    - project/architecture/core-components/CORE-COMPONENT-0001-template.md
+    - project/architecture/ADR/DECISION-LOG.md
     - .devcontainer/devcontainer.json
     - README.md
     - AGENTS.md
     - LLM.txt
   write_paths:
-    - docs/architecture/ADR/ADR-####-slug.md
-    - docs/architecture/core-components/CORE-COMPONENT-####-slug.md
-    - docs/architecture/ADR/DECISION-LOG.md
+    - project/architecture/ADR/ADR-####-slug.md
+    - project/architecture/core-components/CORE-COMPONENT-####-slug.md
+    - project/architecture/ADR/DECISION-LOG.md
     - README.md
-    - docs/application/README.md
+    - docs/README.md
     - AGENTS.md
     - LLM.txt
     - .devcontainer/devcontainer.json
     - .github/soft-factory/verification.yml
   templates:
-    - docs/architecture/ADR/ADR-0001-template.md
-    - docs/architecture/core-components/CORE-COMPONENT-0001-template.md
+    - project/architecture/ADR/ADR-0001-template.md
+    - project/architecture/core-components/CORE-COMPONENT-0001-template.md
   guardrails:
     - must check whether the project has already been bootstrapped before proceeding
     - must refuse to run if the project is already bootstrapped
@@ -131,12 +133,13 @@ research:
     - GitHub CLI (gh) for fetching issue details
   read_paths:
     - docs/
-    - docs/architecture/ADR/
-    - docs/architecture/core-components/
-    - docs/architecture/ADR/DECISION-LOG.md
+    - project/
+    - project/architecture/ADR/
+    - project/architecture/core-components/
+    - project/architecture/ADR/DECISION-LOG.md
     - application source code
   write_paths:
-    - docs/issues/<ISSUE_NUMBER>/research/00-research.md
+    - project/issues/<ISSUE_NUMBER>/research/00-research.md
   templates:
     - Research Brief (Section 5.1)
   guardrails:
@@ -152,23 +155,23 @@ planner:
     - codebase exploration (grep, glob, file reading)
     - file creation and editing
   read_paths:
-    - docs/issues/<ISSUE_NUMBER>/research/00-research.md
-    - docs/architecture/ADR/ADR-0001-template.md
-    - docs/architecture/core-components/CORE-COMPONENT-0001-template.md
-    - docs/architecture/ADR/DECISION-LOG.md
-    - docs/architecture/ADR/
-    - docs/architecture/core-components/
+    - project/issues/<ISSUE_NUMBER>/research/00-research.md
+    - project/architecture/ADR/ADR-0001-template.md
+    - project/architecture/core-components/CORE-COMPONENT-0001-template.md
+    - project/architecture/ADR/DECISION-LOG.md
+    - project/architecture/ADR/
+    - project/architecture/core-components/
     - application source code
   write_paths:
-    - docs/architecture/ADR/ADR-####-slug.md
-    - docs/architecture/core-components/CORE-COMPONENT-####-slug.md
-    - docs/architecture/ADR/DECISION-LOG.md
-    - docs/issues/<ISSUE_NUMBER>/plan/01-action-plan.md
-    - docs/issues/<ISSUE_NUMBER>/plan/02-task-breakdown.md
-    - docs/issues/<ISSUE_NUMBER>/plan/03-test-plan.md
+    - project/architecture/ADR/ADR-####-slug.md
+    - project/architecture/core-components/CORE-COMPONENT-####-slug.md
+    - project/architecture/ADR/DECISION-LOG.md
+    - project/issues/<ISSUE_NUMBER>/plan/01-action-plan.md
+    - project/issues/<ISSUE_NUMBER>/plan/02-task-breakdown.md
+    - project/issues/<ISSUE_NUMBER>/plan/03-test-plan.md
   templates:
-    - docs/architecture/ADR/ADR-0001-template.md
-    - docs/architecture/core-components/CORE-COMPONENT-0001-template.md
+    - project/architecture/ADR/ADR-0001-template.md
+    - project/architecture/core-components/CORE-COMPONENT-0001-template.md
     - Task Breakdown (Section 5.5)
     - Test Plan (Section 5.6)
   guardrails:
@@ -188,14 +191,14 @@ implementer:
     - build and test execution
     - file creation
   read_paths:
-    - docs/issues/<ISSUE_NUMBER>/plan/
-    - docs/architecture/ADR/
-    - docs/architecture/core-components/
+    - project/issues/<ISSUE_NUMBER>/plan/
+    - project/architecture/ADR/
+    - project/architecture/core-components/
     - application source code
   write_paths:
     - application source code
     - test files
-    - docs/issues/<ISSUE_NUMBER>/implementation/README.md
+    - project/issues/<ISSUE_NUMBER>/implementation/README.md
   templates: []
   guardrails:
     - must implement within architectural boundaries defined by ADRs and core-components
@@ -210,17 +213,18 @@ verifier:
     - file reading and editing
     - codebase exploration
   read_paths:
-    - docs/architecture/ADR/DECISION-LOG.md
-    - docs/architecture/ADR/
-    - docs/architecture/core-components/
+    - project/architecture/ADR/DECISION-LOG.md
+    - project/architecture/ADR/
+    - project/architecture/core-components/
     - AGENTS.md
-    - docs/issues/<ISSUE_NUMBER>/
+    - project/issues/<ISSUE_NUMBER>/
     - .github/soft-factory/verification.yml
     - application source code and test files
   write_paths:
-    - docs/architecture/ADR/DECISION-LOG.md
+    - project/architecture/ADR/DECISION-LOG.md
     - AGENTS.md
     - docs/
+    - project/
     - README.md
   templates: []
   guardrails:
@@ -237,12 +241,12 @@ verifier:
     - must assign the PR to Copilot for review
 >>
 TEMPLATE_PATHS: YAML<<
-adr: docs/architecture/ADR/ADR-0001-template.md
-core_component: docs/architecture/core-components/CORE-COMPONENT-0001-template.md
-action_plan: docs/issues/<ISSUE_NUMBER>/plan/01-action-plan.md
-task_breakdown: docs/issues/<ISSUE_NUMBER>/plan/02-task-breakdown.md
-test_plan: docs/issues/<ISSUE_NUMBER>/plan/03-test-plan.md
-research_brief: docs/issues/<ISSUE_NUMBER>/research/00-research.md
+adr: project/architecture/ADR/ADR-0001-template.md
+core_component: project/architecture/core-components/CORE-COMPONENT-0001-template.md
+action_plan: project/issues/<ISSUE_NUMBER>/plan/01-action-plan.md
+task_breakdown: project/issues/<ISSUE_NUMBER>/plan/02-task-breakdown.md
+test_plan: project/issues/<ISSUE_NUMBER>/plan/03-test-plan.md
+research_brief: project/issues/<ISSUE_NUMBER>/research/00-research.md
 >>
 SCOPE_TYPES: YAML<<
 - issue

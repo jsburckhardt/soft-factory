@@ -13,12 +13,12 @@ Each stage has clear inputs, outputs, and artifact locations. No stage may be sk
 ## How to Start Work on an Issue
 
 1. **Create a GitHub Issue** describing the work to be done.
-2. **Run the pipeline** — agents handle each stage in order, starting from the issue number. Agents create the documentation structure automatically under `docs/issues/<ISSUE_NUMBER>/`.
+2. **Run the pipeline** — agents handle each stage in order, starting from the issue number. Agents create the documentation structure automatically under `project/issues/<ISSUE_NUMBER>/`.
 
 ## Stage 1 — Research
 
 - The research agent fetches the GitHub Issue via `gh issue view`
-- Produces `docs/issues/<ISSUE_NUMBER>/research/00-research.md`
+- Produces `project/issues/<ISSUE_NUMBER>/research/00-research.md`
 - Classifies `scope_type` as one of: `issue`, `architecture_decision`, `core_component`
 - Identifies whether ADRs or core-components are needed
 - References existing ADRs and core-components
@@ -26,19 +26,19 @@ Each stage has clear inputs, outputs, and artifact locations. No stage may be sk
 ## Stage 2 — Plan
 
 - Reads the research brief before creating any architectural artifacts
-- Creates ADRs in `docs/architecture/ADR/` using the ADR template **when the research brief identifies them as needed**
-- Creates core-components in `docs/architecture/core-components/` using the core-component template **when the research brief identifies them as needed**
-- Updates `docs/architecture/ADR/DECISION-LOG.md` with every new ADR or core-component
-- Produces `docs/issues/<ISSUE_NUMBER>/plan/01-action-plan.md` with the chosen approach
-- Produces `docs/issues/<ISSUE_NUMBER>/plan/02-task-breakdown.md` with acceptance criteria for every task
-- Produces `docs/issues/<ISSUE_NUMBER>/plan/03-test-plan.md` with full test coverage requirements
+- Creates ADRs in `project/architecture/ADR/` using the ADR template **when the research brief identifies them as needed**
+- Creates core-components in `project/architecture/core-components/` using the core-component template **when the research brief identifies them as needed**
+- Updates `project/architecture/ADR/DECISION-LOG.md` with every new ADR or core-component
+- Produces `project/issues/<ISSUE_NUMBER>/plan/01-action-plan.md` with the chosen approach
+- Produces `project/issues/<ISSUE_NUMBER>/plan/02-task-breakdown.md` with acceptance criteria for every task
+- Produces `project/issues/<ISSUE_NUMBER>/plan/03-test-plan.md` with full test coverage requirements
 - References relevant ADRs and core-components in every task
 
 ## Stage 3 — Implement
 
 - Executes tasks from the task breakdown
 - Writes tests as specified in the test plan
-- Documents implementation notes in `docs/issues/<ISSUE_NUMBER>/implementation/README.md`
+- Documents implementation notes in `project/issues/<ISSUE_NUMBER>/implementation/README.md`
 - Deviations from ADRs or core-components require returning to the Plan stage
 
 ## Stage 4 — Verify
@@ -53,21 +53,21 @@ Each stage has clear inputs, outputs, and artifact locations. No stage may be sk
 
 | Artifact | Location |
 |----------|----------|
-| Research briefs | `docs/issues/<ISSUE_NUMBER>/research/00-research.md` |
-| Action plans | `docs/issues/<ISSUE_NUMBER>/plan/01-action-plan.md` |
-| Task breakdowns | `docs/issues/<ISSUE_NUMBER>/plan/02-task-breakdown.md` |
-| Test plans | `docs/issues/<ISSUE_NUMBER>/plan/03-test-plan.md` |
-| Implementation notes | `docs/issues/<ISSUE_NUMBER>/implementation/README.md` |
-| ADRs | `docs/architecture/ADR/` (global, not issue-scoped) |
-| Core-Components | `docs/architecture/core-components/` (global, not issue-scoped) |
-| Decision log | `docs/architecture/ADR/DECISION-LOG.md` |
+| Research briefs | `project/issues/<ISSUE_NUMBER>/research/00-research.md` |
+| Action plans | `project/issues/<ISSUE_NUMBER>/plan/01-action-plan.md` |
+| Task breakdowns | `project/issues/<ISSUE_NUMBER>/plan/02-task-breakdown.md` |
+| Test plans | `project/issues/<ISSUE_NUMBER>/plan/03-test-plan.md` |
+| Implementation notes | `project/issues/<ISSUE_NUMBER>/implementation/README.md` |
+| ADRs | `project/architecture/ADR/` (global, not issue-scoped) |
+| Core-Components | `project/architecture/core-components/` (global, not issue-scoped) |
+| Decision log | `project/architecture/ADR/DECISION-LOG.md` |
 
 ## How to Propose ADRs and Core-Components
 
-- **ADRs** capture architectural decisions. Copy the template from `docs/architecture/ADR/ADR-0001-template.md` and create the new ADR in the same `docs/architecture/ADR/` directory.
-- **Core-Components** capture reusable cross-cutting behavior. Copy the template from `docs/architecture/core-components/CORE-COMPONENT-0001-template.md` and create in the same `docs/architecture/core-components/` directory.
+- **ADRs** capture architectural decisions. Copy the template from `project/architecture/ADR/ADR-0001-template.md` and create the new ADR in the same `project/architecture/ADR/` directory.
+- **Core-Components** capture reusable cross-cutting behavior. Copy the template from `project/architecture/core-components/CORE-COMPONENT-0001-template.md` and create in the same `project/architecture/core-components/` directory.
 - ADRs and core-components are **global** — never scoped to a single issue.
-- Always update `docs/architecture/ADR/DECISION-LOG.md` when adding or modifying an ADR or core-component.
+- Always update `project/architecture/ADR/DECISION-LOG.md` when adding or modifying an ADR or core-component.
 
 ## PR Expectations
 

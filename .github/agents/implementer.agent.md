@@ -20,16 +20,16 @@ target: vscode
 ---
 
 <instructions>
-You MUST read the task breakdown at docs/issues/<ISSUE_NUMBER>/plan/02-task-breakdown.md before implementing.
-You MUST read the test plan at docs/issues/<ISSUE_NUMBER>/plan/03-test-plan.md before implementing.
-You MUST read all relevant ADRs under docs/architecture/ADR/ before implementing.
-You MUST read all relevant core-components under docs/architecture/core-components/ before implementing.
+You MUST read the task breakdown at project/issues/<ISSUE_NUMBER>/plan/02-task-breakdown.md before implementing.
+You MUST read the test plan at project/issues/<ISSUE_NUMBER>/plan/03-test-plan.md before implementing.
+You MUST read all relevant ADRs under project/architecture/ADR/ before implementing.
+You MUST read all relevant core-components under project/architecture/core-components/ before implementing.
 You MUST implement within architectural boundaries defined by ADRs and core-components.
 You MUST return to the Plan stage if a deviation from an ADR or core-component is required.
 You MUST satisfy the test plan for every implemented task.
 You MUST NOT skip any test defined in the test plan.
 You MUST run tests after implementing each task to verify correctness.
-You MUST produce implementation notes at docs/issues/<ISSUE_NUMBER>/implementation/README.md.
+You MUST produce implementation notes at project/issues/<ISSUE_NUMBER>/implementation/README.md.
 You MUST follow the task breakdown order respecting dependencies between tasks.
 You SHOULD make the smallest possible changes to achieve each task.
 You SHOULD commit frequently with descriptive messages referencing task IDs.
@@ -37,11 +37,11 @@ You MAY refactor existing code when required by a task.
 </instructions>
 
 <constants>
-TASK_BREAKDOWN_PATH: "docs/issues/<ISSUE_NUMBER>/plan/02-task-breakdown.md"
-TEST_PLAN_PATH: "docs/issues/<ISSUE_NUMBER>/plan/03-test-plan.md"
-IMPLEMENTATION_NOTES_PATH: "docs/issues/<ISSUE_NUMBER>/implementation/README.md"
-ADR_DIR: "docs/architecture/ADR"
-CORE_COMPONENT_DIR: "docs/architecture/core-components"
+TASK_BREAKDOWN_PATH: "project/issues/<ISSUE_NUMBER>/plan/02-task-breakdown.md"
+TEST_PLAN_PATH: "project/issues/<ISSUE_NUMBER>/plan/03-test-plan.md"
+IMPLEMENTATION_NOTES_PATH: "project/issues/<ISSUE_NUMBER>/implementation/README.md"
+ADR_DIR: "project/architecture/ADR"
+CORE_COMPONENT_DIR: "project/architecture/core-components"
 </constants>
 
 <formats>
@@ -102,13 +102,13 @@ RETURN: CURRENT_TASK_ID, COMPLETED_TASKS
 
 <process id="load-impl-context" name="Load task breakdown and test plan">
 SET CURRENT_ISSUE_NUMBER := <ID> (from "Agent Inference")
-USE `read/readFile` where: filePath="docs/issues/<ISSUE_NUMBER>/plan/02-task-breakdown.md"
+USE `read/readFile` where: filePath="project/issues/<ISSUE_NUMBER>/plan/02-task-breakdown.md"
 CAPTURE TASK_BREAKDOWN from `read/readFile`
-USE `read/readFile` where: filePath="docs/issues/<ISSUE_NUMBER>/plan/03-test-plan.md"
+USE `read/readFile` where: filePath="project/issues/<ISSUE_NUMBER>/plan/03-test-plan.md"
 CAPTURE TEST_PLAN from `read/readFile`
-USE `search/fileSearch` where: pattern="docs/architecture/ADR/ADR-*.md"
+USE `search/fileSearch` where: pattern="project/architecture/ADR/ADR-*.md"
 CAPTURE ALL_ADRS from `search/fileSearch`
-USE `search/fileSearch` where: pattern="docs/architecture/core-components/CORE-COMPONENT-*.md"
+USE `search/fileSearch` where: pattern="project/architecture/core-components/CORE-COMPONENT-*.md"
 CAPTURE ALL_CORE_COMPONENTS from `search/fileSearch`
 SET RELEVANT_ADRS := <ADRS> (from "Agent Inference" using TASK_BREAKDOWN, ALL_ADRS)
 SET RELEVANT_CORE_COMPONENTS := <COMPONENTS> (from "Agent Inference" using TASK_BREAKDOWN, ALL_CORE_COMPONENTS)
@@ -136,14 +136,14 @@ IF TEST_PASSED is false:
 
 <process id="update-impl-notes" name="Update implementation notes with task results">
 SET IMPL_ENTRY := <ENTRY> (from "Agent Inference" using CURRENT_TASK_ID, TEST_OUTPUT)
-USE `edit/createDirectory` where: dirPath="docs/issues/<ISSUE_NUMBER>/implementation"
+USE `edit/createDirectory` where: dirPath="project/issues/<ISSUE_NUMBER>/implementation"
 TRY:
-  USE `read/readFile` where: filePath="docs/issues/<ISSUE_NUMBER>/implementation/README.md"
+  USE `read/readFile` where: filePath="project/issues/<ISSUE_NUMBER>/implementation/README.md"
   CAPTURE EXISTING_NOTES from `read/readFile`
   SET UPDATED_NOTES := <NOTES> (from "Agent Inference" using EXISTING_NOTES, IMPL_ENTRY)
-  USE `edit/editFiles` where: filePath="docs/issues/<ISSUE_NUMBER>/implementation/README.md"
+  USE `edit/editFiles` where: filePath="project/issues/<ISSUE_NUMBER>/implementation/README.md"
 RECOVER (err):
-  USE `edit/createFile` where: content=IMPL_ENTRY, filePath="docs/issues/<ISSUE_NUMBER>/implementation/README.md"
+  USE `edit/createFile` where: content=IMPL_ENTRY, filePath="project/issues/<ISSUE_NUMBER>/implementation/README.md"
 </process>
 </processes>
 

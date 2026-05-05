@@ -25,10 +25,10 @@ agents:
 
 <instructions>
 You MUST read AGENTS.md to understand the pipeline specification before starting.
-You MUST read docs/architecture/ADR/DECISION-LOG.md to understand existing architectural decisions.
-You MUST inspect existing documentation under docs/ before dispatching any stage.
+You MUST read project/architecture/ADR/DECISION-LOG.md to understand existing architectural decisions.
+You MUST inspect existing documentation under docs/ and project/ before dispatching any stage.
 You MUST use the GitHub issue number as the identifier before dispatching any stage.
-You MUST create the issue documentation folder structure under docs/issues/<ISSUE_NUMBER>/ before dispatching the Research stage.
+You MUST create the issue documentation folder structure under project/issues/<ISSUE_NUMBER>/ before dispatching the Research stage.
 You MUST execute pipeline stages in strict order: Research, Plan, Implement, Verify.
 You MUST NOT skip any pipeline stage.
 You MUST dispatch each stage to its corresponding agent as a subagent.
@@ -44,19 +44,19 @@ You MAY retry a failed stage once before stopping with an error report.
 
 <constants>
 AGENTS_MD_PATH: "AGENTS.md"
-DECISION_LOG_PATH: "docs/architecture/ADR/DECISION-LOG.md"
-ISSUES_DIR: "docs/issues"
+DECISION_LOG_PATH: "project/architecture/ADR/DECISION-LOG.md"
+ISSUES_DIR: "project/issues"
 STAGE_AGENTS: YAML<<
 - agent: research
-  output: docs/issues/<ISSUE_NUMBER>/research/00-research.md
+  output: project/issues/<ISSUE_NUMBER>/research/00-research.md
   purpose: Explore problem space, classify scope, produce research brief
   stage: research
 - agent: planner
-  output: docs/issues/<ISSUE_NUMBER>/plan/01-action-plan.md
+  output: project/issues/<ISSUE_NUMBER>/plan/01-action-plan.md
   purpose: Commit ADRs and core-components, produce action plan, task breakdown, test plan
   stage: plan
 - agent: implementer
-  output: docs/issues/<ISSUE_NUMBER>/implementation/README.md
+  output: project/issues/<ISSUE_NUMBER>/implementation/README.md
   purpose: Execute tasks, write code and tests, verify against test plan
   stage: implement
 - agent: verifier
@@ -190,7 +190,7 @@ USE `agent/runSubagent` where: agent="research", prompt=TASK_DESCRIPTION
 CAPTURE RESEARCH_RESULT from `agent/runSubagent`
 SET PIPELINE_STATUS := <STATUS> (from "Agent Inference" using RESEARCH_RESULT)
 IF PIPELINE_STATUS != "error":
-  USE `read/readFile` where: filePath="docs/issues/<ISSUE_NUMBER>/research/00-research.md"
+  USE `read/readFile` where: filePath="project/issues/<ISSUE_NUMBER>/research/00-research.md"
   CAPTURE RESEARCH_BRIEF from `read/readFile`
   SET STAGE_RESULTS := STAGE_RESULTS + ["Research: OK"] (from "Agent Inference")
 </process>
@@ -202,7 +202,7 @@ USE `agent/runSubagent` where: agent="planner", prompt=PLAN_PROMPT
 CAPTURE PLAN_RESULT from `agent/runSubagent`
 SET PIPELINE_STATUS := <STATUS> (from "Agent Inference" using PLAN_RESULT)
 IF PIPELINE_STATUS != "error":
-  USE `read/readFile` where: filePath="docs/issues/<ISSUE_NUMBER>/plan/01-action-plan.md"
+  USE `read/readFile` where: filePath="project/issues/<ISSUE_NUMBER>/plan/01-action-plan.md"
   CAPTURE ACTION_PLAN from `read/readFile`
   SET STAGE_RESULTS := STAGE_RESULTS + ["Plan: OK"] (from "Agent Inference")
 </process>

@@ -27,18 +27,18 @@ handoffs:
 You MUST check whether the project is already onboarded before proceeding.
 You MUST refuse to run if the project is already onboarded and explain why.
 You MUST read README.md before analysing the repository.
-You MUST read all existing documentation under docs/ before making any changes.
+You MUST read all existing documentation under docs/ and project/ before making any changes.
 You MUST scan the full source tree to infer tech stack, language, framework, and package manager.
 You MUST scan the source tree to identify cross-cutting concerns already present in the codebase.
 You MUST infer architectural decisions already embedded in the code and document them as ADRs.
-You MUST read the ADR template at docs/architecture/ADR/ADR-0001-template.md before creating any ADR.
-You MUST read the core-component template at docs/architecture/core-components/CORE-COMPONENT-0001-template.md before creating any core-component.
+You MUST read the ADR template at project/architecture/ADR/ADR-0001-template.md before creating any ADR.
+You MUST read the core-component template at project/architecture/core-components/CORE-COMPONENT-0001-template.md before creating any core-component.
 You MUST create ADRs starting from ADR-0002 using the pattern ADR-####-slug.md.
 You MUST create core-component files starting from CORE-COMPONENT-0002 using the pattern CORE-COMPONENT-####-slug.md.
-You MUST update docs/architecture/ADR/DECISION-LOG.md with every ADR and core-component created.
+You MUST update project/architecture/ADR/DECISION-LOG.md with every ADR and core-component created.
 You MUST record at least one decision record per ADR or core-component in the Decisions section of DECISION-LOG.md.
 You MUST create a GitHub issue titled "Repository Understanding" as the first issue using `gh issue create`.
-You MUST capture the issue number from `gh issue create` output and create the research brief at docs/issues/<ISSUE_NUMBER>/research/00-research.md.
+You MUST capture the issue number from `gh issue create` output and create the research brief at project/issues/<ISSUE_NUMBER>/research/00-research.md.
 You MUST update AGENTS.md to register the onboard-repo agent in the AGENTS constant.
 You MUST update LLM.txt with new file references created during onboarding.
 You MUST update README.md to reflect the project name and description discovered during analysis.
@@ -51,16 +51,16 @@ You MAY consult external documentation to clarify inferred tech stack choices.
 </instructions>
 
 <constants>
-ADR_TEMPLATE_PATH: "docs/architecture/ADR/ADR-0001-template.md"
-CORE_COMPONENT_TEMPLATE_PATH: "docs/architecture/core-components/CORE-COMPONENT-0001-template.md"
-DECISION_LOG_PATH: "docs/architecture/ADR/DECISION-LOG.md"
-ADR_DIR: "docs/architecture/ADR"
-CORE_COMPONENT_DIR: "docs/architecture/core-components"
+ADR_TEMPLATE_PATH: "project/architecture/ADR/ADR-0001-template.md"
+CORE_COMPONENT_TEMPLATE_PATH: "project/architecture/core-components/CORE-COMPONENT-0001-template.md"
+DECISION_LOG_PATH: "project/architecture/ADR/DECISION-LOG.md"
+ADR_DIR: "project/architecture/ADR"
+CORE_COMPONENT_DIR: "project/architecture/core-components"
 AGENTS_MD_PATH: "AGENTS.md"
 README_PATH: "README.md"
 LLM_TXT_PATH: "LLM.txt"
 FIRST_ISSUE_TITLE: "Repository Understanding"
-FIRST_ISSUE_RESEARCH_DIR: "docs/issues"
+FIRST_ISSUE_RESEARCH_DIR: "project/issues"
 ONBOARD_MARKER: "ADR-0002"
 TECH_STACK_SIGNALS: YAML<<
 - file: go.mod
@@ -177,7 +177,7 @@ WHERE:
 ## First GitHub Issue
 - **Issue:** #<FIRST_ISSUE_NUMBER>
 - **Title:** Repository Understanding
-- **Research Brief:** docs/issues/<FIRST_ISSUE_NUMBER>/research/00-research.md
+- **Research Brief:** project/issues/<FIRST_ISSUE_NUMBER>/research/00-research.md
 
 ## Files Updated
 <FILES_UPDATED>
@@ -260,7 +260,7 @@ RETURN: format="ONBOARD_REPORT", project_name=PROJECT_NAME, project_description=
 </process>
 
 <process id="check-onboarded" name="Check if the repository already has the Soft Factory engineering flow">
-USE `search/fileSearch` where: pattern="docs/architecture/ADR/ADR-0002-*.md"
+USE `search/fileSearch` where: pattern="project/architecture/ADR/ADR-0002-*.md"
 CAPTURE EXISTING_ADRS from `search/fileSearch`
 IF EXISTING_ADRS is not empty:
   SET IS_ONBOARDED := true (from "Agent Inference")
@@ -324,9 +324,9 @@ USE `execute/runInTerminal` where: command="gh issue create --title 'Repository 
 CAPTURE ISSUE_OUTPUT from `execute/runInTerminal`
 SET FIRST_ISSUE_NUMBER := <NUMBER> (from "Agent Inference" using ISSUE_OUTPUT)
 SET BRIEF_CONTENT := <CONTENT> (from "Agent Inference" using FIRST_ISSUE_NUMBER, PROJECT_NAME, PROJECT_DESCRIPTION, TECH_STACK, DISCOVERED_ADRS, DISCOVERED_CONCERNS, CREATED_ADRS, CREATED_CORE_COMPONENTS, RISKS)
-USE `edit/createDirectory` where: dirPath="docs/issues/<FIRST_ISSUE_NUMBER>/research"
-USE `edit/createFile` where: content=BRIEF_CONTENT, filePath="docs/issues/<FIRST_ISSUE_NUMBER>/research/00-research.md"
-SET UPDATED_FILES := UPDATED_FILES + ["docs/issues/<FIRST_ISSUE_NUMBER>/research/00-research.md"] (from "Agent Inference")
+USE `edit/createDirectory` where: dirPath="project/issues/<FIRST_ISSUE_NUMBER>/research"
+USE `edit/createFile` where: content=BRIEF_CONTENT, filePath="project/issues/<FIRST_ISSUE_NUMBER>/research/00-research.md"
+SET UPDATED_FILES := UPDATED_FILES + ["project/issues/<FIRST_ISSUE_NUMBER>/research/00-research.md"] (from "Agent Inference")
 </process>
 
 <process id="update-project-docs" name="Update README.md, AGENTS.md, and LLM.txt with onboarding context">

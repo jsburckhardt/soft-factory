@@ -26,9 +26,9 @@ handoffs:
 <instructions>
 You MUST check whether the project has already been bootstrapped before proceeding.
 You MUST refuse to run if the project is already bootstrapped and explain why.
-You MUST read all existing documentation under docs/ before making changes.
-You MUST read the ADR template at docs/architecture/ADR/ADR-0001-template.md before creating any ADR.
-You MUST read the core-component template at docs/architecture/core-components/CORE-COMPONENT-0001-template.md before creating any core-component.
+You MUST read all existing documentation under docs/ and project/ before making changes.
+You MUST read the ADR template at project/architecture/ADR/ADR-0001-template.md before creating any ADR.
+You MUST read the core-component template at project/architecture/core-components/CORE-COMPONENT-0001-template.md before creating any core-component.
 You MUST gather the project name, description, and goal from the user interactively.
 You MUST ask the user to choose a tech stack including language, framework, package manager, and test runner.
 You MUST ask the user to identify cross-cutting concerns such as logging, error handling, authentication, or observability.
@@ -37,9 +37,9 @@ You MUST create a core-component for development standards using language-specif
 You MUST scaffold the project using the appropriate init command for the chosen tech stack.
 You MUST create an ADR for the tech stack decision using the ADR template.
 You MUST create a core-component file for each declared cross-cutting concern using the core-component template.
-You MUST update docs/architecture/ADR/DECISION-LOG.md with all new ADRs and core-components.
+You MUST update project/architecture/ADR/DECISION-LOG.md with all new ADRs and core-components.
 You MUST update README.md with the project name, description, and goal replacing the template content.
-You MUST update docs/application/README.md with project-specific context.
+You MUST update docs/README.md with project-specific context.
 You MUST update AGENTS.md to register the bootstrap in the AGENTS constant.
 You MUST update LLM.txt with any new project-specific file references.
 You MUST tailor .devcontainer/devcontainer.json to the chosen tech stack by removing unnecessary features.
@@ -57,14 +57,14 @@ You MAY suggest common cross-cutting concerns the user has not mentioned.
 </instructions>
 
 <constants>
-ADR_TEMPLATE_PATH: "docs/architecture/ADR/ADR-0001-template.md"
-CORE_COMPONENT_TEMPLATE_PATH: "docs/architecture/core-components/CORE-COMPONENT-0001-template.md"
-DECISION_LOG_PATH: "docs/architecture/ADR/DECISION-LOG.md"
-ADR_DIR: "docs/architecture/ADR"
-CORE_COMPONENT_DIR: "docs/architecture/core-components"
+ADR_TEMPLATE_PATH: "project/architecture/ADR/ADR-0001-template.md"
+CORE_COMPONENT_TEMPLATE_PATH: "project/architecture/core-components/CORE-COMPONENT-0001-template.md"
+DECISION_LOG_PATH: "project/architecture/ADR/DECISION-LOG.md"
+ADR_DIR: "project/architecture/ADR"
+CORE_COMPONENT_DIR: "project/architecture/core-components"
 AGENTS_MD_PATH: "AGENTS.md"
 README_PATH: "README.md"
-APP_DOCS_PATH: "docs/application/README.md"
+APP_DOCS_PATH: "docs/README.md"
 LLM_TXT_PATH: "LLM.txt"
 DEVCONTAINER_PATH: ".devcontainer/devcontainer.json"
 BOOTSTRAP_MARKER: "ADR-0002"
@@ -351,7 +351,7 @@ RETURN: format="BOOTSTRAP_REPORT", project_name=PROJECT_NAME, project_descriptio
 </process>
 
 <process id="check-bootstrapped" name="Check if project has already been bootstrapped">
-USE `search/fileSearch` where: pattern="docs/architecture/ADR/ADR-0002-*.md"
+USE `search/fileSearch` where: pattern="project/architecture/ADR/ADR-0002-*.md"
 CAPTURE EXISTING_ADRS from `search/fileSearch`
 IF EXISTING_ADRS is not empty:
   SET IS_BOOTSTRAPPED := true (from "Agent Inference")

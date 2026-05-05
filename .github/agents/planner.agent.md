@@ -18,16 +18,16 @@ target: vscode
 ---
 
 <instructions>
-You MUST read the research brief at docs/issues/<ISSUE_NUMBER>/research/00-research.md before any planning work.
-You MUST read the ADR template at docs/architecture/ADR/ADR-0001-template.md before creating any ADR.
-You MUST read the core-component template at docs/architecture/core-components/CORE-COMPONENT-0001-template.md before creating any core-component.
-You MUST read the decision log at docs/architecture/ADR/DECISION-LOG.md before creating any ADR or core-component.
-You MUST read all existing ADRs under docs/architecture/ADR/ before creating new ones.
-You MUST read all existing core-components under docs/architecture/core-components/ before creating new ones.
+You MUST read the research brief at project/issues/<ISSUE_NUMBER>/research/00-research.md before any planning work.
+You MUST read the ADR template at project/architecture/ADR/ADR-0001-template.md before creating any ADR.
+You MUST read the core-component template at project/architecture/core-components/CORE-COMPONENT-0001-template.md before creating any core-component.
+You MUST read the decision log at project/architecture/ADR/DECISION-LOG.md before creating any ADR or core-component.
+You MUST read all existing ADRs under project/architecture/ADR/ before creating new ones.
+You MUST read all existing core-components under project/architecture/core-components/ before creating new ones.
 You MUST inspect application source code before creating tasks.
 You MUST NOT create an architectural decision outside of an ADR document.
 You MUST NOT create reusable cross-cutting behavior outside of a core-component document.
-You MUST update docs/architecture/ADR/DECISION-LOG.md for every ADR or core-component change.
+You MUST update project/architecture/ADR/DECISION-LOG.md for every ADR or core-component change.
 You MUST record one or more decision records in the Decisions section of DECISION-LOG.md for every ADR or core-component created.
 You MUST write each decision record as a short actionable statement that can be understood without opening the source document.
 You MUST derive decision records from the concrete choices made in an ADR.
@@ -40,9 +40,9 @@ You MUST follow the ADR template structure exactly when creating new ADRs.
 You MUST follow the core-component template structure exactly when creating new core-components.
 You MUST assign sequential ADR numbers using the pattern ADR-####-slug.md.
 You MUST assign sequential core-component numbers using the pattern CORE-COMPONENT-####-slug.md.
-You MUST create a Plan of Attack at docs/issues/<ISSUE_NUMBER>/plan/01-action-plan.md for each issue where <ISSUE_NUMBER> is the GitHub issue number.
-You MUST produce the task breakdown at docs/issues/<ISSUE_NUMBER>/plan/02-task-breakdown.md.
-You MUST produce the test plan at docs/issues/<ISSUE_NUMBER>/plan/03-test-plan.md.
+You MUST create a Plan of Attack at project/issues/<ISSUE_NUMBER>/plan/01-action-plan.md for each issue where <ISSUE_NUMBER> is the GitHub issue number.
+You MUST produce the task breakdown at project/issues/<ISSUE_NUMBER>/plan/02-task-breakdown.md.
+You MUST produce the test plan at project/issues/<ISSUE_NUMBER>/plan/03-test-plan.md.
 You MUST ensure every task has acceptance criteria.
 You MUST ensure every task has explicit test coverage requirements.
 You MUST ensure every task references relevant ADRs and core-components.
@@ -53,15 +53,15 @@ You MAY split large tasks into smaller subtasks for clarity.
 </instructions>
 
 <constants>
-ADR_TEMPLATE_PATH: "docs/architecture/ADR/ADR-0001-template.md"
-CORE_COMPONENT_TEMPLATE_PATH: "docs/architecture/core-components/CORE-COMPONENT-0001-template.md"
-DECISION_LOG_PATH: "docs/architecture/ADR/DECISION-LOG.md"
-ADR_DIR: "docs/architecture/ADR"
-CORE_COMPONENT_DIR: "docs/architecture/core-components"
+ADR_TEMPLATE_PATH: "project/architecture/ADR/ADR-0001-template.md"
+CORE_COMPONENT_TEMPLATE_PATH: "project/architecture/core-components/CORE-COMPONENT-0001-template.md"
+DECISION_LOG_PATH: "project/architecture/ADR/DECISION-LOG.md"
+ADR_DIR: "project/architecture/ADR"
+CORE_COMPONENT_DIR: "project/architecture/core-components"
 ADR_PATTERN: "ADR-####-slug.md"
 CORE_COMPONENT_PATTERN: "CORE-COMPONENT-####-slug.md"
-TASK_BREAKDOWN_PATH: "docs/issues/<ISSUE_NUMBER>/plan/02-task-breakdown.md"
-TEST_PLAN_PATH: "docs/issues/<ISSUE_NUMBER>/plan/03-test-plan.md"
+TASK_BREAKDOWN_PATH: "project/issues/<ISSUE_NUMBER>/plan/02-task-breakdown.md"
+TEST_PLAN_PATH: "project/issues/<ISSUE_NUMBER>/plan/03-test-plan.md"
 DECISION_GUIDANCE: TEXT<<
 Purpose:
   The Decisions section is the central quick-reference for every concrete commitment
@@ -238,7 +238,7 @@ RETURN: CREATED_ADRS, CREATED_CORE_COMPONENTS, TASKS, TESTS
 
 <process id="load-context" name="Load research brief, templates, and existing artifacts">
 SET CURRENT_ISSUE_NUMBER := <ID> (from "Agent Inference")
-USE `read/readFile` where: filePath="docs/issues/<ISSUE_NUMBER>/research/00-research.md"
+USE `read/readFile` where: filePath="project/issues/<ISSUE_NUMBER>/research/00-research.md"
 CAPTURE RESEARCH_BRIEF from `read/readFile`
 USE `read/readFile` where: filePath=ADR_TEMPLATE_PATH
 CAPTURE ADR_TEMPLATE from `read/readFile`
@@ -246,10 +246,10 @@ USE `read/readFile` where: filePath=CORE_COMPONENT_TEMPLATE_PATH
 CAPTURE CORE_COMPONENT_TEMPLATE from `read/readFile`
 USE `read/readFile` where: filePath=DECISION_LOG_PATH
 CAPTURE DECISION_LOG from `read/readFile`
-USE `search/fileSearch` where: pattern="docs/architecture/ADR/ADR-*.md"
+USE `search/fileSearch` where: pattern="project/architecture/ADR/ADR-*.md"
 CAPTURE EXISTING_ADRS from `search/fileSearch`
 SET NEXT_ADR_NUMBER := <NUM> (from "Agent Inference" using EXISTING_ADRS)
-USE `search/fileSearch` where: pattern="docs/architecture/core-components/CORE-COMPONENT-*.md"
+USE `search/fileSearch` where: pattern="project/architecture/core-components/CORE-COMPONENT-*.md"
 CAPTURE EXISTING_CORE_COMPONENTS from `search/fileSearch`
 SET NEXT_CORE_COMPONENT_NUMBER := <NUM> (from "Agent Inference" using EXISTING_CORE_COMPONENTS)
 </process>
@@ -280,8 +280,8 @@ USE `edit/editFiles` where: filePath=DECISION_LOG_PATH
 
 <process id="create-action-plan" name="Create the action plan for the issue">
 SET PLAN_CONTENT := <CONTENT> (from "Agent Inference" using RESEARCH_BRIEF, CREATED_ADRS, CREATED_CORE_COMPONENTS)
-USE `edit/createDirectory` where: dirPath="docs/issues/<ISSUE_NUMBER>/plan"
-USE `edit/createFile` where: content=PLAN_CONTENT, filePath="docs/issues/<ISSUE_NUMBER>/plan/01-action-plan.md"
+USE `edit/createDirectory` where: dirPath="project/issues/<ISSUE_NUMBER>/plan"
+USE `edit/createFile` where: content=PLAN_CONTENT, filePath="project/issues/<ISSUE_NUMBER>/plan/01-action-plan.md"
 SET ACTION_PLAN := PLAN_CONTENT (from "Agent Inference")
 </process>
 
@@ -290,14 +290,14 @@ SET RELEVANT_ADRS := <ADRS> (from "Agent Inference" using ACTION_PLAN, CREATED_A
 SET RELEVANT_CORE_COMPONENTS := <COMPONENTS> (from "Agent Inference" using ACTION_PLAN, CREATED_CORE_COMPONENTS)
 SET TASKS := <TASK_LIST> (from "Agent Inference" using ACTION_PLAN, RELEVANT_ADRS, RELEVANT_CORE_COMPONENTS)
 SET BREAKDOWN_CONTENT := <CONTENT> (from "Agent Inference" using TASKS)
-USE `edit/createFile` where: content=BREAKDOWN_CONTENT, filePath="docs/issues/<ISSUE_NUMBER>/plan/02-task-breakdown.md"
+USE `edit/createFile` where: content=BREAKDOWN_CONTENT, filePath="project/issues/<ISSUE_NUMBER>/plan/02-task-breakdown.md"
 SET BREAKDOWN_COMPLETE := true (from "Agent Inference")
 </process>
 
 <process id="create-test-plan" name="Create the test plan document">
 SET TESTS := <TEST_LIST> (from "Agent Inference" using TASKS, RELEVANT_ADRS, RELEVANT_CORE_COMPONENTS)
 SET TEST_PLAN_CONTENT := <CONTENT> (from "Agent Inference" using TESTS)
-USE `edit/createFile` where: content=TEST_PLAN_CONTENT, filePath="docs/issues/<ISSUE_NUMBER>/plan/03-test-plan.md"
+USE `edit/createFile` where: content=TEST_PLAN_CONTENT, filePath="project/issues/<ISSUE_NUMBER>/plan/03-test-plan.md"
 SET TEST_PLAN_COMPLETE := true (from "Agent Inference")
 </process>
 </processes>

@@ -45,11 +45,11 @@ You SHOULD update documentation when implementation changes warrant it.
 </instructions>
 
 <constants>
-DECISION_LOG_PATH: "docs/architecture/ADR/DECISION-LOG.md"
-ADR_DIR: "docs/architecture/ADR"
-CORE_COMPONENT_DIR: "docs/architecture/core-components"
+DECISION_LOG_PATH: "project/architecture/ADR/DECISION-LOG.md"
+ADR_DIR: "project/architecture/ADR"
+CORE_COMPONENT_DIR: "project/architecture/core-components"
 AGENTS_MD_PATH: "AGENTS.md"
-ISSUES_DIR: "docs/issues"
+ISSUES_DIR: "project/issues"
 VERIFICATION_CONFIG_PATH: ".github/soft-factory/verification.yml"
 BRANCH_PATTERN: "<TYPE>/<ISSUE_NUMBER>-<SHORT_SLUG>"
 CO_AUTHOR_TRAILER: "Co-authored-by: github-copilot[bot] <175728472+github-copilot[bot]@users.noreply.github.com>"
@@ -234,7 +234,7 @@ USE `read/readFile` where: filePath=DECISION_LOG_PATH
 CAPTURE CURRENT_LOG from `read/readFile`
 SET UPDATED_LOG := <LOG> (from "Agent Inference" using CURRENT_LOG, ADR_CHANGES, CC_CHANGES)
 USE `edit/editFiles` where: filePath=DECISION_LOG_PATH
-USE `execute/runInTerminal` where: command="git add docs/architecture/ADR/DECISION-LOG.md"
+USE `execute/runInTerminal` where: command="git add project/architecture/ADR/DECISION-LOG.md"
 USE `execute/runInTerminal` where: command="git commit -m 'docs: update DECISION-LOG.md' -m '' -m 'CO_AUTHOR_TRAILER'"
 CAPTURE COMMIT_HASH from `execute/runInTerminal`
 SET COMMITS := COMMITS + [COMMIT_HASH] (from "Agent Inference")
@@ -255,7 +255,7 @@ SET COMMITS := COMMITS + [COMMIT_HASH] (from "Agent Inference")
 SET DOCS_NEEDED := <NEEDED> (from "Agent Inference" using CHANGED_FILES)
 IF DOCS_NEEDED is true:
   SET DOC_UPDATES := <UPDATES> (from "Agent Inference" using CHANGED_FILES, ISSUE_NUMBER)
-  USE `execute/runInTerminal` where: command="git add docs/ README.md"
+  USE `execute/runInTerminal` where: command="git add project/ docs/ README.md"
   USE `execute/runInTerminal` where: command="git commit -m 'docs: update documentation' -m '' -m 'CO_AUTHOR_TRAILER'"
   CAPTURE COMMIT_HASH from `execute/runInTerminal`
   SET COMMITS := COMMITS + [COMMIT_HASH] (from "Agent Inference")

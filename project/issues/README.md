@@ -7,7 +7,7 @@ This directory contains per-issue documentation produced by the RPIV pipeline. E
 When an agent runs the pipeline for GitHub Issue `#42`, it creates:
 
 ```
-docs/issues/42/
+project/issues/42/
   research/
     00-research.md          ← Research brief (scope classification, findings)
   plan/
@@ -22,5 +22,5 @@ docs/issues/42/
 
 - Subdirectory names are plain issue numbers (e.g., `42/`, not `WI-0042-slug/`)
 - Agents create these directories automatically — do not create them manually
-- ADRs and core-components are **global** and live under `docs/architecture/`, never inside an issue folder
+- ADRs and core-components are **global** and live under `project/architecture/`, never inside an issue folder
 - Templates are defined in the agent specifications, not duplicated here
