@@ -5,6 +5,6 @@
 
 ## Documentation
 
-- [`CONTRIBUTING.md`](CONTRIBUTING.md) — pipeline workflow, how to start workitems, and where artifacts belong
+- [`CONTRIBUTING.md`](CONTRIBUTING.md) — pipeline workflow, how to contribute via GitHub Issues, and where artifacts belong
 - [`AGENTS.md`](AGENTS.md) — agent definitions, guardrails, and pipeline specification
-- [`docs/`](docs/) — architecture decisions, core-components, and workitem artifacts
+- [`docs/`](docs/) — architecture decisions, core-components, and per-issue pipeline artifacts
