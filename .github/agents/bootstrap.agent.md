@@ -32,6 +32,8 @@ You MUST read the core-component template at docs/architecture/core-components/C
 You MUST gather the project name, description, and goal from the user interactively.
 You MUST ask the user to choose a tech stack including language, framework, package manager, and test runner.
 You MUST ask the user to identify cross-cutting concerns such as logging, error handling, authentication, or observability.
+You MUST ask the user to confirm or customize development standards covering coding conventions, commit standards, and testing practices.
+You MUST create a core-component for development standards using language-specific defaults from DEV_STANDARDS.
 You MUST scaffold the project using the appropriate init command for the chosen tech stack.
 You MUST create an ADR for the tech stack decision using the ADR template.
 You MUST create a core-component file for each declared cross-cutting concern using the core-component template.
@@ -119,6 +121,77 @@ TECH_STACK_INIT: YAML<<
     lint: dotnet format --verify-no-changes
     build: dotnet build
 >>
+DEV_STANDARDS: YAML<<
+- language: python
+  coding_conventions:
+    - Follow PEP 8 for code style
+    - Use type hints on all function signatures
+    - Use docstrings on all public modules, classes, and functions
+    - Prefer pathlib over os.path for file system operations
+  commit_standards:
+    - Follow Conventional Commits specification
+    - Include scope in commit messages when applicable
+  testing_practices:
+    - Write unit tests for all public functions
+    - Use pytest fixtures for shared test setup
+    - Aim for 80% code coverage minimum
+    - Name test files with test_ prefix
+- language: node
+  coding_conventions:
+    - Use ESLint with the project-configured ruleset
+    - Use TypeScript strict mode when TypeScript is chosen
+    - Prefer named exports over default exports
+    - Use async/await over raw Promises
+  commit_standards:
+    - Follow Conventional Commits specification
+    - Include scope in commit messages when applicable
+  testing_practices:
+    - Write unit tests for all exported functions
+    - Use describe/it blocks for test organization
+    - Aim for 80% code coverage minimum
+    - Co-locate test files next to source files or in __tests__ directory
+- language: go
+  coding_conventions:
+    - Follow Effective Go and Go Code Review Comments
+    - Run gofmt on all source files
+    - Use meaningful variable names over single-letter names outside loops
+    - Return errors rather than panic in library code
+  commit_standards:
+    - Follow Conventional Commits specification
+    - Include scope in commit messages when applicable
+  testing_practices:
+    - Write table-driven tests where applicable
+    - Use testify or standard testing package
+    - Aim for 80% code coverage minimum
+    - Name test files with _test.go suffix
+- language: rust
+  coding_conventions:
+    - Follow Rust API Guidelines
+    - Run cargo fmt on all source files
+    - Use clippy lints at warn level minimum
+    - Prefer Result over panic for error handling
+  commit_standards:
+    - Follow Conventional Commits specification
+    - Include scope in commit messages when applicable
+  testing_practices:
+    - Write unit tests in the same file using mod tests
+    - Write integration tests in the tests/ directory
+    - Aim for 80% code coverage minimum
+- language: dotnet
+  coding_conventions:
+    - Follow Microsoft C# coding conventions
+    - Use nullable reference types
+    - Use async/await for I/O-bound operations
+    - Prefer records for immutable data types
+  commit_standards:
+    - Follow Conventional Commits specification
+    - Include scope in commit messages when applicable
+  testing_practices:
+    - Write unit tests using xUnit or NUnit
+    - Use the Arrange-Act-Assert pattern
+    - Aim for 80% code coverage minimum
+    - Name test projects with .Tests suffix
+>>
 </constants>
 
 <formats>
@@ -140,6 +213,9 @@ TECH_STACK_INIT: YAML<<
 ## Cross-Cutting Concerns
 <CROSS_CUTTING_LIST>
 
+## Development Standards
+<CODING_STANDARDS_SUMMARY>
+
 ## Verification Commands
 <VERIFICATION_COMMANDS>
 
@@ -150,6 +226,7 @@ TECH_STACK_INIT: YAML<<
 <UPDATE_LIST>
 WHERE:
 - <ARTIFACT_LIST> is Markdown.
+- <CODING_STANDARDS_SUMMARY> is Markdown.
 - <CROSS_CUTTING_LIST> is Markdown.
 - <FRAMEWORK> is String.
 - <INIT_COMMAND> is String.
@@ -229,6 +306,7 @@ PACKAGE_MANAGER: ""
 TEST_RUNNER: ""
 INIT_COMMAND: ""
 CROSS_CUTTING_CONCERNS: []
+CODING_STANDARDS: {}
 IS_BOOTSTRAPPED: false
 BOOTSTRAP_EVIDENCE: ""
 INFO_CONFIRMED: false
@@ -262,6 +340,7 @@ RUN `scaffold-project`
 RUN `create-tech-stack-adr`
 IF CROSS_CUTTING_CONCERNS is not empty:
   RUN `create-core-components`
+RUN `create-development-standards`
 RUN `update-decision-log`
 RUN `configure-verification`
 RUN `update-project-docs`
@@ -289,6 +368,7 @@ SET PACKAGE_MANAGER := <PM> (from "Agent Inference" using USER_INPUT, TECH_STACK
 SET TEST_RUNNER := <TR> (from "Agent Inference" using USER_INPUT, TECH_STACK_INIT)
 SET INIT_COMMAND := <CMD> (from "Agent Inference" using LANGUAGE, TECH_STACK_INIT)
 SET CROSS_CUTTING_CONCERNS := <CONCERNS> (from "Agent Inference" using USER_INPUT)
+SET CODING_STANDARDS := <STANDARDS> (from "Agent Inference" using LANGUAGE, DEV_STANDARDS, USER_INPUT)
 SET VERIFICATION_COMMANDS := <DEFAULTS> (from "Agent Inference" using LANGUAGE, TECH_STACK_INIT, TEST_RUNNER)
 </process>
 
@@ -317,6 +397,16 @@ FOREACH concern IN CROSS_CUTTING_CONCERNS:
   USE `edit/createFile` where: content=CC_CONTENT, filePath=CC_FILE
   SET CREATED_CORE_COMPONENTS := CREATED_CORE_COMPONENTS + [CC_FILE] (from "Agent Inference")
   SET NEXT_CC_NUMBER := NEXT_CC_NUMBER + 1 (from "Agent Inference")
+</process>
+
+<process id="create-development-standards" name="Create the development standards core-component">
+USE `read/readFile` where: filePath=CORE_COMPONENT_TEMPLATE_PATH
+CAPTURE CC_TEMPLATE from `read/readFile`
+SET DEV_STD_CONTENT := <CONTENT> (from "Agent Inference" using CC_TEMPLATE, CODING_STANDARDS, LANGUAGE, NEXT_CC_NUMBER, CREATED_ADRS)
+SET DEV_STD_FILE := <PATH> (from "Agent Inference" using CORE_COMPONENT_DIR, NEXT_CC_NUMBER, "development-standards")
+USE `edit/createFile` where: content=DEV_STD_CONTENT, filePath=DEV_STD_FILE
+SET CREATED_CORE_COMPONENTS := CREATED_CORE_COMPONENTS + [DEV_STD_FILE] (from "Agent Inference")
+SET NEXT_CC_NUMBER := NEXT_CC_NUMBER + 1 (from "Agent Inference")
 </process>
 
 <process id="update-decision-log" name="Update DECISION-LOG.md with all new ADRs and core-components">
