@@ -16,6 +16,7 @@ docs/architecture/soft-factory-pipeline.excalidraw          — Pipeline diagram
 docs/architecture/ADR/ADR-0001-template.md                  — ADR template (read-only, copy to create new)
 docs/architecture/ADR/DECISION-LOG.md                       — Registry of all ADR and core-component decisions
 docs/architecture/core-components/CORE-COMPONENT-0001-template.md — Core-component template (read-only, copy to create new)
+docs/architecture/core-components/CORE-COMPONENT-0002-commit-standards.md — Commit standards (Conventional Commits, Co-authored-by)
 docs/architecture/core-components/README.md                 — Core-components index
 docs/workitems/README.md                                    — Workitems index and naming conventions
 docs/workitems/WI-0001-example/README.md                    — Example workitem overview
