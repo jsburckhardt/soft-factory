@@ -29,7 +29,8 @@
         "ghcr.io/jsburckhardt/devcontainer-features/just": {},
         "ghcr.io/devcontainers/features/github-cli": {},
         "ghcr.io/devcontainers/features/copilot-cli": {},
-        "ghcr.io/rosstaco/devcontainer-features/copilot-persistence:1": {}
+        "ghcr.io/rosstaco/devcontainer-features/copilot-persistence:1": {},
+        "ghcr.io/jsburckhardt/devcontainer-features/tmux": {}
     },
     "customizations": {
         "vscode": {
