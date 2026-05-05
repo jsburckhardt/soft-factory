@@ -1,12 +1,14 @@
 ---
 name: justdoit
-description: "Receive a task and autonomously execute the full RPIV pipeline — Research, Plan, Implement, Verify — to deliver a complete feature end-to-end."
+description: "Receive a GitHub issue and autonomously execute the full RPIV pipeline — Research, Plan, Implement, Verify — to deliver a complete feature end-to-end."
 tools:
   - search/codebase
   - search/fileSearch
   - search/textSearch
   - read/readFile
   - read/problems
+  - execute/runInTerminal
+  - execute/getTerminalOutput
   - agent/runSubagent
   - todo
   - agent
@@ -24,8 +26,8 @@ agents:
 You MUST read AGENTS.md to understand the pipeline specification before starting.
 You MUST read docs/architecture/ADR/DECISION-LOG.md to understand existing architectural decisions.
 You MUST inspect existing documentation under docs/ before dispatching any stage.
-You MUST assign a workitem ID following the pattern WI-####-short-slug before dispatching any stage.
-You MUST create the workitem folder structure under docs/workitems/<WI-ID>/ before dispatching the Research stage.
+You MUST use the GitHub issue number as the identifier before dispatching any stage.
+You MUST create the issue documentation folder structure under docs/issues/<ISSUE_NUMBER>/ before dispatching the Research stage.
 You MUST execute pipeline stages in strict order: Research, Plan, Implement, Verify.
 You MUST NOT skip any pipeline stage.
 You MUST dispatch each stage to its corresponding agent as a subagent.
@@ -42,18 +44,18 @@ You MAY retry a failed stage once before stopping with an error report.
 <constants>
 AGENTS_MD_PATH: "AGENTS.md"
 DECISION_LOG_PATH: "docs/architecture/ADR/DECISION-LOG.md"
-WORKITEM_DIR: "docs/workitems"
+ISSUES_DIR: "docs/issues"
 STAGE_AGENTS: YAML<<
 - agent: research
-  output: docs/workitems/<WI-ID>/research/00-research.md
+  output: docs/issues/<ISSUE_NUMBER>/research/00-research.md
   purpose: Explore problem space, classify scope, produce research brief
   stage: research
 - agent: planner
-  output: docs/workitems/<WI-ID>/plan/01-action-plan.md
+  output: docs/issues/<ISSUE_NUMBER>/plan/01-action-plan.md
   purpose: Commit ADRs and core-components, produce action plan, task breakdown, test plan
   stage: plan
 - agent: implementer
-  output: docs/workitems/<WI-ID>/implementation/README.md
+  output: docs/issues/<ISSUE_NUMBER>/implementation/README.md
   purpose: Execute tasks, write code and tests, verify against test plan
   stage: implement
 - agent: verifier
@@ -64,7 +66,7 @@ STAGE_AGENTS: YAML<<
 SCOPE_TYPES: YAML<<
 - architecture_decision
 - core_component
-- workitem
+- issue
 >>
 </constants>
 
@@ -87,7 +89,7 @@ WHERE:
 </format>
 
 <format id="COMPLETION_REPORT" name="Completion Report" purpose="Summarize the full pipeline execution after all stages complete.">
-# Pipeline Complete — <WI_ID>
+# Pipeline Complete — <ISSUE_NUMBER>
 
 ## Task
 <TASK_DESCRIPTION>
@@ -107,11 +109,11 @@ WHERE:
 - <PR_URL> is URI.
 - <STAGE_ROW> is String.
 - <TASK_DESCRIPTION> is Markdown.
-- <WI_ID> is String.
+- <ISSUE_NUMBER> is String.
 </format>
 
 <format id="PIPELINE_ERROR" name="Pipeline Error" purpose="Report a blocking error that halted the pipeline.">
-## Pipeline Halted — <WI_ID>
+## Pipeline Halted — <ISSUE_NUMBER>
 
 **Failed Stage:** <FAILED_STAGE>
 **Error:** <ERROR_MESSAGE>
@@ -126,12 +128,12 @@ WHERE:
 - <ERROR_MESSAGE> is String.
 - <FAILED_STAGE> is String.
 - <RECOVERY> is String.
-- <WI_ID> is String.
+- <ISSUE_NUMBER> is String.
 </format>
 </formats>
 
 <runtime>
-WI_ID: ""
+ISSUE_NUMBER: ""
 TASK_DESCRIPTION: ""
 SCOPE_TYPE: ""
 CURRENT_STAGE: ""
@@ -154,30 +156,30 @@ RETRY_COUNT: 0
 RUN `init-pipeline`
 RUN `dispatch-research`
 IF PIPELINE_STATUS = "error":
-  RETURN: format="PIPELINE_ERROR", wi_id=WI_ID, failed_stage=CURRENT_STAGE, error_message="Research stage failed", details=RESEARCH_RESULT, recovery="Review the error and retry with @research"
+  RETURN: format="PIPELINE_ERROR", issue_number=ISSUE_NUMBER, failed_stage=CURRENT_STAGE, error_message="Research stage failed", details=RESEARCH_RESULT, recovery="Review the error and retry with @research"
 RUN `dispatch-plan`
 IF PIPELINE_STATUS = "error":
-  RETURN: format="PIPELINE_ERROR", wi_id=WI_ID, failed_stage=CURRENT_STAGE, error_message="Plan stage failed", details=PLAN_RESULT, recovery="Review the error and retry with @planner"
+  RETURN: format="PIPELINE_ERROR", issue_number=ISSUE_NUMBER, failed_stage=CURRENT_STAGE, error_message="Plan stage failed", details=PLAN_RESULT, recovery="Review the error and retry with @planner"
 RUN `dispatch-implement`
 IF PIPELINE_STATUS = "error":
-  RETURN: format="PIPELINE_ERROR", wi_id=WI_ID, failed_stage=CURRENT_STAGE, error_message="Implement stage failed", details=IMPLEMENT_RESULT, recovery="Review the error and retry with @implementer"
+  RETURN: format="PIPELINE_ERROR", issue_number=ISSUE_NUMBER, failed_stage=CURRENT_STAGE, error_message="Implement stage failed", details=IMPLEMENT_RESULT, recovery="Review the error and retry with @implementer"
 RUN `dispatch-verify`
 IF PIPELINE_STATUS = "error":
-  RETURN: format="PIPELINE_ERROR", wi_id=WI_ID, failed_stage=CURRENT_STAGE, error_message="Verify stage failed", details=VERIFY_RESULT, recovery="Review the error and retry with @verifier"
+  RETURN: format="PIPELINE_ERROR", issue_number=ISSUE_NUMBER, failed_stage=CURRENT_STAGE, error_message="Verify stage failed", details=VERIFY_RESULT, recovery="Review the error and retry with @verifier"
 RUN `report-completion`
-RETURN: format="COMPLETION_REPORT", wi_id=WI_ID, task_description=TASK_DESCRIPTION, stage_row=STAGE_RESULTS, final_result=VERIFY_RESULT, pr_url=PR_URL
+RETURN: format="COMPLETION_REPORT", issue_number=ISSUE_NUMBER, task_description=TASK_DESCRIPTION, stage_row=STAGE_RESULTS, final_result=VERIFY_RESULT, pr_url=PR_URL
 </process>
 
-<process id="init-pipeline" name="Initialize the pipeline with context and workitem ID">
+<process id="init-pipeline" name="Initialize the pipeline with context and issue number">
 USE `read/readFile` where: filePath=AGENTS_MD_PATH
 CAPTURE PIPELINE_SPEC from `read/readFile`
 USE `read/readFile` where: filePath=DECISION_LOG_PATH
 CAPTURE DECISION_LOG from `read/readFile`
-USE `search/fileSearch` where: pattern="docs/workitems/WI-*"
-CAPTURE EXISTING_WIS from `search/fileSearch`
-SET WI_ID := <ID> (from "Agent Inference" using USER_INPUT, EXISTING_WIS)
-SET TASK_DESCRIPTION := <DESC> (from "Agent Inference" using USER_INPUT)
-SET SCOPE_TYPE := <SCOPE> (from "Agent Inference" using USER_INPUT, DECISION_LOG)
+SET ISSUE_NUMBER := <NUMBER> (from "Agent Inference" using USER_INPUT)
+USE `execute/runInTerminal` where: command="gh issue view <ISSUE_NUMBER> --json title,body,labels,assignees,milestone"
+CAPTURE ISSUE_JSON from `execute/runInTerminal`
+SET TASK_DESCRIPTION := <DESC> (from "Agent Inference" using ISSUE_JSON)
+SET SCOPE_TYPE := <SCOPE> (from "Agent Inference" using ISSUE_JSON, DECISION_LOG)
 SET PIPELINE_STATUS := "running" (from "Agent Inference")
 </process>
 
@@ -187,26 +189,26 @@ USE `agent/runSubagent` where: agent="research", prompt=TASK_DESCRIPTION
 CAPTURE RESEARCH_RESULT from `agent/runSubagent`
 SET PIPELINE_STATUS := <STATUS> (from "Agent Inference" using RESEARCH_RESULT)
 IF PIPELINE_STATUS != "error":
-  USE `read/readFile` where: filePath="docs/workitems/<WI-ID>/research/00-research.md"
+  USE `read/readFile` where: filePath="docs/issues/<ISSUE_NUMBER>/research/00-research.md"
   CAPTURE RESEARCH_BRIEF from `read/readFile`
   SET STAGE_RESULTS := STAGE_RESULTS + ["Research: OK"] (from "Agent Inference")
 </process>
 
 <process id="dispatch-plan" name="Dispatch the Plan stage to the planner agent">
 SET CURRENT_STAGE := "plan" (from "Agent Inference")
-SET PLAN_PROMPT := <PROMPT> (from "Agent Inference" using WI_ID, RESEARCH_RESULT)
+SET PLAN_PROMPT := <PROMPT> (from "Agent Inference" using ISSUE_NUMBER, RESEARCH_RESULT)
 USE `agent/runSubagent` where: agent="planner", prompt=PLAN_PROMPT
 CAPTURE PLAN_RESULT from `agent/runSubagent`
 SET PIPELINE_STATUS := <STATUS> (from "Agent Inference" using PLAN_RESULT)
 IF PIPELINE_STATUS != "error":
-  USE `read/readFile` where: filePath="docs/workitems/<WI-ID>/plan/01-action-plan.md"
+  USE `read/readFile` where: filePath="docs/issues/<ISSUE_NUMBER>/plan/01-action-plan.md"
   CAPTURE ACTION_PLAN from `read/readFile`
   SET STAGE_RESULTS := STAGE_RESULTS + ["Plan: OK"] (from "Agent Inference")
 </process>
 
 <process id="dispatch-implement" name="Dispatch the Implement stage to the implementer agent">
 SET CURRENT_STAGE := "implement" (from "Agent Inference")
-SET IMPL_PROMPT := <PROMPT> (from "Agent Inference" using WI_ID, PLAN_RESULT)
+SET IMPL_PROMPT := <PROMPT> (from "Agent Inference" using ISSUE_NUMBER, PLAN_RESULT)
 USE `agent/runSubagent` where: agent="implementer", prompt=IMPL_PROMPT
 CAPTURE IMPLEMENT_RESULT from `agent/runSubagent`
 SET PIPELINE_STATUS := <STATUS> (from "Agent Inference" using IMPLEMENT_RESULT)
@@ -216,7 +218,7 @@ IF PIPELINE_STATUS != "error":
 
 <process id="dispatch-verify" name="Dispatch the Verify stage to the verifier agent">
 SET CURRENT_STAGE := "verify" (from "Agent Inference")
-SET VERIFY_PROMPT := <PROMPT> (from "Agent Inference" using WI_ID)
+SET VERIFY_PROMPT := <PROMPT> (from "Agent Inference" using ISSUE_NUMBER)
 USE `agent/runSubagent` where: agent="verifier", prompt=VERIFY_PROMPT
 CAPTURE VERIFY_RESULT from `agent/runSubagent`
 SET PIPELINE_STATUS := <STATUS> (from "Agent Inference" using VERIFY_RESULT)
@@ -231,5 +233,5 @@ SET PIPELINE_STATUS := "complete" (from "Agent Inference")
 </processes>
 
 <input>
-USER_INPUT is the task description — what feature, fix, or change to deliver through the full RPIV pipeline.
+USER_INPUT is a GitHub issue number or URL — the issue to deliver through the full RPIV pipeline.
 </input>

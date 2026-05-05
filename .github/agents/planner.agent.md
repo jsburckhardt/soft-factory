@@ -18,7 +18,7 @@ target: vscode
 ---
 
 <instructions>
-You MUST read the research brief at docs/workitems/<WI-ID>/research/00-research.md before any planning work.
+You MUST read the research brief at docs/issues/<ISSUE_NUMBER>/research/00-research.md before any planning work.
 You MUST read the ADR template at docs/architecture/ADR/ADR-0001-template.md before creating any ADR.
 You MUST read the core-component template at docs/architecture/core-components/CORE-COMPONENT-0001-template.md before creating any core-component.
 You MUST read the decision log at docs/architecture/ADR/DECISION-LOG.md before creating any ADR or core-component.
@@ -35,14 +35,14 @@ You MUST derive decision records from core-components by extracting each enforce
 You MUST start each decision statement with an imperative verb.
 You MUST NOT write vague or aspirational decisions.
 You MUST reference the source as the ADR or core-component ID.
-You MUST treat ADRs and core-components as global artifacts not scoped to any workitem.
+You MUST treat ADRs and core-components as global artifacts not scoped to any issue.
 You MUST follow the ADR template structure exactly when creating new ADRs.
 You MUST follow the core-component template structure exactly when creating new core-components.
 You MUST assign sequential ADR numbers using the pattern ADR-####-slug.md.
 You MUST assign sequential core-component numbers using the pattern CORE-COMPONENT-####-slug.md.
-You MUST create a Plan of Attack at docs/workitems/<WI-ID>/plan/01-action-plan.md for each workitem.
-You MUST produce the task breakdown at docs/workitems/<WI-ID>/plan/02-task-breakdown.md.
-You MUST produce the test plan at docs/workitems/<WI-ID>/plan/03-test-plan.md.
+You MUST create a Plan of Attack at docs/issues/<ISSUE_NUMBER>/plan/01-action-plan.md for each issue where <ISSUE_NUMBER> is the GitHub issue number.
+You MUST produce the task breakdown at docs/issues/<ISSUE_NUMBER>/plan/02-task-breakdown.md.
+You MUST produce the test plan at docs/issues/<ISSUE_NUMBER>/plan/03-test-plan.md.
 You MUST ensure every task has acceptance criteria.
 You MUST ensure every task has explicit test coverage requirements.
 You MUST ensure every task references relevant ADRs and core-components.
@@ -60,8 +60,8 @@ ADR_DIR: "docs/architecture/ADR"
 CORE_COMPONENT_DIR: "docs/architecture/core-components"
 ADR_PATTERN: "ADR-####-slug.md"
 CORE_COMPONENT_PATTERN: "CORE-COMPONENT-####-slug.md"
-TASK_BREAKDOWN_PATH: "docs/workitems/<WI-ID>/plan/02-task-breakdown.md"
-TEST_PLAN_PATH: "docs/workitems/<WI-ID>/plan/03-test-plan.md"
+TASK_BREAKDOWN_PATH: "docs/issues/<ISSUE_NUMBER>/plan/02-task-breakdown.md"
+TEST_PLAN_PATH: "docs/issues/<ISSUE_NUMBER>/plan/03-test-plan.md"
 DECISION_GUIDANCE: TEXT<<
 Purpose:
   The Decisions section is the central quick-reference for every concrete commitment
@@ -118,11 +118,11 @@ WHERE:
 - <SOURCE_ID> is String.
 </format>
 
-<format id="ACTION_PLAN" name="Action Plan" purpose="Structured plan of attack for a workitem linking research to implementation tasks.">
+<format id="ACTION_PLAN" name="Action Plan" purpose="Structured plan of attack for an issue linking research to implementation tasks.">
 # Action Plan: <TITLE>
 
 ## Feature
-- **ID:** <WI_ID>
+- **ID:** <ISSUE_NUMBER>
 - **Research Brief:** <RESEARCH_PATH>
 
 ## ADRs Created
@@ -139,7 +139,7 @@ WHERE:
 - <RESEARCH_PATH> is Path.
 - <TASK_OUTLINE> is Markdown.
 - <TITLE> is String.
-- <WI_ID> is String.
+- <ISSUE_NUMBER> is String.
 </format>
 
 <format id="TASK_ITEM" name="Task Item" purpose="Structured task entry within the task breakdown document.">
@@ -200,7 +200,7 @@ WHERE:
 </formats>
 
 <runtime>
-CURRENT_WI_ID: ""
+CURRENT_ISSUE_NUMBER: ""
 RESEARCH_BRIEF: ""
 NEXT_ADR_NUMBER: 0
 NEXT_CORE_COMPONENT_NUMBER: 0
@@ -223,7 +223,7 @@ TEST_PLAN_COMPLETE: false
 
 <processes>
 <process id="planner-router" name="Route planner request through architecture then task planning">
-IF CURRENT_WI_ID is empty:
+IF CURRENT_ISSUE_NUMBER is empty:
   RUN `load-context`
 IF ARCHITECTURE_COMPLETE is false:
   RUN `create-architecture-artifacts`
@@ -237,8 +237,8 @@ RETURN: CREATED_ADRS, CREATED_CORE_COMPONENTS, TASKS, TESTS
 </process>
 
 <process id="load-context" name="Load research brief, templates, and existing artifacts">
-SET CURRENT_WI_ID := <ID> (from "Agent Inference")
-USE `read/readFile` where: filePath="docs/workitems/<WI-ID>/research/00-research.md"
+SET CURRENT_ISSUE_NUMBER := <ID> (from "Agent Inference")
+USE `read/readFile` where: filePath="docs/issues/<ISSUE_NUMBER>/research/00-research.md"
 CAPTURE RESEARCH_BRIEF from `read/readFile`
 USE `read/readFile` where: filePath=ADR_TEMPLATE_PATH
 CAPTURE ADR_TEMPLATE from `read/readFile`
@@ -278,10 +278,10 @@ SET UPDATED_LOG := <LOG> (from "Agent Inference" using CURRENT_LOG, CREATED_ADRS
 USE `edit/editFiles` where: filePath=DECISION_LOG_PATH
 </process>
 
-<process id="create-action-plan" name="Create the action plan for the workitem">
+<process id="create-action-plan" name="Create the action plan for the issue">
 SET PLAN_CONTENT := <CONTENT> (from "Agent Inference" using RESEARCH_BRIEF, CREATED_ADRS, CREATED_CORE_COMPONENTS)
-USE `edit/createDirectory` where: dirPath="docs/workitems/<WI-ID>/plan"
-USE `edit/createFile` where: content=PLAN_CONTENT, filePath="docs/workitems/<WI-ID>/plan/01-action-plan.md"
+USE `edit/createDirectory` where: dirPath="docs/issues/<ISSUE_NUMBER>/plan"
+USE `edit/createFile` where: content=PLAN_CONTENT, filePath="docs/issues/<ISSUE_NUMBER>/plan/01-action-plan.md"
 SET ACTION_PLAN := PLAN_CONTENT (from "Agent Inference")
 </process>
 
@@ -290,18 +290,18 @@ SET RELEVANT_ADRS := <ADRS> (from "Agent Inference" using ACTION_PLAN, CREATED_A
 SET RELEVANT_CORE_COMPONENTS := <COMPONENTS> (from "Agent Inference" using ACTION_PLAN, CREATED_CORE_COMPONENTS)
 SET TASKS := <TASK_LIST> (from "Agent Inference" using ACTION_PLAN, RELEVANT_ADRS, RELEVANT_CORE_COMPONENTS)
 SET BREAKDOWN_CONTENT := <CONTENT> (from "Agent Inference" using TASKS)
-USE `edit/createFile` where: content=BREAKDOWN_CONTENT, filePath="docs/workitems/<WI-ID>/plan/02-task-breakdown.md"
+USE `edit/createFile` where: content=BREAKDOWN_CONTENT, filePath="docs/issues/<ISSUE_NUMBER>/plan/02-task-breakdown.md"
 SET BREAKDOWN_COMPLETE := true (from "Agent Inference")
 </process>
 
 <process id="create-test-plan" name="Create the test plan document">
 SET TESTS := <TEST_LIST> (from "Agent Inference" using TASKS, RELEVANT_ADRS, RELEVANT_CORE_COMPONENTS)
 SET TEST_PLAN_CONTENT := <CONTENT> (from "Agent Inference" using TESTS)
-USE `edit/createFile` where: content=TEST_PLAN_CONTENT, filePath="docs/workitems/<WI-ID>/plan/03-test-plan.md"
+USE `edit/createFile` where: content=TEST_PLAN_CONTENT, filePath="docs/issues/<ISSUE_NUMBER>/plan/03-test-plan.md"
 SET TEST_PLAN_COMPLETE := true (from "Agent Inference")
 </process>
 </processes>
 
 <input>
-USER_INPUT is a reference to the workitem ID and research brief to plan — including architecture decisions, task breakdown, and test plan.
+USER_INPUT is a GitHub issue number and reference to its research brief to plan — including architecture decisions, task breakdown, and test plan.
 </input>

@@ -17,9 +17,9 @@ user-invocable: true
 disable-model-invocation: true
 target: vscode
 handoffs:
-  - label: Start First Workitem
+  - label: Start First Issue
     agent: research
-    prompt: Research and classify the first workitem for this newly bootstrapped project.
+    prompt: Research and classify the first GitHub issue for this newly bootstrapped project.
     send: false
 ---
 
@@ -251,7 +251,7 @@ VERIFICATION_COMMANDS: {}
 <process id="bootstrap-router" name="Route bootstrap request">
 RUN `check-bootstrapped`
 IF IS_BOOTSTRAPPED is true:
-  RETURN: format="BOOTSTRAP_BLOCKED", reason="Project has already been bootstrapped", evidence=BOOTSTRAP_EVIDENCE, suggestion="Use the research to start a new workitem instead"
+  RETURN: format="BOOTSTRAP_BLOCKED", reason="Project has already been bootstrapped", evidence=BOOTSTRAP_EVIDENCE, suggestion="Create a GitHub issue and use the research agent to start working on it"
 IF PROJECT_NAME is empty:
   RUN `gather-project-info`
 SET ARTIFACT_LIST := <LIST> (from "Agent Inference" using LANGUAGE, CROSS_CUTTING_CONCERNS, NEXT_ADR_NUMBER, NEXT_CC_NUMBER)
@@ -266,7 +266,7 @@ RUN `update-decision-log`
 RUN `configure-verification`
 RUN `update-project-docs`
 RUN `tailor-devcontainer`
-RETURN: format="BOOTSTRAP_REPORT", project_name=PROJECT_NAME, project_description=PROJECT_DESCRIPTION, scaffold_output=SCAFFOLD_OUTPUT, adr_list=CREATED_ADRS, core_component_list=CREATED_CORE_COMPONENTS, files_updated=UPDATED_FILES, verification_summary=VERIFICATION_COMMANDS, status="Bootstrapped", next_steps="Use the research to start your first workitem"
+RETURN: format="BOOTSTRAP_REPORT", project_name=PROJECT_NAME, project_description=PROJECT_DESCRIPTION, scaffold_output=SCAFFOLD_OUTPUT, adr_list=CREATED_ADRS, core_component_list=CREATED_CORE_COMPONENTS, files_updated=UPDATED_FILES, verification_summary=VERIFICATION_COMMANDS, status="Bootstrapped", next_steps="Create a GitHub issue and use the research agent to start working on it"
 </process>
 
 <process id="check-bootstrapped" name="Check if project has already been bootstrapped">

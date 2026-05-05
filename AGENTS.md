@@ -2,12 +2,12 @@
 
 <instructions>
 Every piece of work MUST flow through exactly four stages in order: Research, Plan, Implement, Verify.
-You MUST classify scope_type as exactly one of: workitem, architecture_decision, core_component.
+You MUST classify scope_type as exactly one of: issue, architecture_decision, core_component.
 You MUST NOT create an architectural decision outside of an ADR document.
 You MUST NOT create reusable cross-cutting behavior outside of a core-component document.
 You MUST update docs/architecture/ADR/DECISION-LOG.md for every ADR or core-component change.
-You MUST treat ADRs as global artifacts stored in docs/architecture/ADR/ — never inside a workitem folder.
-You MUST treat core-components as global artifacts stored in docs/architecture/core-components/ — never inside a workitem folder.
+You MUST treat ADRs as global artifacts stored in docs/architecture/ADR/ — never inside an issue documentation folder.
+You MUST treat core-components as global artifacts stored in docs/architecture/core-components/ — never inside an issue documentation folder.
 You MUST NOT edit template files directly — copy them within the same directory and rename.
 You MUST return to the Plan stage if implementation diverges from an ADR or core-component.
 You MUST inspect existing repo code and documentation before proposing new work.
@@ -38,11 +38,12 @@ PIPELINE_STAGES: YAML<<
 AGENTS: YAML<<
 onboard-repo:
   file: .github/agents/onboard-repo.agent.md
-  purpose: Introduce the Soft Factory engineering flow into an existing repository by analysing its codebase, inferring architectural decisions already embedded in the code, scaffolding the documentation infrastructure, and seeding the first work item with a full repository-understanding brief.
+  purpose: Introduce the Soft Factory engineering flow into an existing repository by analysing its codebase, inferring architectural decisions already embedded in the code, scaffolding the documentation infrastructure, and creating the first GitHub issue and seeding it with a full repository-understanding brief.
   tools:
     - codebase exploration and reading
     - file creation and editing
     - web fetch
+    - GitHub CLI (gh)
   read_paths:
     - README.md
     - docs/
@@ -56,7 +57,7 @@ onboard-repo:
     - docs/architecture/ADR/ADR-####-slug.md
     - docs/architecture/core-components/CORE-COMPONENT-####-slug.md
     - docs/architecture/ADR/DECISION-LOG.md
-    - docs/workitems/WI-0001-repository-understanding/research/00-research.md
+    - docs/issues/<ISSUE_NUMBER>/research/00-research.md
     - README.md
     - AGENTS.md
     - LLM.txt
@@ -72,7 +73,7 @@ onboard-repo:
     - must create core-component files for existing cross-cutting concerns starting from CORE-COMPONENT-0002
     - must update DECISION-LOG.md with all new ADRs and core-components
     - must record decision records in the Decisions section of DECISION-LOG.md for every ADR and core-component created
-    - must create WI-0001-repository-understanding research brief
+    - must create a GitHub issue for repository understanding and its research brief
     - must not make new feature-level decisions
     - must not scaffold or modify application source code
 bootstrap:
@@ -82,6 +83,7 @@ bootstrap:
     - codebase exploration and editing
     - file creation and editing
     - terminal execution
+    - GitHub CLI (gh)
   read_paths:
     - docs/
     - docs/architecture/ADR/ADR-0001-template.md
@@ -125,6 +127,7 @@ research:
     - web search and documentation lookup
     - codebase exploration (grep, glob, file reading)
     - external API/library research
+    - GitHub CLI (gh) for fetching issue details
   read_paths:
     - docs/
     - docs/architecture/ADR/
@@ -132,11 +135,11 @@ research:
     - docs/architecture/ADR/DECISION-LOG.md
     - application source code
   write_paths:
-    - docs/workitems/<WI-ID>/research/00-research.md
+    - docs/issues/<ISSUE_NUMBER>/research/00-research.md
   templates:
     - Research Brief (Section 5.1)
   guardrails:
-    - classify scope_type as exactly one of workitem, architecture_decision, core_component
+    - classify scope_type as exactly one of issue, architecture_decision, core_component
     - inspect existing repo code and docs before proposing new work
     - explicitly state if ADRs or core-components are required
     - propose ADR titles and core-component titles when applicable
@@ -148,7 +151,7 @@ planner:
     - codebase exploration (grep, glob, file reading)
     - file creation and editing
   read_paths:
-    - docs/workitems/<WI-ID>/research/00-research.md
+    - docs/issues/<ISSUE_NUMBER>/research/00-research.md
     - docs/architecture/ADR/ADR-0001-template.md
     - docs/architecture/core-components/CORE-COMPONENT-0001-template.md
     - docs/architecture/ADR/DECISION-LOG.md
@@ -159,9 +162,9 @@ planner:
     - docs/architecture/ADR/ADR-####-slug.md
     - docs/architecture/core-components/CORE-COMPONENT-####-slug.md
     - docs/architecture/ADR/DECISION-LOG.md
-    - docs/workitems/<WI-ID>/plan/01-action-plan.md
-    - docs/workitems/<WI-ID>/plan/02-task-breakdown.md
-    - docs/workitems/<WI-ID>/plan/03-test-plan.md
+    - docs/issues/<ISSUE_NUMBER>/plan/01-action-plan.md
+    - docs/issues/<ISSUE_NUMBER>/plan/02-task-breakdown.md
+    - docs/issues/<ISSUE_NUMBER>/plan/03-test-plan.md
   templates:
     - docs/architecture/ADR/ADR-0001-template.md
     - docs/architecture/core-components/CORE-COMPONENT-0001-template.md
@@ -172,7 +175,7 @@ planner:
     - no reusable cross-cutting behavior exists unless it is a core-component
     - every ADR or core-component change must update DECISION-LOG.md
     - every ADR or core-component must produce at least one decision record
-    - ADRs and core-components are global — not scoped to a workitem
+    - ADRs and core-components are global — not scoped to an issue
     - every task must have acceptance criteria
     - every task must have explicit test coverage requirements
     - tasks must reference relevant ADRs and core-components
@@ -184,14 +187,14 @@ implementer:
     - build and test execution
     - file creation
   read_paths:
-    - docs/workitems/<WI-ID>/plan/
+    - docs/issues/<ISSUE_NUMBER>/plan/
     - docs/architecture/ADR/
     - docs/architecture/core-components/
     - application source code
   write_paths:
     - application source code
     - test files
-    - docs/workitems/<WI-ID>/implementation/README.md
+    - docs/issues/<ISSUE_NUMBER>/implementation/README.md
   templates: []
   guardrails:
     - must implement within architectural boundaries defined by ADRs and core-components
@@ -210,7 +213,7 @@ verifier:
     - docs/architecture/ADR/
     - docs/architecture/core-components/
     - AGENTS.md
-    - docs/workitems/<WI-ID>/
+    - docs/issues/<ISSUE_NUMBER>/
     - .github/soft-factory/verification.yml
     - application source code and test files
   write_paths:
@@ -224,7 +227,7 @@ verifier:
     - must load verification commands from .github/soft-factory/verification.yml when present
     - must fall back to auto-detecting applicable verification steps from project files when verification config is absent
     - must not push directly to main or master
-    - must create feature branches following pattern <type>/<WI-ID>-<short-slug>
+    - must create feature branches following pattern <type>/<ISSUE_NUMBER>-<short-slug>
     - must follow Conventional Commits for all commit messages and the PR title
     - must include Co-authored-by trailer on every commit
     - must not force-push or use --no-verify
@@ -235,18 +238,18 @@ verifier:
 TEMPLATE_PATHS: YAML<<
 adr: docs/architecture/ADR/ADR-0001-template.md
 core_component: docs/architecture/core-components/CORE-COMPONENT-0001-template.md
-action_plan: docs/workitems/<WI-ID>/plan/01-action-plan.md
-task_breakdown: docs/workitems/<WI-ID>/plan/02-task-breakdown.md
-test_plan: docs/workitems/<WI-ID>/plan/03-test-plan.md
-research_brief: docs/workitems/<WI-ID>/research/00-research.md
+action_plan: docs/issues/<ISSUE_NUMBER>/plan/01-action-plan.md
+task_breakdown: docs/issues/<ISSUE_NUMBER>/plan/02-task-breakdown.md
+test_plan: docs/issues/<ISSUE_NUMBER>/plan/03-test-plan.md
+research_brief: docs/issues/<ISSUE_NUMBER>/research/00-research.md
 >>
 SCOPE_TYPES: YAML<<
-- workitem
+- issue
 - architecture_decision
 - core_component
 >>
 NAMING: YAML<<
-workitems: "WI-####-short-slug"
+issues: "GitHub Issue #<number>"
 adrs: "ADR-####-short-slug.md"
 core_components: "CORE-COMPONENT-####-short-slug.md"
 >>
@@ -257,7 +260,7 @@ core_components: "CORE-COMPONENT-####-short-slug.md"
 
 <runtime>
 SCOPE_TYPE: ""
-WI_ID: ""
+ISSUE_NUMBER: ""
 ADRS: []
 CORE_COMPONENTS: []
 DECISIONS: []
@@ -278,32 +281,32 @@ RUN `research`
 RUN `plan`
 RUN `implement`
 RUN `verify`
-RETURN: SCOPE_TYPE, WI_ID
+RETURN: SCOPE_TYPE, ISSUE_NUMBER
 </process>
 
 <process id="research" name="Research stage">
 SET SCOPE_TYPE := <CLASSIFICATION> (from "Agent Inference" using USER_INPUT)
-SET WI_ID := <ID> (from "Agent Inference")
+SET ISSUE_NUMBER := <ID> (from "Agent Inference")
 </process>
 
 <process id="plan" name="Plan stage">
-SET ADRS := <ADR_LIST> (from "Agent Inference" using WI_ID, SCOPE_TYPE)
-SET CORE_COMPONENTS := <CC_LIST> (from "Agent Inference" using WI_ID, SCOPE_TYPE)
+SET ADRS := <ADR_LIST> (from "Agent Inference" using ISSUE_NUMBER, SCOPE_TYPE)
+SET CORE_COMPONENTS := <CC_LIST> (from "Agent Inference" using ISSUE_NUMBER, SCOPE_TYPE)
 SET DECISIONS := <DECISION_LIST> (from "Agent Inference" using ADRS, CORE_COMPONENTS)
-SET ACTION_PLAN := <PLAN> (from "Agent Inference" using WI_ID)
-SET TASK_BREAKDOWN := <TASKS> (from "Agent Inference" using WI_ID, ACTION_PLAN)
-SET TEST_PLAN := <TESTS> (from "Agent Inference" using WI_ID, TASK_BREAKDOWN)
+SET ACTION_PLAN := <PLAN> (from "Agent Inference" using ISSUE_NUMBER)
+SET TASK_BREAKDOWN := <TASKS> (from "Agent Inference" using ISSUE_NUMBER, ACTION_PLAN)
+SET TEST_PLAN := <TESTS> (from "Agent Inference" using ISSUE_NUMBER, TASK_BREAKDOWN)
 </process>
 
 <process id="implement" name="Implement stage">
-SET RESULT := <OUTCOME> (from "Agent Inference" using WI_ID, TASK_BREAKDOWN, TEST_PLAN)
+SET RESULT := <OUTCOME> (from "Agent Inference" using ISSUE_NUMBER, TASK_BREAKDOWN, TEST_PLAN)
 </process>
 
 <process id="verify" name="Verify stage">
-SET VERIFY_RESULT := <OUTCOME> (from "Agent Inference" using WI_ID)
+SET VERIFY_RESULT := <OUTCOME> (from "Agent Inference" using ISSUE_NUMBER)
 </process>
 </processes>
 
 <input>
-USER_INPUT is the work item description, scope classification, or pipeline routing request.
+USER_INPUT is the GitHub issue number, URL, or description for pipeline routing.
 </input>
