@@ -23,10 +23,10 @@ You MUST fall back to auto-detecting and running all applicable verification ste
 You MUST NOT proceed if any configured or auto-detected verification step fails; stop immediately and report which step failed.
 You MUST check the current git branch before making changes.
 You MUST NOT push directly to main or master; always work on a feature branch.
-You MUST create a feature branch following the pattern <type>/<WI-ID>-<short-slug> when on main or master.
+You MUST create a feature branch following the pattern <type>/<ISSUE_NUMBER>-<short-slug> when on main or master, where <ISSUE_NUMBER> is the GitHub issue number.
 You MUST stay on the current branch if already on a feature branch.
 You MUST stage all changed and new files using git add while respecting .gitignore.
-You MUST NOT stage files unrelated to the current work item.
+You MUST NOT stage files unrelated to the current GitHub issue.
 You MUST follow the Conventional Commits specification for every commit message and the PR title.
 You MUST include a Co-authored-by trailer on every commit crediting the AI model.
 You MUST group related file changes into logical, atomic commits.
@@ -40,7 +40,7 @@ You MUST push the feature branch to the remote origin.
 You MUST use the GitHub CLI (gh pr create) to create a pull request.
 You MUST assign the PR to Copilot for review using the --reviewer flag.
 You MUST stop and instruct the user to authenticate if the gh CLI is not authenticated.
-You MUST summarize what was done, reference the work item ID, and list all ADRs and core-components in the PR body.
+You MUST summarize what was done, reference the GitHub issue with "Closes #<number>" in the PR body, and list all ADRs and core-components.
 You SHOULD update documentation when implementation changes warrant it.
 </instructions>
 
@@ -49,9 +49,9 @@ DECISION_LOG_PATH: "docs/architecture/ADR/DECISION-LOG.md"
 ADR_DIR: "docs/architecture/ADR"
 CORE_COMPONENT_DIR: "docs/architecture/core-components"
 AGENTS_MD_PATH: "AGENTS.md"
-WORKITEM_DIR: "docs/workitems"
+ISSUES_DIR: "docs/issues"
 VERIFICATION_CONFIG_PATH: ".github/soft-factory/verification.yml"
-BRANCH_PATTERN: "<TYPE>/<WI-ID>-<SHORT_SLUG>"
+BRANCH_PATTERN: "<TYPE>/<ISSUE_NUMBER>-<SHORT_SLUG>"
 CO_AUTHOR_TRAILER: "Co-authored-by: github-copilot[bot] <175728472+github-copilot[bot]@users.noreply.github.com>"
 PROTECTED_BRANCHES: YAML<<
 - main
@@ -72,8 +72,8 @@ TEST_RUNNER_SIGNALS: YAML<<
 </constants>
 
 <formats>
-<format id="VERIFY_REPORT" name="Verify Report" purpose="Summarize all verification and shipping actions taken for a work item.">
-## Verify Report — <WI_ID>
+<format id="VERIFY_REPORT" name="Verify Report" purpose="Summarize all verification and shipping actions taken for a GitHub issue.">
+## Verify Report — <ISSUE_NUMBER>
 
 **Branch:** <BRANCH_NAME>
 **PR:** <PR_URL>
@@ -96,11 +96,11 @@ WHERE:
 - <PR_URL> is URI.
 - <STATUS> is String.
 - <VERIFICATION_SUMMARY> is Markdown.
-- <WI_ID> is String.
+- <ISSUE_NUMBER> is String.
 </format>
 
 <format id="VERIFY_ERROR" name="Verify Error" purpose="Report a blocking error that prevents verification or shipping.">
-## Verify Blocked — <WI_ID>
+## Verify Blocked — <ISSUE_NUMBER>
 
 **Stage:** <STAGE>
 **Error:** <ERROR_MESSAGE>
@@ -115,12 +115,12 @@ WHERE:
 - <ERROR_MESSAGE> is String.
 - <FIX> is String.
 - <STAGE> is String.
-- <WI_ID> is String.
+- <ISSUE_NUMBER> is String.
 </format>
 </formats>
 
 <runtime>
-WI_ID: ""
+ISSUE_NUMBER: ""
 SHORT_SLUG: ""
 BRANCH_NAME: ""
 CURRENT_BRANCH: ""
@@ -146,10 +146,10 @@ RUN `detect-context`
 RUN `load-verification-config`
 RUN `run-verification`
 IF VERIFICATION_PASSED is false:
-  RETURN: format="VERIFY_ERROR", wi_id=WI_ID, stage="Verification", error_message="Verification failed", details=VERIFICATION_RESULTS, fix="Fix failing verification steps before shipping"
+  RETURN: format="VERIFY_ERROR", issue_number=ISSUE_NUMBER, stage="Verification", error_message="Verification failed", details=VERIFICATION_RESULTS, fix="Fix failing verification steps before shipping"
 RUN `check-gh-auth`
 IF GH_AUTHENTICATED is false:
-  RETURN: format="VERIFY_ERROR", wi_id=WI_ID, stage="Authentication", error_message="GitHub CLI not authenticated", details="gh auth status failed", fix="Run 'gh auth login' to authenticate"
+  RETURN: format="VERIFY_ERROR", issue_number=ISSUE_NUMBER, stage="Authentication", error_message="GitHub CLI not authenticated", details="gh auth status failed", fix="Run 'gh auth login' to authenticate"
 RUN `prepare-branch`
 RUN `detect-changes`
 RUN `commit-implementation`
@@ -162,12 +162,12 @@ RUN `verify-clean`
 RUN `push-branch`
 RUN `create-pr`
 SET ADR_CC_LIST := <MERGED_LIST> (from "Agent Inference" using ADR_CHANGES, CC_CHANGES)
-RETURN: format="VERIFY_REPORT", wi_id=WI_ID, branch_name=BRANCH_NAME, pr_url=PR_URL, commit_list=COMMITS, adr_cc_list=ADR_CC_LIST, verification_summary=VERIFICATION_RESULTS, status="Verified and shipped"
+RETURN: format="VERIFY_REPORT", issue_number=ISSUE_NUMBER, branch_name=BRANCH_NAME, pr_url=PR_URL, commit_list=COMMITS, adr_cc_list=ADR_CC_LIST, verification_summary=VERIFICATION_RESULTS, status="Verified and shipped"
 </process>
 
-<process id="detect-context" name="Detect work item ID and slug">
-SET WI_ID := <ID> (from "Agent Inference" using USER_INPUT, WORKITEM_DIR)
-SET SHORT_SLUG := <SLUG> (from "Agent Inference" using WI_ID, WORKITEM_DIR)
+<process id="detect-context" name="Detect GitHub issue ID and slug">
+SET ISSUE_NUMBER := <ID> (from "Agent Inference" using USER_INPUT, ISSUES_DIR)
+SET SHORT_SLUG := <SLUG> (from "Agent Inference" using ISSUE_NUMBER, ISSUES_DIR)
 </process>
 
 <process id="load-verification-config" name="Load verification commands from config file or fall back to auto-detection">
@@ -204,7 +204,7 @@ SET GH_AUTHENTICATED := <RESULT> (from "Agent Inference" using GH_STATUS)
 USE `execute/runInTerminal` where: command="git branch --show-current"
 CAPTURE CURRENT_BRANCH from `execute/runInTerminal`
 IF CURRENT_BRANCH matches PROTECTED_BRANCHES:
-  SET BRANCH_NAME := <NAME> (from "Agent Inference" using BRANCH_PATTERN, WI_ID, SHORT_SLUG)
+  SET BRANCH_NAME := <NAME> (from "Agent Inference" using BRANCH_PATTERN, ISSUE_NUMBER, SHORT_SLUG)
   USE `execute/runInTerminal` where: command="git checkout -b <BRANCH_NAME>"
 ELSE:
   SET BRANCH_NAME := CURRENT_BRANCH (from "Agent Inference")
@@ -254,7 +254,7 @@ SET COMMITS := COMMITS + [COMMIT_HASH] (from "Agent Inference")
 <process id="update-docs" name="Update documentation if implementation changes warrant it">
 SET DOCS_NEEDED := <NEEDED> (from "Agent Inference" using CHANGED_FILES)
 IF DOCS_NEEDED is true:
-  SET DOC_UPDATES := <UPDATES> (from "Agent Inference" using CHANGED_FILES, WI_ID)
+  SET DOC_UPDATES := <UPDATES> (from "Agent Inference" using CHANGED_FILES, ISSUE_NUMBER)
   USE `execute/runInTerminal` where: command="git add docs/ README.md"
   USE `execute/runInTerminal` where: command="git commit -m 'docs: update documentation' -m '' -m 'CO_AUTHOR_TRAILER'"
   CAPTURE COMMIT_HASH from `execute/runInTerminal`
@@ -265,7 +265,7 @@ IF DOCS_NEEDED is true:
 USE `execute/runInTerminal` where: command="git status --porcelain"
 CAPTURE STATUS_OUTPUT from `execute/runInTerminal`
 IF STATUS_OUTPUT is not empty:
-  RETURN: format="VERIFY_ERROR", wi_id=WI_ID, stage="Verify Clean", error_message="Uncommitted changes remain", details=STATUS_OUTPUT, fix="Stage and commit remaining changes"
+  RETURN: format="VERIFY_ERROR", issue_number=ISSUE_NUMBER, stage="Verify Clean", error_message="Uncommitted changes remain", details=STATUS_OUTPUT, fix="Stage and commit remaining changes"
 </process>
 
 <process id="push-branch" name="Push the feature branch to remote origin">
@@ -274,14 +274,15 @@ CAPTURE PUSH_OUTPUT from `execute/runInTerminal`
 </process>
 
 <process id="create-pr" name="Create a pull request using the GitHub CLI">
-SET PR_TITLE := <TITLE> (from "Agent Inference" using WI_ID, SHORT_SLUG)
-SET PR_BODY := <BODY> (from "Agent Inference" using WI_ID, COMMITS, ADR_CHANGES, CC_CHANGES)
-USE `execute/runInTerminal` where: command="gh pr create --title '<PR_TITLE>' --body '<PR_BODY>' --reviewer Copilot"
+SET PR_TITLE := <TITLE> (from "Agent Inference" using ISSUE_NUMBER, SHORT_SLUG)
+SET PR_BODY := <BODY> (from "Agent Inference" using ISSUE_NUMBER, COMMITS, ADR_CHANGES, CC_CHANGES)
+USE `edit/createFile` where: content=PR_BODY, filePath="/tmp/pr-body.md"
+USE `execute/runInTerminal` where: command="gh pr create --title '<PR_TITLE>' --body-file /tmp/pr-body.md --reviewer Copilot"
 CAPTURE PR_OUTPUT from `execute/runInTerminal`
 SET PR_URL := <URL> (from "Agent Inference" using PR_OUTPUT)
 </process>
 </processes>
 
 <input>
-USER_INPUT is the work item ID (e.g., WI-0042) and optionally any verification instructions or overrides.
+USER_INPUT is the GitHub issue number (e.g., 42) and optionally any verification instructions or overrides.
 </input>

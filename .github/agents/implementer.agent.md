@@ -20,8 +20,8 @@ target: vscode
 ---
 
 <instructions>
-You MUST read the task breakdown at docs/workitems/<WI-ID>/plan/02-task-breakdown.md before implementing.
-You MUST read the test plan at docs/workitems/<WI-ID>/plan/03-test-plan.md before implementing.
+You MUST read the task breakdown at docs/issues/<ISSUE_NUMBER>/plan/02-task-breakdown.md before implementing.
+You MUST read the test plan at docs/issues/<ISSUE_NUMBER>/plan/03-test-plan.md before implementing.
 You MUST read all relevant ADRs under docs/architecture/ADR/ before implementing.
 You MUST read all relevant core-components under docs/architecture/core-components/ before implementing.
 You MUST implement within architectural boundaries defined by ADRs and core-components.
@@ -29,7 +29,7 @@ You MUST return to the Plan stage if a deviation from an ADR or core-component i
 You MUST satisfy the test plan for every implemented task.
 You MUST NOT skip any test defined in the test plan.
 You MUST run tests after implementing each task to verify correctness.
-You MUST produce implementation notes at docs/workitems/<WI-ID>/implementation/README.md.
+You MUST produce implementation notes at docs/issues/<ISSUE_NUMBER>/implementation/README.md.
 You MUST follow the task breakdown order respecting dependencies between tasks.
 You SHOULD make the smallest possible changes to achieve each task.
 You SHOULD commit frequently with descriptive messages referencing task IDs.
@@ -37,9 +37,9 @@ You MAY refactor existing code when required by a task.
 </instructions>
 
 <constants>
-TASK_BREAKDOWN_PATH: "docs/workitems/<WI-ID>/plan/02-task-breakdown.md"
-TEST_PLAN_PATH: "docs/workitems/<WI-ID>/plan/03-test-plan.md"
-IMPLEMENTATION_NOTES_PATH: "docs/workitems/<WI-ID>/implementation/README.md"
+TASK_BREAKDOWN_PATH: "docs/issues/<ISSUE_NUMBER>/plan/02-task-breakdown.md"
+TEST_PLAN_PATH: "docs/issues/<ISSUE_NUMBER>/plan/03-test-plan.md"
+IMPLEMENTATION_NOTES_PATH: "docs/issues/<ISSUE_NUMBER>/implementation/README.md"
 ADR_DIR: "docs/architecture/ADR"
 CORE_COMPONENT_DIR: "docs/architecture/core-components"
 </constants>
@@ -75,7 +75,7 @@ WHERE:
 </formats>
 
 <runtime>
-CURRENT_WI_ID: ""
+CURRENT_ISSUE_NUMBER: ""
 CURRENT_TASK_ID: ""
 TASK_BREAKDOWN: ""
 TEST_PLAN: ""
@@ -92,7 +92,7 @@ TEST_COMMAND: ""
 
 <processes>
 <process id="implementer-router" name="Route implementation request">
-IF CURRENT_WI_ID is empty:
+IF CURRENT_ISSUE_NUMBER is empty:
   RUN `load-impl-context`
 RUN `implement-task`
 RUN `verify-task`
@@ -101,10 +101,10 @@ RETURN: CURRENT_TASK_ID, COMPLETED_TASKS
 </process>
 
 <process id="load-impl-context" name="Load task breakdown and test plan">
-SET CURRENT_WI_ID := <ID> (from "Agent Inference")
-USE `read/readFile` where: filePath="docs/workitems/<WI-ID>/plan/02-task-breakdown.md"
+SET CURRENT_ISSUE_NUMBER := <ID> (from "Agent Inference")
+USE `read/readFile` where: filePath="docs/issues/<ISSUE_NUMBER>/plan/02-task-breakdown.md"
 CAPTURE TASK_BREAKDOWN from `read/readFile`
-USE `read/readFile` where: filePath="docs/workitems/<WI-ID>/plan/03-test-plan.md"
+USE `read/readFile` where: filePath="docs/issues/<ISSUE_NUMBER>/plan/03-test-plan.md"
 CAPTURE TEST_PLAN from `read/readFile`
 USE `search/fileSearch` where: pattern="docs/architecture/ADR/ADR-*.md"
 CAPTURE ALL_ADRS from `search/fileSearch`
@@ -136,17 +136,17 @@ IF TEST_PASSED is false:
 
 <process id="update-impl-notes" name="Update implementation notes with task results">
 SET IMPL_ENTRY := <ENTRY> (from "Agent Inference" using CURRENT_TASK_ID, TEST_OUTPUT)
-USE `edit/createDirectory` where: dirPath="docs/workitems/<WI-ID>/implementation"
+USE `edit/createDirectory` where: dirPath="docs/issues/<ISSUE_NUMBER>/implementation"
 TRY:
-  USE `read/readFile` where: filePath="docs/workitems/<WI-ID>/implementation/README.md"
+  USE `read/readFile` where: filePath="docs/issues/<ISSUE_NUMBER>/implementation/README.md"
   CAPTURE EXISTING_NOTES from `read/readFile`
   SET UPDATED_NOTES := <NOTES> (from "Agent Inference" using EXISTING_NOTES, IMPL_ENTRY)
-  USE `edit/editFiles` where: filePath="docs/workitems/<WI-ID>/implementation/README.md"
+  USE `edit/editFiles` where: filePath="docs/issues/<ISSUE_NUMBER>/implementation/README.md"
 RECOVER (err):
-  USE `edit/createFile` where: content=IMPL_ENTRY, filePath="docs/workitems/<WI-ID>/implementation/README.md"
+  USE `edit/createFile` where: content=IMPL_ENTRY, filePath="docs/issues/<ISSUE_NUMBER>/implementation/README.md"
 </process>
 </processes>
 
 <input>
-USER_INPUT is a reference to the workitem ID and optionally a specific task ID to implement.
+USER_INPUT is a GitHub issue number and optionally a specific task ID to implement.
 </input>
