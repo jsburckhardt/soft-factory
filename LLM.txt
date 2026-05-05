@@ -3,8 +3,11 @@ CONTRIBUTING.md                                             — Human contributi
 LLM.txt                                                     — This file; repo map for AI agents
 README.md                                                   — Project overview
 .devcontainer/devcontainer.json                             — Dev container configuration
-.github/agents/aps-v1.2.1.agent.md                         — APS prompt generator agent
+.github/agents/aps-v1.2.2.agent.md                         — APS prompt generator agent
+.github/agents/bootstrap.agent.md                           — Bootstrap agent (new project scaffolding)
 .github/agents/excali.agent.md                              — Excalidraw diagram agent
+.github/agents/justdoit.agent.md                            — JustDoIt agent (single-pass RPIV for small issues)
+.github/agents/onboard-repo.agent.md                        — Onboard-repo agent (introduce Soft Factory to existing repos)
 .github/agents/verifier.agent.md                      — Verifier agent (test validation, commits, PR creation)
 .github/agents/implementer.agent.md                   — Implementer agent (code, tests, verification)
 .github/agents/planner.agent.md                       — Planner agent (ADRs, core-components, action plans, task breakdown, test plans)
@@ -18,11 +21,4 @@ docs/architecture/ADR/DECISION-LOG.md                       — Registry of all 
 docs/architecture/core-components/CORE-COMPONENT-0001-template.md — Core-component template (read-only, copy to create new)
 docs/architecture/core-components/CORE-COMPONENT-0002-commit-standards.md — Commit standards (Conventional Commits, Co-authored-by)
 docs/architecture/core-components/README.md                 — Core-components index
-docs/workitems/README.md                                    — Workitems index and naming conventions
-docs/workitems/WI-0001-example/README.md                    — Example workitem overview
-docs/workitems/WI-0001-example/artifacts/README.md          — Supporting artifacts for the workitem
-docs/workitems/WI-0001-example/implementation/README.md     — Implementation notes
-docs/workitems/WI-0001-example/plan/01-action-plan.md       — Action plan (from Plan stage)
-docs/workitems/WI-0001-example/plan/02-task-breakdown.md    — Task breakdown with acceptance criteria
-docs/workitems/WI-0001-example/plan/03-test-plan.md         — Test plan with coverage requirements
-docs/workitems/WI-0001-example/research/00-research.md      — Research brief (scope classification, findings)
+docs/issues/README.md                                       — Issues index and canonical structure

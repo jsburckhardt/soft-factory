@@ -11,7 +11,7 @@ This directory contains all active core-component definitions for the project.
 
 ## Conventions
 
-- Core-components are **global** — they define reusable, cross-cutting behavior shared across all workitems
+- Core-components are **global** — they define reusable, cross-cutting behavior shared across all issues
 - Core-component IDs are sequential and never reused
 - Deprecated core-components are marked as such and link to the replacement
 - Every core-component should reference the ADR(s) that motivate it

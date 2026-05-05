@@ -35,9 +35,9 @@ What becomes easier or harder as a result of this decision?
 ### Neutral
 -
 
-## Related Workitems
+## Related Issues
 
-- [WI-####-slug](../../workitems/WI-####-slug/)
+- [#ISSUE_NUMBER](../../issues/ISSUE_NUMBER/)
 
 ## References
 

@@ -12,10 +12,10 @@ This directory contains all architectural documentation for the project.
 ## Key Concepts
 
 ### ADRs (Architecture Decision Records)
-ADRs capture significant architectural decisions. They are **global** — not scoped to any single workitem. Every ADR must be recorded in `ADR/DECISION-LOG.md`.
+ADRs capture significant architectural decisions. They are **global** — not scoped to any single issue. Every ADR must be recorded in `ADR/DECISION-LOG.md`.
 
 ### Core-Components
-Core-components define reusable, cross-cutting behavioral contracts. They are **global** and shared across all workitems. Every core-component must be recorded in `ADR/DECISION-LOG.md`.
+Core-components define reusable, cross-cutting behavioral contracts. They are **global** and shared across all issues. Every core-component must be recorded in `ADR/DECISION-LOG.md`.
 
 ### Templates
 Templates are read-only references — copy and rename them, don't edit them directly:
