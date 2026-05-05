@@ -26,8 +26,8 @@ Each stage has clear inputs, outputs, and artifact locations. No stage may be sk
 ## Stage 2 — Plan
 
 - Reads the research brief before creating any architectural artifacts
-- Creates ADRs in `docs/architecture/ADR/` using the ADR template
-- Creates core-components in `docs/architecture/core-components/` using the core-component template
+- Creates ADRs in `docs/architecture/ADR/` using the ADR template **when the research brief identifies them as needed**
+- Creates core-components in `docs/architecture/core-components/` using the core-component template **when the research brief identifies them as needed**
 - Updates `docs/architecture/ADR/DECISION-LOG.md` with every new ADR or core-component
 - Produces `docs/issues/<ISSUE_NUMBER>/plan/01-action-plan.md` with the chosen approach
 - Produces `docs/issues/<ISSUE_NUMBER>/plan/02-task-breakdown.md` with acceptance criteria for every task

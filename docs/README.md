@@ -8,7 +8,7 @@ This directory contains all project documentation organized by category.
 |-----------|---------|
 | `application/` | Application-specific documentation (API docs, user guides, etc.) |
 | `architecture/` | Architectural decisions, core-components, and templates |
-| `issues/` | Per-issue pipeline artifacts following Research → Plan → Implement → Verify |
+| `issues/` | Per-issue pipeline artifacts (research briefs, plans, implementation notes) |
 
 ## Conventions
 

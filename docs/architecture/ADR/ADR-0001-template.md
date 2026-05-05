@@ -37,7 +37,7 @@ What becomes easier or harder as a result of this decision?
 
 ## Related Issues
 
-- [#ISSUE_NUMBER](../../issues/ISSUE_NUMBER/)
+- [#ISSUE_NUMBER](https://github.com/ORG/REPO/issues/ISSUE_NUMBER)
 
 ## References
 
