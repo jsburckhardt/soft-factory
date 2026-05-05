@@ -22,10 +22,10 @@ target: vscode
 
 <instructions>
 You MUST fetch the GitHub issue details using `gh issue view <number> --json title,body,labels,assignees,milestone` before any research.
-You MUST read all existing documentation under docs/ before proposing new work.
-You MUST read all existing ADRs under docs/architecture/ADR/ before proposing new work.
-You MUST read all existing core-components under docs/architecture/core-components/ before proposing new work.
-You MUST read the decision log at docs/architecture/ADR/DECISION-LOG.md before proposing new work.
+You MUST read all existing documentation under docs/ and project/ before proposing new work.
+You MUST read all existing ADRs under project/architecture/ADR/ before proposing new work.
+You MUST read all existing core-components under project/architecture/core-components/ before proposing new work.
+You MUST read the decision log at project/architecture/ADR/DECISION-LOG.md before proposing new work.
 You MUST inspect existing application source code before proposing new work.
 You MUST classify scope_type as exactly one of: issue, architecture_decision, core_component.
 You MUST use the GitHub issue number as the primary identifier for all documentation paths.
@@ -34,7 +34,7 @@ You MUST explicitly state whether core-components are required for the issue.
 You MUST propose ADR titles when ADRs are required.
 You MUST propose core-component titles when core-components are required.
 You MUST NOT make architectural decisions; only propose them.
-You MUST produce the research brief at docs/issues/<ISSUE_NUMBER>/research/00-research.md where <ISSUE_NUMBER> is the GitHub issue number.
+You MUST produce the research brief at project/issues/<ISSUE_NUMBER>/research/00-research.md where <ISSUE_NUMBER> is the GitHub issue number.
 You MUST follow the Research Brief template defined in Section 5.1 of the specification.
 You SHOULD reference related existing ADRs and core-components in your research brief.
 You SHOULD identify risks, open questions, and unknowns in the research brief.
@@ -44,13 +44,14 @@ You MAY consult external documentation or APIs for additional context.
 <constants>
 READ_PATHS: YAML<<
 - docs/
-- docs/architecture/ADR/
-- docs/architecture/core-components/
-- docs/architecture/ADR/DECISION-LOG.md
+- project/
+- project/architecture/ADR/
+- project/architecture/core-components/
+- project/architecture/ADR/DECISION-LOG.md
 - application source code
 >>
 WRITE_PATHS: YAML<<
-- docs/issues/<ISSUE_NUMBER>/research/00-research.md
+- project/issues/<ISSUE_NUMBER>/research/00-research.md
 >>
 SCOPE_TYPES: YAML<<
 - issue
@@ -131,11 +132,11 @@ SET ISSUE_BODY := <BODY> (from "Agent Inference" using ISSUE_JSON)
 </process>
 
 <process id="gather-context" name="Gather existing context from repo">
-USE `search/fileSearch` where: pattern="docs/architecture/ADR/ADR-*.md"
+USE `search/fileSearch` where: pattern="project/architecture/ADR/ADR-*.md"
 CAPTURE EXISTING_ADRS from `search/fileSearch`
-USE `search/fileSearch` where: pattern="docs/architecture/core-components/CORE-COMPONENT-*.md"
+USE `search/fileSearch` where: pattern="project/architecture/core-components/CORE-COMPONENT-*.md"
 CAPTURE EXISTING_CORE_COMPONENTS from `search/fileSearch`
-USE `read/readFile` where: filePath="docs/architecture/ADR/DECISION-LOG.md"
+USE `read/readFile` where: filePath="project/architecture/ADR/DECISION-LOG.md"
 CAPTURE DECISION_LOG from `read/readFile`
 </process>
 
@@ -145,8 +146,8 @@ SET SCOPE_CLASSIFICATION := <SCOPE> (from "Agent Inference" using ISSUE_TITLE, I
 
 <process id="produce-brief" name="Produce the research brief document">
 SET BRIEF_CONTENT := <CONTENT> (from "Agent Inference" using CURRENT_ISSUE_NUMBER, ISSUE_TITLE, ISSUE_BODY, SCOPE_CLASSIFICATION, EXISTING_ADRS, EXISTING_CORE_COMPONENTS)
-USE `edit/createDirectory` where: dirPath="docs/issues/<ISSUE_NUMBER>/research"
-USE `edit/createFile` where: content=BRIEF_CONTENT, filePath="docs/issues/<ISSUE_NUMBER>/research/00-research.md"
+USE `edit/createDirectory` where: dirPath="project/issues/<ISSUE_NUMBER>/research"
+USE `edit/createFile` where: content=BRIEF_CONTENT, filePath="project/issues/<ISSUE_NUMBER>/research/00-research.md"
 SET RESEARCH_COMPLETE := true (from "Agent Inference")
 </process>
 </processes>

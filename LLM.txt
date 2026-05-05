@@ -12,13 +12,13 @@ README.md                                                   — Project overview
 .github/agents/implementer.agent.md                   — Implementer agent (code, tests, verification)
 .github/agents/planner.agent.md                       — Planner agent (ADRs, core-components, action plans, task breakdown, test plans)
 .github/agents/research.agent.md                      — Research agent (exploration, scope classification)
-docs/README.md                                              — Docs directory index
-docs/application/README.md                                  — Application-specific documentation
-docs/architecture/README.md                                 — Architecture documentation index
-docs/architecture/soft-factory-pipeline.excalidraw          — Pipeline diagram source
-docs/architecture/ADR/ADR-0001-template.md                  — ADR template (read-only, copy to create new)
-docs/architecture/ADR/DECISION-LOG.md                       — Registry of all ADR and core-component decisions
-docs/architecture/core-components/CORE-COMPONENT-0001-template.md — Core-component template (read-only, copy to create new)
-docs/architecture/core-components/CORE-COMPONENT-0002-commit-standards.md — Commit standards (Conventional Commits, Co-authored-by)
-docs/architecture/core-components/README.md                 — Core-components index
-docs/issues/README.md                                       — Issues index and canonical structure
+docs/README.md                                              — Application documentation index
+project/README.md                                             — Project documentation index
+project/architecture/README.md                                 — Architecture documentation index
+project/architecture/soft-factory-pipeline.excalidraw          — Pipeline diagram source
+project/architecture/ADR/ADR-0001-template.md                  — ADR template (read-only, copy to create new)
+project/architecture/ADR/DECISION-LOG.md                       — Registry of all ADR and core-component decisions
+project/architecture/core-components/CORE-COMPONENT-0001-template.md — Core-component template (read-only, copy to create new)
+project/architecture/core-components/CORE-COMPONENT-0002-commit-standards.md — Commit standards (Conventional Commits, Co-authored-by)
+project/architecture/core-components/README.md                 — Core-components index
+project/issues/README.md                                       — Issues index and canonical structure
