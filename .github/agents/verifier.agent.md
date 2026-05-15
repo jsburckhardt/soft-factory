@@ -165,15 +165,15 @@ RUN `load-verification-config`
 RUN `run-verification`
 IF VERIFICATION_PASSED is false:
   RETURN: format="VERIFY_ERROR", issue_number=ISSUE_NUMBER, stage="Verification", error_message="Verification failed", details=VERIFICATION_RESULTS, fix="Fix failing verification steps before shipping"
-RUN `fetch-acceptance-criteria`
-RUN `validate-acceptance-criteria`
-IF AC_ALL_PASSED is false:
-  RETURN: format="VERIFY_ERROR", issue_number=ISSUE_NUMBER, stage="Acceptance Criteria", error_message="One or more acceptance criteria failed validation", details=AC_VALIDATION_RESULTS, fix="Address failing acceptance criteria before shipping"
 RUN `check-gh-auth`
 IF GH_AUTHENTICATED is false:
   RETURN: format="VERIFY_ERROR", issue_number=ISSUE_NUMBER, stage="Authentication", error_message="GitHub CLI not authenticated", details="gh auth status failed", fix="Run 'gh auth login' to authenticate"
 RUN `prepare-branch`
 RUN `detect-changes`
+RUN `fetch-acceptance-criteria`
+RUN `validate-acceptance-criteria`
+IF AC_ALL_PASSED is false:
+  RETURN: format="VERIFY_ERROR", issue_number=ISSUE_NUMBER, stage="Acceptance Criteria", error_message="One or more acceptance criteria failed validation", details=AC_VALIDATION_RESULTS, fix="Address failing acceptance criteria before shipping"
 RUN `commit-implementation`
 IF ADR_CHANGES is not empty or CC_CHANGES is not empty:
   RUN `update-decision-log`
@@ -212,7 +212,8 @@ FOREACH criterion IN ACCEPTANCE_CRITERIA:
 
 <process id="update-issue-acceptance" name="Update the GitHub issue body to mark satisfied acceptance criteria as checked">
 SET UPDATED_BODY := <BODY> (from "Agent Inference" using ISSUE_BODY, AC_VALIDATION_RESULTS; replace `- [ ]` with `- [x]` for criteria with status=passed, preserve all other content)
-USE `execute/runInTerminal` where: command="gh issue edit <ISSUE_NUMBER> --body '<UPDATED_BODY>'"
+USE `edit/createFile` where: content=UPDATED_BODY, filePath="/tmp/issue-body.md"
+USE `execute/runInTerminal` where: command="gh issue edit <ISSUE_NUMBER> --body-file /tmp/issue-body.md"
 </process>
 
 <process id="load-verification-config" name="Load verification commands from config file or fall back to auto-detection">
@@ -324,7 +325,8 @@ CAPTURE PR_TEMPLATE from `read/readFile`
 SET PR_TITLE := <TITLE> (from "Agent Inference" using ISSUE_NUMBER, SHORT_SLUG; must follow Conventional Commits format)
 SET AC_SECTION := <SECTION> (from "Agent Inference" using AC_VALIDATION_RESULTS; render each criterion as `- [x]` if passed or `- [ ]` if not_verifiable, with evidence summary per item)
 SET PR_BODY := <BODY> (from "Agent Inference" using PR_TEMPLATE, ISSUE_NUMBER, AC_SECTION, COMMITS, ADR_CHANGES, CC_CHANGES, VERIFICATION_RESULTS; populate all template sections, replace issue number placeholder, insert AC_SECTION between ACCEPTANCE_CRITERIA_START/END markers, assert body contains "Closes #<ISSUE_NUMBER>")
-USE `execute/runInTerminal` where: command="printf '%s' '<PR_BODY>' | gh pr create --title '<PR_TITLE>' --body-file -"
+USE `edit/createFile` where: content=PR_BODY, filePath="/tmp/pr-body.md"
+USE `execute/runInTerminal` where: command="gh pr create --title '<PR_TITLE>' --body-file /tmp/pr-body.md"
 CAPTURE PR_OUTPUT from `execute/runInTerminal`
 SET PR_URL := <URL> (from "Agent Inference" using PR_OUTPUT)
 </process>

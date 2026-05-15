@@ -51,6 +51,7 @@ You MAY suggest labels based on the issue content.
 <constants>
 DECISION_LOG_PATH: "project/architecture/ADR/DECISION-LOG.md"
 ISSUES_DIR: "project/issues"
+MAX_REVISIONS: 2
 
 ISSUE_SECTIONS: YAML<<
 - id: problem
@@ -201,10 +202,12 @@ WHERE:
 <runtime>
 FEATURE_DESCRIPTION: ""
 HISTORY_ANALYSIS: ""
+HISTORY_OUTPUTS: []
 DRAFT_TITLE: ""
 DRAFT_BODY: ""
 RUBBER_DUCK_RESULT: ""
 RUBBER_DUCK_OK: false
+REVISION_COUNT: 0
 ISSUE_URL: ""
 ISSUE_NUMBER: ""
 </runtime>
@@ -236,12 +239,14 @@ SET FEATURE_DESCRIPTION := <DESC> (from "Agent Inference" using USER_INPUT)
 </process>
 
 <process id="analyze-history" name="Run git history analysis for pitfall detection">
+SET HISTORY_OUTPUTS := [] (from "Agent Inference")
 FOREACH cmd IN HISTORY_COMMANDS:
   USE `execute/runInTerminal` where: command=cmd.command
-  CAPTURE cmd_output from `execute/runInTerminal`
+  CAPTURE CMD_OUTPUT from `execute/runInTerminal`
+  SET HISTORY_OUTPUTS := HISTORY_OUTPUTS + [{name: cmd.name, output: CMD_OUTPUT}] (from "Agent Inference")
 USE `execute/runInTerminal` where: command="git --no-pager log --all --format='%h %s' | grep -i 'fix:\\|address\\|correct\\|align' | head -30"
 CAPTURE FIX_PATTERNS from `execute/runInTerminal`
-SET HISTORY_ANALYSIS := <ANALYSIS> (from "Agent Inference" using FIX_PATTERNS, KNOWN_PITFALLS)
+SET HISTORY_ANALYSIS := <ANALYSIS> (from "Agent Inference" using HISTORY_OUTPUTS, FIX_PATTERNS, KNOWN_PITFALLS)
 </process>
 
 <process id="draft-issue" name="Compose the issue body from context and history">
@@ -258,13 +263,17 @@ SET RUBBER_DUCK_OK := <IS_APPROVED> (from "Agent Inference" using RUBBER_DUCK_RE
 
 <process id="revise-draft" name="Incorporate rubber-duck feedback into the draft">
 SET DRAFT_BODY := <REVISED_BODY> (from "Agent Inference" using DRAFT_BODY, RUBBER_DUCK_RESULT, KNOWN_PITFALLS)
+SET REVISION_COUNT := REVISION_COUNT + 1 (from "Agent Inference")
 RUN `rubber-duck-review`
-IF RUBBER_DUCK_OK is false:
-  SET RUBBER_DUCK_OK := true (from "Agent Inference")
+IF RUBBER_DUCK_OK is false AND REVISION_COUNT < MAX_REVISIONS:
+  RUN `revise-draft`
+IF RUBBER_DUCK_OK is false AND REVISION_COUNT >= MAX_REVISIONS:
+  RETURN: format="GENERATION_ERROR", failed_stage="Rubber-Duck Review", error_message="Draft not approved after maximum revision attempts", recovery="Review the rubber-duck feedback manually and refine the issue description before retrying"
 </process>
 
 <process id="create-issue" name="Create the issue via GitHub CLI">
-USE `execute/runInTerminal` where: command="gh issue create --title '<DRAFT_TITLE>' --body '<DRAFT_BODY>'"
+USE `edit/createFile` where: content=DRAFT_BODY, filePath="/tmp/issue-body.md"
+USE `execute/runInTerminal` where: command="gh issue create --title '<DRAFT_TITLE>' --body-file /tmp/issue-body.md"
 CAPTURE CREATE_OUTPUT from `execute/runInTerminal`
 SET ISSUE_URL := <URL> (from "Agent Inference" using CREATE_OUTPUT)
 SET ISSUE_NUMBER := <NUMBER> (from "Agent Inference" using CREATE_OUTPUT)
