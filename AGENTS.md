@@ -209,7 +209,7 @@ implementer:
     - must not skip tests defined in the test plan
 verifier:
   file: .github/agents/verifier.agent.md
-  purpose: Verify completed work — run tests, validate acceptance criteria, create commits following Conventional Commits, push, and open a PR assigned to Copilot for review.
+  purpose: Verify completed work — run tests, validate acceptance criteria, create commits following Conventional Commits, push, and open a PR for review.
   tools:
     - terminal execution (git, gh, test runners)
     - file reading and editing
@@ -246,7 +246,6 @@ verifier:
     - must not force-push or use --no-verify
     - must not modify application source code
     - must verify the branch is clean after all commits
-    - must assign the PR to Copilot for review
 issue-generator:
   file: .github/agents/issue-generator.agent.md
   purpose: Analyze codebase history for recurring pitfalls, draft a comprehensive GitHub issue with structured acceptance criteria, dispatch a rubber-duck subagent to critique it, then create the issue via gh. Runs before the RPIV pipeline to produce properly formatted issues.

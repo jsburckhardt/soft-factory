@@ -1,6 +1,6 @@
 ---
 name: verifier
-description: "Own the Verify stage of the RPIV pipeline — run tests, validate implementation, create commits following Conventional Commits, push, and open a PR assigned to Copilot for review."
+description: "Own the Verify stage of the RPIV pipeline — run tests, validate implementation, create commits following Conventional Commits, push, and open a PR for review."
 tools:
   - search/codebase
   - search/fileSearch
@@ -45,7 +45,6 @@ You MUST update the GitHub issue body after PR creation to mark satisfied criter
 You MUST read the PR template from `.github/PULL_REQUEST_TEMPLATE.md` and populate it with acceptance criteria status, changes summary, ADR/core-component references, and `Closes #<ISSUE_NUMBER>`.
 You MUST assert the final PR body contains `Closes #<ISSUE_NUMBER>` before running `gh pr create`.
 You MUST use the GitHub CLI (gh pr create) to create a pull request.
-You MUST assign the PR to Copilot for review using the --reviewer flag.
 You MUST stop and instruct the user to authenticate if the gh CLI is not authenticated.
 You MUST summarize what was done, reference the GitHub issue with "Closes #<number>" in the PR body, and list all ADRs and core-components.
 You SHOULD update documentation when implementation changes warrant it.
@@ -325,7 +324,7 @@ CAPTURE PR_TEMPLATE from `read/readFile`
 SET PR_TITLE := <TITLE> (from "Agent Inference" using ISSUE_NUMBER, SHORT_SLUG; must follow Conventional Commits format)
 SET AC_SECTION := <SECTION> (from "Agent Inference" using AC_VALIDATION_RESULTS; render each criterion as `- [x]` if passed or `- [ ]` if not_verifiable, with evidence summary per item)
 SET PR_BODY := <BODY> (from "Agent Inference" using PR_TEMPLATE, ISSUE_NUMBER, AC_SECTION, COMMITS, ADR_CHANGES, CC_CHANGES, VERIFICATION_RESULTS; populate all template sections, replace issue number placeholder, insert AC_SECTION between ACCEPTANCE_CRITERIA_START/END markers, assert body contains "Closes #<ISSUE_NUMBER>")
-USE `execute/runInTerminal` where: command="printf '%s' '<PR_BODY>' | gh pr create --title '<PR_TITLE>' --body-file - --reviewer Copilot"
+USE `execute/runInTerminal` where: command="printf '%s' '<PR_BODY>' | gh pr create --title '<PR_TITLE>' --body-file -"
 CAPTURE PR_OUTPUT from `execute/runInTerminal`
 SET PR_URL := <URL> (from "Agent Inference" using PR_OUTPUT)
 </process>
