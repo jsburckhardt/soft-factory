@@ -13,6 +13,7 @@ You MUST return to the Plan stage if implementation diverges from an ADR or core
 You MUST inspect existing repo code and documentation before proposing new work.
 You MUST NOT skip any stage in the pipeline.
 You MUST update the APS version badge in README.md and the APS_BADGE constant when the APS skill is upgraded.
+You MUST mark a PR review comment as resolved via the GitHub API after fixing the issue it raised.
 </instructions>
 
 <constants>
