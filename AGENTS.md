@@ -13,6 +13,7 @@ You MUST return to the Plan stage if implementation diverges from an ADR or core
 You MUST inspect existing repo code and documentation before proposing new work.
 You MUST NOT skip any stage in the pipeline.
 You MUST update the APS version badge in README.md and the APS_BADGE constant when the APS skill is upgraded.
+You MUST mark a PR review comment as resolved via the GitHub API after fixing the issue it raised.
 </instructions>
 
 <constants>
@@ -144,6 +145,8 @@ research:
     - Research Brief (Section 5.1)
   guardrails:
     - classify scope_type as exactly one of issue, architecture_decision, core_component
+    - validate that the issue has structured acceptance criteria; stop if absent
+    - extract acceptance criteria from the issue and include them in the research brief
     - inspect existing repo code and docs before proposing new work
     - explicitly state if ADRs or core-components are required
     - propose ADR titles and core-component titles when applicable
@@ -207,7 +210,7 @@ implementer:
     - must not skip tests defined in the test plan
 verifier:
   file: .github/agents/verifier.agent.md
-  purpose: Verify completed work — run tests, create commits following Conventional Commits, push, and open a PR assigned to Copilot for review.
+  purpose: Verify completed work — run tests, validate acceptance criteria, create commits following Conventional Commits, push, and open a PR for review.
   tools:
     - terminal execution (git, gh, test runners)
     - file reading and editing
@@ -219,6 +222,7 @@ verifier:
     - AGENTS.md
     - project/issues/<ISSUE_NUMBER>/
     - .github/soft-factory/verification.yml
+    - .github/PULL_REQUEST_TEMPLATE.md
     - application source code and test files
   write_paths:
     - project/architecture/ADR/DECISION-LOG.md
@@ -226,11 +230,16 @@ verifier:
     - docs/
     - project/
     - README.md
-  templates: []
+  templates:
+    - .github/PULL_REQUEST_TEMPLATE.md
   guardrails:
     - must not proceed if any configured or auto-detected verification step fails
     - must load verification commands from .github/soft-factory/verification.yml when present
     - must fall back to auto-detecting applicable verification steps from project files when verification config is absent
+    - must fetch and validate acceptance criteria from the GitHub issue before creating the PR
+    - must not proceed to push or PR creation if any acceptance criterion fails validation
+    - must update the GitHub issue body to mark satisfied acceptance criteria as checked after PR creation
+    - must populate the PR description from the PR template with acceptance criteria status
     - must not push directly to main or master
     - must create feature branches following pattern <type>/<ISSUE_NUMBER>-<short-slug>
     - must follow Conventional Commits for all commit messages and the PR title
@@ -238,7 +247,32 @@ verifier:
     - must not force-push or use --no-verify
     - must not modify application source code
     - must verify the branch is clean after all commits
-    - must assign the PR to Copilot for review
+issue-generator:
+  file: .github/agents/issue-generator.agent.md
+  purpose: Analyze codebase history for recurring pitfalls, draft a comprehensive GitHub issue with structured acceptance criteria, dispatch a rubber-duck subagent to critique it, then create the issue via gh. Runs before the RPIV pipeline to produce properly formatted issues.
+  tools:
+    - codebase exploration (search, grep, file reading)
+    - terminal execution (git, gh)
+    - file creation
+    - web fetch
+    - subagent dispatch (rubber-duck)
+  read_paths:
+    - project/architecture/ADR/DECISION-LOG.md
+    - AGENTS.md
+    - LLM.txt
+    - project/issues/
+    - application source code
+  write_paths:
+    - GitHub issues (via gh issue create)
+  templates: []
+  guardrails:
+    - must read AGENTS.md and DECISION-LOG.md before starting
+    - must run git history analysis to surface recurring fix patterns
+    - must structure every issue with all required sections (Problem, Proposed Solution, Technical Considerations, Known Pitfalls, Acceptance Criteria, Testing)
+    - must format acceptance criteria as markdown checkboxes with ACCEPTANCE_CRITERIA_START/END HTML markers
+    - must dispatch a rubber-duck subagent to critique the draft before creating the issue
+    - must incorporate rubber-duck feedback before issue creation
+    - must not create an issue without rubber-duck review
 >>
 TEMPLATE_PATHS: YAML<<
 adr: project/architecture/ADR/ADR-0001-template.md
@@ -247,6 +281,7 @@ action_plan: project/issues/<ISSUE_NUMBER>/plan/01-action-plan.md
 task_breakdown: project/issues/<ISSUE_NUMBER>/plan/02-task-breakdown.md
 test_plan: project/issues/<ISSUE_NUMBER>/plan/03-test-plan.md
 research_brief: project/issues/<ISSUE_NUMBER>/research/00-research.md
+pull_request: .github/PULL_REQUEST_TEMPLATE.md
 >>
 SCOPE_TYPES: YAML<<
 - issue

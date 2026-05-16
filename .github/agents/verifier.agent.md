@@ -1,6 +1,6 @@
 ---
 name: verifier
-description: "Own the Verify stage of the RPIV pipeline — run tests, validate implementation, create commits following Conventional Commits, push, and open a PR assigned to Copilot for review."
+description: "Own the Verify stage of the RPIV pipeline — run tests, validate implementation, create commits following Conventional Commits, push, and open a PR for review."
 tools:
   - search/codebase
   - search/fileSearch
@@ -37,8 +37,14 @@ You MUST check whether new or modified agent definitions exist in the changeset 
 You MUST verify the branch is clean with no uncommitted changes after all commits.
 You MUST NOT force-push or use --no-verify.
 You MUST push the feature branch to the remote origin.
+You MUST fetch the GitHub issue body and extract acceptance criteria before creating the PR.
+You MUST parse acceptance criteria between `<!-- ACCEPTANCE_CRITERIA_START -->` and `<!-- ACCEPTANCE_CRITERIA_END -->` markers; if markers are absent, fall back to parsing `- [ ]` checkboxes under the `## Acceptance Criteria` heading.
+You MUST validate each acceptance criterion against the implementation by producing evidence (file paths, test names, commands, or docs) for each; mark criteria without concrete evidence as `not verifiable`.
+You MUST NOT proceed to push or create the PR if any acceptance criterion is `failed`; return a VERIFY_ERROR.
+You MUST update the GitHub issue body after PR creation to mark satisfied criteria as checked (`- [x]`), preserving all other content.
+You MUST read the PR template from `.github/PULL_REQUEST_TEMPLATE.md` and populate it with acceptance criteria status, changes summary, ADR/core-component references, and `Closes #<ISSUE_NUMBER>`.
+You MUST assert the final PR body contains `Closes #<ISSUE_NUMBER>` before running `gh pr create`.
 You MUST use the GitHub CLI (gh pr create) to create a pull request.
-You MUST assign the PR to Copilot for review using the --reviewer flag.
 You MUST stop and instruct the user to authenticate if the gh CLI is not authenticated.
 You MUST summarize what was done, reference the GitHub issue with "Closes #<number>" in the PR body, and list all ADRs and core-components.
 You SHOULD update documentation when implementation changes warrant it.
@@ -51,6 +57,10 @@ CORE_COMPONENT_DIR: "project/architecture/core-components"
 AGENTS_MD_PATH: "AGENTS.md"
 ISSUES_DIR: "project/issues"
 VERIFICATION_CONFIG_PATH: ".github/soft-factory/verification.yml"
+PR_TEMPLATE_PATH: ".github/PULL_REQUEST_TEMPLATE.md"
+AC_START_MARKER: "<!-- ACCEPTANCE_CRITERIA_START -->"
+AC_END_MARKER: "<!-- ACCEPTANCE_CRITERIA_END -->"
+AC_FALLBACK_HEADING: "## Acceptance Criteria"
 BRANCH_PATTERN: "<TYPE>/<ISSUE_NUMBER>-<SHORT_SLUG>"
 CO_AUTHOR_TRAILER: "Co-authored-by: github-copilot[bot] <175728472+github-copilot[bot]@users.noreply.github.com>"
 PROTECTED_BRANCHES: YAML<<
@@ -81,6 +91,9 @@ TEST_RUNNER_SIGNALS: YAML<<
 ### Commits
 <COMMIT_LIST>
 
+### Acceptance Criteria
+<AC_SUMMARY>
+
 ### ADRs / Core-Components Referenced
 <ADR_CC_LIST>
 
@@ -90,6 +103,7 @@ TEST_RUNNER_SIGNALS: YAML<<
 ### Status
 <STATUS>
 WHERE:
+- <AC_SUMMARY> is Markdown.
 - <ADR_CC_LIST> is Markdown.
 - <BRANCH_NAME> is String.
 - <COMMIT_LIST> is Markdown.
@@ -134,6 +148,10 @@ ADR_CHANGES: []
 CC_CHANGES: []
 AGENT_CHANGES: false
 GH_AUTHENTICATED: false
+ACCEPTANCE_CRITERIA: []
+AC_VALIDATION_RESULTS: []
+AC_ALL_PASSED: false
+ISSUE_BODY: ""
 </runtime>
 
 <triggers>
@@ -152,6 +170,10 @@ IF GH_AUTHENTICATED is false:
   RETURN: format="VERIFY_ERROR", issue_number=ISSUE_NUMBER, stage="Authentication", error_message="GitHub CLI not authenticated", details="gh auth status failed", fix="Run 'gh auth login' to authenticate"
 RUN `prepare-branch`
 RUN `detect-changes`
+RUN `fetch-acceptance-criteria`
+RUN `validate-acceptance-criteria`
+IF AC_ALL_PASSED is false:
+  RETURN: format="VERIFY_ERROR", issue_number=ISSUE_NUMBER, stage="Acceptance Criteria", error_message="One or more acceptance criteria failed validation", details=AC_VALIDATION_RESULTS, fix="Address failing acceptance criteria before shipping"
 RUN `commit-implementation`
 IF ADR_CHANGES is not empty or CC_CHANGES is not empty:
   RUN `update-decision-log`
@@ -161,6 +183,7 @@ RUN `update-docs`
 RUN `verify-clean`
 RUN `push-branch`
 RUN `create-pr`
+RUN `update-issue-acceptance`
 SET ADR_CC_LIST := <MERGED_LIST> (from "Agent Inference" using ADR_CHANGES, CC_CHANGES)
 RETURN: format="VERIFY_REPORT", issue_number=ISSUE_NUMBER, branch_name=BRANCH_NAME, pr_url=PR_URL, commit_list=COMMITS, adr_cc_list=ADR_CC_LIST, verification_summary=VERIFICATION_RESULTS, status="Verified and shipped"
 </process>
@@ -168,6 +191,29 @@ RETURN: format="VERIFY_REPORT", issue_number=ISSUE_NUMBER, branch_name=BRANCH_NA
 <process id="detect-context" name="Detect GitHub issue ID and slug">
 SET ISSUE_NUMBER := <ID> (from "Agent Inference" using USER_INPUT, ISSUES_DIR)
 SET SHORT_SLUG := <SLUG> (from "Agent Inference" using ISSUE_NUMBER, ISSUES_DIR)
+</process>
+
+<process id="fetch-acceptance-criteria" name="Fetch and parse acceptance criteria from the GitHub issue">
+USE `execute/runInTerminal` where: command="gh issue view <ISSUE_NUMBER> --json body --jq '.body'"
+CAPTURE ISSUE_BODY from `execute/runInTerminal`
+SET ACCEPTANCE_CRITERIA := <CRITERIA_LIST> (from "Agent Inference" using ISSUE_BODY, AC_START_MARKER, AC_END_MARKER, AC_FALLBACK_HEADING; parse checkboxes between markers or under heading; each item is {text, checked})
+IF ACCEPTANCE_CRITERIA is empty:
+  RETURN: format="VERIFY_ERROR", issue_number=ISSUE_NUMBER, stage="Acceptance Criteria", error_message="No acceptance criteria found in issue body", details="The issue must contain acceptance criteria as markdown checkboxes. Use the issue-generator agent to create properly structured issues.", fix="Re-create the issue using @issue-generator or manually add an Acceptance Criteria section with - [ ] checkboxes"
+</process>
+
+<process id="validate-acceptance-criteria" name="Validate each acceptance criterion against the implementation">
+SET AC_ALL_PASSED := true (from "Agent Inference")
+FOREACH criterion IN ACCEPTANCE_CRITERIA:
+  SET VALIDATION := <RESULT> (from "Agent Inference" using criterion.text, CHANGED_FILES, ISSUES_DIR, ISSUE_NUMBER; evaluate whether the implementation satisfies this criterion by checking code, tests, and docs; produce {status: passed|failed|not_verifiable, evidence: string})
+  SET AC_VALIDATION_RESULTS := AC_VALIDATION_RESULTS + [{criterion: criterion.text, status: VALIDATION.status, evidence: VALIDATION.evidence}] (from "Agent Inference")
+  IF VALIDATION.status = "failed":
+    SET AC_ALL_PASSED := false (from "Agent Inference")
+</process>
+
+<process id="update-issue-acceptance" name="Update the GitHub issue body to mark satisfied acceptance criteria as checked">
+SET UPDATED_BODY := <BODY> (from "Agent Inference" using ISSUE_BODY, AC_VALIDATION_RESULTS; replace `- [ ]` with `- [x]` for criteria with status=passed, preserve all other content)
+USE `edit/createFile` where: content=UPDATED_BODY, filePath="/tmp/issue-body.md"
+USE `execute/runInTerminal` where: command="gh issue edit <ISSUE_NUMBER> --body-file /tmp/issue-body.md"
 </process>
 
 <process id="load-verification-config" name="Load verification commands from config file or fall back to auto-detection">
@@ -273,11 +319,14 @@ USE `execute/runInTerminal` where: command="git push -u origin <BRANCH_NAME>"
 CAPTURE PUSH_OUTPUT from `execute/runInTerminal`
 </process>
 
-<process id="create-pr" name="Create a pull request using the GitHub CLI">
-SET PR_TITLE := <TITLE> (from "Agent Inference" using ISSUE_NUMBER, SHORT_SLUG)
-SET PR_BODY := <BODY> (from "Agent Inference" using ISSUE_NUMBER, COMMITS, ADR_CHANGES, CC_CHANGES)
+<process id="create-pr" name="Create a pull request using the PR template and acceptance criteria">
+USE `read/readFile` where: filePath=PR_TEMPLATE_PATH
+CAPTURE PR_TEMPLATE from `read/readFile`
+SET PR_TITLE := <TITLE> (from "Agent Inference" using ISSUE_NUMBER, SHORT_SLUG; must follow Conventional Commits format)
+SET AC_SECTION := <SECTION> (from "Agent Inference" using AC_VALIDATION_RESULTS; render each criterion as `- [x]` if passed or `- [ ]` if not_verifiable, with evidence summary per item)
+SET PR_BODY := <BODY> (from "Agent Inference" using PR_TEMPLATE, ISSUE_NUMBER, AC_SECTION, COMMITS, ADR_CHANGES, CC_CHANGES, VERIFICATION_RESULTS; populate all template sections, replace issue number placeholder, insert AC_SECTION between ACCEPTANCE_CRITERIA_START/END markers, assert body contains "Closes #<ISSUE_NUMBER>")
 USE `edit/createFile` where: content=PR_BODY, filePath="/tmp/pr-body.md"
-USE `execute/runInTerminal` where: command="gh pr create --title '<PR_TITLE>' --body-file /tmp/pr-body.md --reviewer Copilot"
+USE `execute/runInTerminal` where: command="gh pr create --title '<PR_TITLE>' --body-file /tmp/pr-body.md"
 CAPTURE PR_OUTPUT from `execute/runInTerminal`
 SET PR_URL := <URL> (from "Agent Inference" using PR_OUTPUT)
 </process>

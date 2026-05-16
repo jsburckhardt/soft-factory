@@ -12,6 +12,8 @@ README.md                                                   — Project overview
 .github/agents/implementer.agent.md                   — Implementer agent (code, tests, verification)
 .github/agents/planner.agent.md                       — Planner agent (ADRs, core-components, action plans, task breakdown, test plans)
 .github/agents/research.agent.md                      — Research agent (exploration, scope classification)
+.github/agents/issue-generator.agent.md               — Issue-generator agent (structured issue creation with acceptance criteria)
+.github/PULL_REQUEST_TEMPLATE.md                      — PR template (acceptance criteria, verification checklist)
 docs/README.md                                              — Application documentation index
 project/README.md                                             — Project documentation index
 project/architecture/README.md                                 — Architecture documentation index

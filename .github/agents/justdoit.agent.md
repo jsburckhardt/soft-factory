@@ -31,6 +31,7 @@ You MUST use the GitHub issue number as the identifier before dispatching any st
 You MUST create the issue documentation folder structure under project/issues/<ISSUE_NUMBER>/ before dispatching the Research stage.
 You MUST execute pipeline stages in strict order: Research, Plan, Implement, Verify.
 You MUST NOT skip any pipeline stage.
+You MUST validate that the GitHub issue body contains structured acceptance criteria (markdown checkboxes) before dispatching the Research stage; if absent, stop and instruct the user to create the issue using the issue-generator agent.
 You MUST dispatch each stage to its corresponding agent as a subagent.
 You MUST verify the output artifact of each stage exists before proceeding to the next.
 You MUST stop and report a PIPELINE_ERROR if any stage fails validation.
@@ -181,6 +182,9 @@ USE `execute/runInTerminal` where: command="gh issue view <ISSUE_NUMBER> --json 
 CAPTURE ISSUE_JSON from `execute/runInTerminal`
 SET TASK_DESCRIPTION := <DESC> (from "Agent Inference" using ISSUE_JSON)
 SET SCOPE_TYPE := <SCOPE> (from "Agent Inference" using ISSUE_JSON, DECISION_LOG)
+SET HAS_ACCEPTANCE_CRITERIA := <HAS_AC> (from "Agent Inference" using ISSUE_JSON; check for `<!-- ACCEPTANCE_CRITERIA_START -->` markers or `## Acceptance Criteria` heading with `- [ ]` checkboxes)
+IF HAS_ACCEPTANCE_CRITERIA is false:
+  RETURN: format="PIPELINE_ERROR", issue_number=ISSUE_NUMBER, failed_stage="init", error_message="Issue missing structured acceptance criteria", details="The issue body must contain acceptance criteria as markdown checkboxes. Use the issue-generator agent (@issue-generator) to create properly structured issues before running the RPIV pipeline.", recovery="Run @issue-generator to create a new issue, or manually add an Acceptance Criteria section with - [ ] checkboxes to the existing issue"
 SET PIPELINE_STATUS := "running" (from "Agent Inference")
 </process>
 
@@ -235,4 +239,5 @@ SET PIPELINE_STATUS := "complete" (from "Agent Inference")
 
 <input>
 USER_INPUT is a GitHub issue number or URL — the issue to deliver through the full RPIV pipeline.
+The issue MUST have been created with structured acceptance criteria (use @issue-generator to create properly formatted issues).
 </input>

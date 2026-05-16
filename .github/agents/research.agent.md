@@ -27,6 +27,8 @@ You MUST read all existing ADRs under project/architecture/ADR/ before proposing
 You MUST read all existing core-components under project/architecture/core-components/ before proposing new work.
 You MUST read the decision log at project/architecture/ADR/DECISION-LOG.md before proposing new work.
 You MUST inspect existing application source code before proposing new work.
+You MUST validate that the issue body contains structured acceptance criteria (markdown checkboxes between `<!-- ACCEPTANCE_CRITERIA_START -->` and `<!-- ACCEPTANCE_CRITERIA_END -->` markers, or under an `## Acceptance Criteria` heading); if absent, stop and instruct the user to create the issue using the issue-generator agent.
+You MUST extract the acceptance criteria from the issue body and include them verbatim in the research brief.
 You MUST classify scope_type as exactly one of: issue, architecture_decision, core_component.
 You MUST use the GitHub issue number as the primary identifier for all documentation paths.
 You MUST explicitly state whether ADRs are required for the issue.
@@ -83,9 +85,13 @@ SCOPE_TYPES: YAML<<
 ## Proposed Core-Components
 <PROPOSED_CORE_COMPONENTS>
 
+## Acceptance Criteria (from issue)
+<ACCEPTANCE_CRITERIA>
+
 ## Risks and Open Questions
 <RISKS>
 WHERE:
+- <ACCEPTANCE_CRITERIA> is Markdown.
 - <EXISTING_CONTEXT> is Markdown.
 - <ISSUE_NUMBER> is Integer.
 - <ISSUE_TITLE> is String.
@@ -102,6 +108,7 @@ WHERE:
 CURRENT_ISSUE_NUMBER: ""
 ISSUE_TITLE: ""
 ISSUE_BODY: ""
+ACCEPTANCE_CRITERIA: ""
 SCOPE_CLASSIFICATION: ""
 EXISTING_ADRS: []
 EXISTING_CORE_COMPONENTS: []
@@ -123,12 +130,15 @@ IF RESEARCH_COMPLETE is false:
 RETURN: CURRENT_ISSUE_NUMBER, SCOPE_CLASSIFICATION
 </process>
 
-<process id="fetch-issue" name="Fetch GitHub issue details">
+<process id="fetch-issue" name="Fetch GitHub issue details and extract acceptance criteria">
 SET CURRENT_ISSUE_NUMBER := <NUMBER> (from "Agent Inference" using USER_INPUT)
 USE `execute/runInTerminal` where: command="gh issue view <CURRENT_ISSUE_NUMBER> --json title,body,labels,assignees,milestone"
 CAPTURE ISSUE_JSON from `execute/runInTerminal`
 SET ISSUE_TITLE := <TITLE> (from "Agent Inference" using ISSUE_JSON)
 SET ISSUE_BODY := <BODY> (from "Agent Inference" using ISSUE_JSON)
+SET ACCEPTANCE_CRITERIA := <AC> (from "Agent Inference" using ISSUE_BODY; extract checkboxes between `<!-- ACCEPTANCE_CRITERIA_START -->` and `<!-- ACCEPTANCE_CRITERIA_END -->` markers, or under `## Acceptance Criteria` heading as fallback)
+IF ACCEPTANCE_CRITERIA is empty:
+  RETURN: error="Issue #<CURRENT_ISSUE_NUMBER> is missing structured acceptance criteria. Use the issue-generator agent (@issue-generator) to create a properly formatted issue before running the RPIV pipeline."
 </process>
 
 <process id="gather-context" name="Gather existing context from repo">
@@ -145,7 +155,7 @@ SET SCOPE_CLASSIFICATION := <SCOPE> (from "Agent Inference" using ISSUE_TITLE, I
 </process>
 
 <process id="produce-brief" name="Produce the research brief document">
-SET BRIEF_CONTENT := <CONTENT> (from "Agent Inference" using CURRENT_ISSUE_NUMBER, ISSUE_TITLE, ISSUE_BODY, SCOPE_CLASSIFICATION, EXISTING_ADRS, EXISTING_CORE_COMPONENTS)
+SET BRIEF_CONTENT := <CONTENT> (from "Agent Inference" using CURRENT_ISSUE_NUMBER, ISSUE_TITLE, ISSUE_BODY, SCOPE_CLASSIFICATION, EXISTING_ADRS, EXISTING_CORE_COMPONENTS, ACCEPTANCE_CRITERIA)
 USE `edit/createDirectory` where: dirPath="project/issues/<ISSUE_NUMBER>/research"
 USE `edit/createFile` where: content=BRIEF_CONTENT, filePath="project/issues/<ISSUE_NUMBER>/research/00-research.md"
 SET RESEARCH_COMPLETE := true (from "Agent Inference")
