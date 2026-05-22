@@ -47,6 +47,8 @@ You MUST assert the final PR body contains `Closes #<ISSUE_NUMBER>` before runni
 You MUST use the GitHub CLI (gh pr create) to create a pull request.
 You MUST stop and instruct the user to authenticate if the gh CLI is not authenticated.
 You MUST summarize what was done, reference the GitHub issue with "Closes #<number>" in the PR body, and list all ADRs and core-components.
+You MUST write a summary.md to project/issues/<ISSUE_NUMBER>/verify/summary.md after PR creation using the write-summary process.
+You MUST NOT include secrets, tokens, environment variables, raw command output, or absolute local filesystem paths in summary.md.
 You SHOULD update documentation when implementation changes warrant it.
 </instructions>
 
@@ -107,10 +109,63 @@ WHERE:
 - <ADR_CC_LIST> is Markdown.
 - <BRANCH_NAME> is String.
 - <COMMIT_LIST> is Markdown.
+- <ISSUE_NUMBER> is String.
 - <PR_URL> is URI.
 - <STATUS> is String.
 - <VERIFICATION_SUMMARY> is Markdown.
+</format>
+
+<format id="SUMMARY_REPORT" name="Summary Report" purpose="Persistent markdown summary of feature delivery details written after PR creation.">
+# Verify Summary — #<ISSUE_NUMBER>
+
+## Feature Overview
+
+**Issue:** #<ISSUE_NUMBER> — <ISSUE_TITLE>
+
+<FEATURE_DESCRIPTION>
+
+## Branch & PR
+
+| Field | Value |
+|-------|-------|
+| Branch | `<BRANCH_NAME>` |
+| PR | [<PR_TITLE>](<PR_URL>) |
+
+## Commits
+
+| Hash | Message |
+|------|---------|
+<COMMITS_ROWS>
+
+## Acceptance Criteria
+
+| Status | Criterion | Evidence |
+|--------|-----------|----------|
+<AC_ROWS>
+
+## ADRs & Core-Components
+
+<ADR_CC_SECTION>
+
+## Verification Results
+
+<VERIFICATION_SECTION>
+
+## Generated At
+
+<GENERATED_AT>
+WHERE:
+- <AC_ROWS> is Markdown; one row per criterion formatted as `| ✅ passed | criterion text | evidence |` or `| ⬜ not verifiable | criterion text | evidence |`.
+- <ADR_CC_SECTION> is Markdown; table with columns `| ID | Title |` listing referenced ADRs and core-components, or the text `None referenced` if empty.
+- <BRANCH_NAME> is String.
+- <COMMITS_ROWS> is Markdown; one row per commit formatted as `| <short-hash> | <message> |` in chronological order; excludes the summary commit itself.
+- <FEATURE_DESCRIPTION> is String; one-paragraph description of what was delivered.
+- <GENERATED_AT> is ISO8601.
 - <ISSUE_NUMBER> is String.
+- <ISSUE_TITLE> is String.
+- <PR_TITLE> is String.
+- <PR_URL> is URI.
+- <VERIFICATION_SECTION> is Markdown; table with columns `| Category | Command | Status |` listing each verification step with pass or fail status, or the text `No configured verification commands detected` if none.
 </format>
 
 <format id="VERIFY_ERROR" name="Verify Error" purpose="Report a blocking error that prevents verification or shipping.">
@@ -128,13 +183,14 @@ WHERE:
 - <DETAILS> is Markdown.
 - <ERROR_MESSAGE> is String.
 - <FIX> is String.
-- <STAGE> is String.
 - <ISSUE_NUMBER> is String.
+- <STAGE> is String.
 </format>
 </formats>
 
 <runtime>
 ISSUE_NUMBER: ""
+ISSUE_TITLE: ""
 SHORT_SLUG: ""
 BRANCH_NAME: ""
 CURRENT_BRANCH: ""
@@ -144,6 +200,7 @@ VERIFICATION_PASSED: false
 CHANGED_FILES: []
 COMMITS: []
 PR_URL: ""
+PR_TITLE: ""
 ADR_CHANGES: []
 CC_CHANGES: []
 AGENT_CHANGES: false
@@ -183,6 +240,7 @@ RUN `update-docs`
 RUN `verify-clean`
 RUN `push-branch`
 RUN `create-pr`
+RUN `write-summary`
 RUN `update-issue-acceptance`
 SET ADR_CC_LIST := <MERGED_LIST> (from "Agent Inference" using ADR_CHANGES, CC_CHANGES)
 RETURN: format="VERIFY_REPORT", issue_number=ISSUE_NUMBER, branch_name=BRANCH_NAME, pr_url=PR_URL, commit_list=COMMITS, adr_cc_list=ADR_CC_LIST, verification_summary=VERIFICATION_RESULTS, status="Verified and shipped"
@@ -329,6 +387,33 @@ USE `edit/createFile` where: content=PR_BODY, filePath="/tmp/pr-body.md"
 USE `execute/runInTerminal` where: command="gh pr create --title '<PR_TITLE>' --body-file /tmp/pr-body.md"
 CAPTURE PR_OUTPUT from `execute/runInTerminal`
 SET PR_URL := <URL> (from "Agent Inference" using PR_OUTPUT)
+</process>
+
+<process id="write-summary" name="Write summary.md with feature delivery details">
+USE `execute/runInTerminal` where: command="gh issue view <ISSUE_NUMBER> --json title --jq '.title'"
+CAPTURE ISSUE_TITLE from `execute/runInTerminal`
+SET SUMMARY_DIR := "project/issues/<ISSUE_NUMBER>/verify" (from "Agent Inference" using ISSUE_NUMBER, ISSUES_DIR)
+SET SUMMARY_PATH := "project/issues/<ISSUE_NUMBER>/verify/summary.md" (from "Agent Inference" using SUMMARY_DIR)
+SET FEATURE_DESCRIPTION := <TEXT> (from "Agent Inference" using ISSUE_TITLE, ISSUE_NUMBER, COMMITS, AC_VALIDATION_RESULTS; one-paragraph summary of what was delivered)
+SET COMMITS_ROWS := <ROWS> (from "Agent Inference" using COMMITS; one `| <short-hash> | <message> |` row per commit in chronological order; excludes the summary commit itself)
+SET AC_ROWS := <ROWS> (from "Agent Inference" using AC_VALIDATION_RESULTS; one row per criterion as `| ✅ passed | criterion text | evidence |` or `| ⬜ not verifiable | criterion text | evidence |`)
+SET ADR_CC_SECTION := <SECTION> (from "Agent Inference" using ADR_CHANGES, CC_CHANGES; table with `| ID | Title |` columns listing referenced items, or `None referenced` if both are empty)
+SET VERIFICATION_SECTION := <SECTION> (from "Agent Inference" using VERIFICATION_RESULTS; table with `| Category | Command | Status |` columns listing each step with pass or fail, or `No configured verification commands detected` if empty)
+SET GENERATED_AT := <TIMESTAMP> (from "Agent Inference"; current ISO 8601 timestamp)
+SET SUMMARY_CONTENT := <CONTENT> (from "Agent Inference" using SUMMARY_REPORT format, ISSUE_NUMBER, ISSUE_TITLE, FEATURE_DESCRIPTION, BRANCH_NAME, PR_TITLE, PR_URL, COMMITS_ROWS, AC_ROWS, ADR_CC_SECTION, VERIFICATION_SECTION, GENERATED_AT; content must not include secrets, tokens, environment variables, raw command output, or absolute local filesystem paths)
+TRY:
+  USE `execute/runInTerminal` where: command="mkdir -p <SUMMARY_DIR>"
+  USE `edit/createFile` where: content=SUMMARY_CONTENT, filePath=SUMMARY_PATH
+  USE `execute/runInTerminal` where: command="git add <SUMMARY_PATH>"
+  USE `execute/runInTerminal` where: command="git diff --cached --quiet -- <SUMMARY_PATH>"
+  CAPTURE DIFF_STATUS from `execute/runInTerminal`
+  IF DIFF_STATUS indicates changes staged:
+    USE `execute/runInTerminal` where: command="git commit -m 'docs: add verify summary for #<ISSUE_NUMBER>' -m '' -m 'CO_AUTHOR_TRAILER'"
+    USE `execute/runInTerminal` where: command="git push origin <BRANCH_NAME>"
+  ELSE:
+    TELL "Summary unchanged — skipping commit and push." level=brief
+RECOVER (err):
+  RETURN: format="VERIFY_ERROR", issue_number=ISSUE_NUMBER, stage="Summary", error_message="Failed to write, commit, or push summary", details=err, fix="Pull latest changes and re-run the verifier"
 </process>
 </processes>
 
