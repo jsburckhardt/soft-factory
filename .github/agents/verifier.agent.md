@@ -241,6 +241,7 @@ RUN `verify-clean`
 RUN `push-branch`
 RUN `create-pr`
 RUN `write-summary`
+RUN `verify-clean`
 RUN `update-issue-acceptance`
 SET ADR_CC_LIST := <MERGED_LIST> (from "Agent Inference" using ADR_CHANGES, CC_CHANGES)
 RETURN: format="VERIFY_REPORT", issue_number=ISSUE_NUMBER, branch_name=BRANCH_NAME, pr_url=PR_URL, commit_list=COMMITS, adr_cc_list=ADR_CC_LIST, verification_summary=VERIFICATION_RESULTS, status="Verified and shipped"
@@ -405,10 +406,10 @@ TRY:
   USE `execute/runInTerminal` where: command="mkdir -p <SUMMARY_DIR>"
   USE `edit/createFile` where: content=SUMMARY_CONTENT, filePath=SUMMARY_PATH
   USE `execute/runInTerminal` where: command="git add <SUMMARY_PATH>"
-  USE `execute/runInTerminal` where: command="git diff --cached --quiet -- <SUMMARY_PATH>"
-  CAPTURE DIFF_STATUS from `execute/runInTerminal`
-  IF DIFF_STATUS indicates changes staged:
-    USE `execute/runInTerminal` where: command="git commit -m 'docs: add verify summary for #<ISSUE_NUMBER>' -m '' -m 'CO_AUTHOR_TRAILER'"
+  USE `execute/runInTerminal` where: command="git diff --cached --name-only -- <SUMMARY_PATH>"
+  CAPTURE STAGED_SUMMARY_FILES from `execute/runInTerminal`
+  IF STAGED_SUMMARY_FILES is not empty:
+    USE `execute/runInTerminal` where: command="git commit -m 'docs: add verify summary for #<ISSUE_NUMBER>' -m '' -m '<CO_AUTHOR_TRAILER>'"
     USE `execute/runInTerminal` where: command="git push origin <BRANCH_NAME>"
   ELSE:
     TELL "Summary unchanged — skipping commit and push." level=brief
