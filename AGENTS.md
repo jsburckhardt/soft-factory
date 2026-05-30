@@ -229,6 +229,7 @@ verifier:
     - AGENTS.md
     - docs/
     - project/
+    - project/issues/<ISSUE_NUMBER>/verify/summary.md
     - README.md
   templates:
     - .github/PULL_REQUEST_TEMPLATE.md
@@ -247,6 +248,7 @@ verifier:
     - must not force-push or use --no-verify
     - must not modify application source code
     - must verify the branch is clean after all commits
+    - must write summary.md to project/issues/<ISSUE_NUMBER>/verify/ after PR creation
 issue-generator:
   file: .github/agents/issue-generator.agent.md
   purpose: Analyze codebase history for recurring pitfalls, draft a comprehensive GitHub issue with structured acceptance criteria, dispatch a rubber-duck subagent to critique it, then create the issue via gh. Runs before the RPIV pipeline to produce properly formatted issues.

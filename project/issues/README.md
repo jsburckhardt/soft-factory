@@ -16,6 +16,8 @@ project/issues/42/
     03-test-plan.md         ← Full test coverage requirements
   implementation/
     README.md               ← Implementation notes and decisions made during coding
+  verify/
+    summary.md              ← Feature delivery summary (commits, AC status, verification)
 ```
 
 ## Conventions
