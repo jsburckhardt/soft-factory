@@ -167,7 +167,8 @@ IF AHEAD_BEHIND indicates branch is behind or diverged from origin/main:
     SET BRANCH_SYNC := "blocked"
     RUN `resolve-sync-conflicts`
   SET BRANCH_UPDATED := true
-  SET BRANCH_SYNC := "merged"
+  IF BRANCH_SYNC != "conflict-resolved":
+    SET BRANCH_SYNC := "merged"
 ELSE:
   SET BRANCH_SYNC := "current"
 </process>
@@ -181,7 +182,7 @@ USE `Shell` where: command="git status --short && git diff --check"
 CAPTURE POST_CONFLICT_STATUS from `Shell`
 IF POST_CONFLICT_STATUS indicates conflicts remain:
   FAIL "Base branch sync conflicts remain unresolved."
-USE `Shell` where: command="git add --all && git commit -m \"chore: resolve origin main merge conflicts\" -m \"Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>\""
+USE `Shell` where: command="git add --all && git commit -m \"chore: resolve origin main merge conflicts\" -m \"Co-authored-by: github-copilot[bot] <175728472+github-copilot[bot]@users.noreply.github.com>\""
 SET BRANCH_SYNC := "conflict-resolved"
 SET BRANCH_UPDATED := true
 </process>
@@ -210,7 +211,7 @@ FOREACH THREAD IN REVIEW_THREADS:
 USE `Shell` where: command="git status --short"
 CAPTURE REVIEW_CHANGE_STATUS from `Shell`
 IF REVIEW_CHANGE_STATUS indicates changes:
-  USE `Shell` where: command="git add --all && git commit -m \"fix: address PR review feedback\" -m \"Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>\""
+  USE `Shell` where: command="git add --all && git commit -m \"fix: address PR review feedback\" -m \"Co-authored-by: github-copilot[bot] <175728472+github-copilot[bot]@users.noreply.github.com>\""
   SET BRANCH_UPDATED := true
 </process>
 

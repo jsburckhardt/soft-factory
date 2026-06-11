@@ -49,8 +49,8 @@ REQUIRED_OUTPUTS: YAML<<
 - .harness/evidence/
 - .harness/friction.jsonl
 - .harness/README.md
-- AGENTS.md requiring use of ./harness
-- .github/agents/*.agent.md updated to use ./harness
+- AGENTS.md
+- .github/agents/*.agent.md
 >>
 
 REQUIRED_VERBS: YAML<<

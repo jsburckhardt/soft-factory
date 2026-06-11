@@ -69,8 +69,8 @@ REQUIRED_OUTPUTS: YAML<<
 - .harness/evidence/
 - .harness/friction.jsonl
 - .harness/README.md
-- AGENTS.md requiring use of ./harness
-- .github/agents/*.agent.md updated to use ./harness
+- AGENTS.md
+- .github/agents/*.agent.md
 >>
 
 REQUIRED_VERBS: YAML<<
@@ -137,7 +137,7 @@ JSON_VERBS: YAML<<
 </constants>
 
 <formats>
-<format id="HARNESS_RESULT" name="Harness Bootstrap Result" purpose="Report the created harness files, verification result, and recorded friction.">
+<format id="HARNESS_RESULT_V1" name="Harness Bootstrap Result" purpose="Report the created harness files, verification result, and recorded friction.">
 # Harness CLI Bootstrap
 
 Verdict: <VERDICT>
@@ -189,7 +189,7 @@ RUN `write-harness-files`
 RUN `write-agent-instructions`
 RUN `write-agent-definitions`
 RUN `verify-harness`
-RETURN: format="HARNESS_RESULT", agent_update_summary=AGENT_UPDATE_SUMMARY, command_summary=COMMAND_MAP, evidence_summary=EVIDENCE_FILES, friction_summary=FRICTION_ENTRIES, harness_path=HARNESS_PATH, verdict=VERIFY_VERDICT, verify_summary=VERIFY_OUTPUT
+RETURN: format="HARNESS_RESULT_V1", agent_update_summary=AGENT_UPDATE_SUMMARY, command_summary=COMMAND_MAP, evidence_summary=EVIDENCE_FILES, friction_summary=FRICTION_ENTRIES, harness_path=HARNESS_PATH, verdict=VERIFY_VERDICT, verify_summary=VERIFY_OUTPUT
 </process>
 
 <process id="inspect-repo" name="Inspect repository surfaces">
