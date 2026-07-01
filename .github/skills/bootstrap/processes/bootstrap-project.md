@@ -21,6 +21,29 @@ VERIFICATION_CONFIG_PATH: ".github/soft-factory/verification.yml"
 </constants>
 
 <formats>
+<format id="BOOTSTRAP_CONFIRMATION_V1" name="Bootstrap Confirmation" purpose="Request confirmation before bootstrap writes files.">
+# Bootstrap Confirmation Required
+
+## Project
+- **Name:** <PROJECT_NAME>
+- **Description:** <PROJECT_DESCRIPTION>
+- **Tech Stack:** <TECH_STACK>
+
+## Planned cross-cutting concerns
+<CROSS_CUTTING_CONCERNS>
+
+## Verification commands
+<VERIFICATION_COMMANDS>
+
+Reply with confirmation before this workflow writes files.
+WHERE:
+- <CROSS_CUTTING_CONCERNS> is Markdown.
+- <PROJECT_DESCRIPTION> is String.
+- <PROJECT_NAME> is String.
+- <TECH_STACK> is String.
+- <VERIFICATION_COMMANDS> is Markdown.
+</format>
+
 <format id="BOOTSTRAP_REPORT_V1" name="Bootstrap Report" purpose="Summarize project bootstrap actions.">
 # Bootstrap Report
 
@@ -57,6 +80,7 @@ WHERE:
 CREATED_ADRS: []
 CREATED_CORE_COMPONENTS: []
 CROSS_CUTTING_CONCERNS: []
+INFO_CONFIRMED: false
 IS_BOOTSTRAPPED: false
 PROJECT_DESCRIPTION: ""
 PROJECT_NAME: ""
@@ -75,6 +99,8 @@ RUN `check-bootstrapped`
 IF IS_BOOTSTRAPPED is true:
   RETURN: error="Project has already been bootstrapped"
 RUN `gather-project-info`
+IF INFO_CONFIRMED is false:
+  RETURN: format="BOOTSTRAP_CONFIRMATION_V1", cross_cutting_concerns=CROSS_CUTTING_CONCERNS, project_description=PROJECT_DESCRIPTION, project_name=PROJECT_NAME, tech_stack=TECH_STACK, verification_commands=VERIFICATION_COMMANDS
 RUN `scaffold-project`
 RUN `create-architecture-artifacts`
 RUN `configure-verification`
@@ -96,6 +122,7 @@ SET PROJECT_NAME := <NAME> (from "Agent Inference" using USER_INPUT)
 SET PROJECT_DESCRIPTION := <DESCRIPTION> (from "Agent Inference" using USER_INPUT)
 SET TECH_STACK := <STACK> (from "Agent Inference" using USER_INPUT)
 SET CROSS_CUTTING_CONCERNS := <CONCERNS> (from "Agent Inference" using USER_INPUT)
+SET INFO_CONFIRMED := <CONFIRMED> (from "Agent Inference" using USER_INPUT)
 SET VERIFICATION_COMMANDS := <COMMANDS> (from "Agent Inference" using USER_INPUT, TECH_STACK)
 </process>
 

@@ -33,7 +33,7 @@ You MUST use history findings only to sharpen the problem statement and acceptan
 You MUST structure every issue with all sections defined in ISSUE_SECTIONS.
 You MUST format every acceptance criterion as a markdown checkbox (`- [ ]` for unchecked).
 You MUST wrap the acceptance criteria list with `<!-- ACCEPTANCE_CRITERIA_START -->` and `<!-- ACCEPTANCE_CRITERIA_END -->` HTML comment markers so downstream agents can machine-parse them.
-You MUST place exactly one start marker and one end marker; only `- [ ]` checkbox list items may appear between them.
+You MUST place exactly one start marker and one end marker; only `- [ ]` checkbox list items and optional group headings may appear between them.
 You MUST group acceptance criteria under subheadings (e.g., **Core**, **Edge Cases**, **Verification**) inside the markers.
 You MUST match the acceptance-criteria formatting documented in project/issues/README.md.
 You MUST dispatch a rubber-duck subagent to critique the draft before creating the issue.

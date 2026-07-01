@@ -47,8 +47,12 @@ WHERE:
 CURRENT_STAGE: ""
 ISSUE_NUMBER: ""
 PIPELINE_STATUS: ""
+IMPLEMENT_RESULT: ""
+PLAN_RESULT: ""
+RESEARCH_RESULT: ""
 STAGE_RESULTS: []
 TASK_DESCRIPTION: ""
+VERIFY_RESULT: ""
 </runtime>
 
 <triggers>
@@ -81,25 +85,37 @@ IF HAS_ACCEPTANCE_CRITERIA is false:
 
 <process id="run-research" name="Run Research stage">
 SET CURRENT_STAGE := "research" (from "Agent Inference")
-SET RESEARCH_RESULT := <RESULT> (from "Agent Inference" using ISSUE_NUMBER, TASK_DESCRIPTION)
+USE `Subagent` where: prompt="Research GitHub issue <ISSUE_NUMBER> and write project/issues/<ISSUE_NUMBER>/research/00-research.md", skill="research"
+CAPTURE RESEARCH_RESULT from `Subagent`
+USE `Read` where: path="project/issues/<ISSUE_NUMBER>/research/00-research.md"
+CAPTURE RESEARCH_ARTIFACT from `Read`
 SET STAGE_RESULTS := STAGE_RESULTS + ["Research complete"] (from "Agent Inference")
 </process>
 
 <process id="run-plan" name="Run Plan stage">
 SET CURRENT_STAGE := "plan" (from "Agent Inference")
-SET PLAN_RESULT := <RESULT> (from "Agent Inference" using ISSUE_NUMBER, RESEARCH_RESULT)
+USE `Subagent` where: prompt="Plan GitHub issue <ISSUE_NUMBER> using the research brief and write action, task, and test plans", skill="planner"
+CAPTURE PLAN_RESULT from `Subagent`
+USE `Read` where: path="project/issues/<ISSUE_NUMBER>/plan/01-action-plan.md"
+CAPTURE PLAN_ARTIFACT from `Read`
 SET STAGE_RESULTS := STAGE_RESULTS + ["Plan complete"] (from "Agent Inference")
 </process>
 
 <process id="run-implement" name="Run Implement stage">
 SET CURRENT_STAGE := "implement" (from "Agent Inference")
-SET IMPLEMENT_RESULT := <RESULT> (from "Agent Inference" using ISSUE_NUMBER, PLAN_RESULT)
+USE `Subagent` where: prompt="Implement GitHub issue <ISSUE_NUMBER> using the task breakdown and test plan", skill="implementer"
+CAPTURE IMPLEMENT_RESULT from `Subagent`
+USE `Read` where: path="project/issues/<ISSUE_NUMBER>/implementation/README.md"
+CAPTURE IMPLEMENT_ARTIFACT from `Read`
 SET STAGE_RESULTS := STAGE_RESULTS + ["Implement complete"] (from "Agent Inference")
 </process>
 
 <process id="run-verify" name="Run Verify stage">
 SET CURRENT_STAGE := "verify" (from "Agent Inference")
-SET VERIFY_RESULT := <RESULT> (from "Agent Inference" using ISSUE_NUMBER, IMPLEMENT_RESULT)
+USE `Subagent` where: prompt="Verify and ship GitHub issue <ISSUE_NUMBER>", skill="verifier"
+CAPTURE VERIFY_RESULT from `Subagent`
+USE `Read` where: path="project/issues/<ISSUE_NUMBER>/verify/summary.md"
+CAPTURE VERIFY_ARTIFACT from `Read`
 SET PIPELINE_STATUS := "complete" (from "Agent Inference")
 SET STAGE_RESULTS := STAGE_RESULTS + ["Verify complete"] (from "Agent Inference")
 </process>

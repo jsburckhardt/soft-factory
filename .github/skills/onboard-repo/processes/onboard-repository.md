@@ -19,6 +19,29 @@ README_PATH: "README.md"
 </constants>
 
 <formats>
+<format id="ONBOARD_CONFIRMATION_V1" name="Onboarding Confirmation" purpose="Request confirmation before onboarding writes files.">
+# Onboarding Confirmation Required
+
+## Repository
+- **Name:** <PROJECT_NAME>
+- **Description:** <PROJECT_DESCRIPTION>
+- **Tech Stack:** <TECH_STACK>
+
+## Discovered ADR candidates
+<DISCOVERED_ADRS>
+
+## Discovered cross-cutting concerns
+<DISCOVERED_CONCERNS>
+
+Reply with confirmation before this workflow writes files.
+WHERE:
+- <DISCOVERED_ADRS> is Markdown.
+- <DISCOVERED_CONCERNS> is Markdown.
+- <PROJECT_DESCRIPTION> is String.
+- <PROJECT_NAME> is String.
+- <TECH_STACK> is String.
+</format>
+
 <format id="ONBOARD_REPORT_V1" name="Onboarding Report" purpose="Summarize repository onboarding actions.">
 # Onboarding Report
 
@@ -55,6 +78,7 @@ CREATED_ADRS: []
 CREATED_CORE_COMPONENTS: []
 DISCOVERED_CONCERNS: []
 FIRST_ISSUE_NUMBER: ""
+INFO_CONFIRMED: false
 IS_ONBOARDED: false
 PROJECT_DESCRIPTION: ""
 PROJECT_NAME: ""
@@ -72,6 +96,8 @@ RUN `check-onboarded`
 IF IS_ONBOARDED is true:
   RETURN: error="Repository already has the Soft Factory engineering flow"
 RUN `analyze-repository`
+IF INFO_CONFIRMED is false:
+  RETURN: format="ONBOARD_CONFIRMATION_V1", discovered_adrs=DISCOVERED_ADRS, discovered_concerns=DISCOVERED_CONCERNS, project_description=PROJECT_DESCRIPTION, project_name=PROJECT_NAME, tech_stack=TECH_STACK
 RUN `create-discovered-artifacts`
 RUN `create-first-issue`
 RUN `update-project-docs`
@@ -97,6 +123,7 @@ SET PROJECT_DESCRIPTION := <DESC> (from "Agent Inference" using README_CONTENT, 
 SET TECH_STACK := <STACK> (from "Agent Inference" using REPO_FILES)
 SET DISCOVERED_ADRS := <ADRS> (from "Agent Inference" using REPO_FILES, TECH_STACK)
 SET DISCOVERED_CONCERNS := <CONCERNS> (from "Agent Inference" using REPO_FILES)
+SET INFO_CONFIRMED := <CONFIRMED> (from "Agent Inference" using USER_INPUT)
 </process>
 
 <process id="create-discovered-artifacts" name="Create discovered architecture artifacts">

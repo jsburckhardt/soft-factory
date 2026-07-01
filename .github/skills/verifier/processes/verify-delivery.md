@@ -53,6 +53,8 @@ BRANCH_NAME: ""
 COMMITS: []
 CURRENT_BRANCH: ""
 ISSUE_NUMBER: ""
+ISSUE_BODY: ""
+PR_TITLE: ""
 PR_URL: ""
 VERIFICATION_RESULTS: []
 </runtime>
@@ -128,6 +130,7 @@ USE `Shell` where: command="git push -u origin <BRANCH_NAME>"
 <process id="create-pull-request" name="Create pull request">
 USE `Read` where: path=PR_TEMPLATE_PATH
 CAPTURE PR_TEMPLATE from `Read`
+SET PR_TITLE := <TITLE> (from "Agent Inference" using ISSUE_NUMBER)
 SET PR_BODY := <BODY> (from "Agent Inference" using PR_TEMPLATE, ISSUE_NUMBER, AC_VALIDATION_RESULTS, VERIFICATION_RESULTS)
 USE `Write` where: content=PR_BODY, path="/tmp/pr-body.md"
 USE `Shell` where: command="gh pr create --title '<PR_TITLE>' --body-file /tmp/pr-body.md"
