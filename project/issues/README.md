@@ -47,8 +47,8 @@ Acceptance criteria must be formatted as markdown checkboxes wrapped with HTML c
 **Edge Cases**
 - [ ] Edge case one
 
-**Testing**
-- [ ] Test requirement one
+**Verification**
+- [ ] Verification requirement one
 
 <!-- ACCEPTANCE_CRITERIA_END -->
 ```
