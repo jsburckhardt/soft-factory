@@ -251,7 +251,7 @@ verifier:
     - must write summary.md to project/issues/<ISSUE_NUMBER>/verify/ after PR creation
 issue-generator:
   file: .github/agents/issue-generator.agent.md
-  purpose: Analyze codebase history for recurring pitfalls, draft a comprehensive GitHub issue with structured acceptance criteria, dispatch a rubber-duck subagent to critique it, then create the issue via gh. Runs before the RPIV pipeline to produce properly formatted issues.
+  purpose: Analyze codebase history for issue-quality gaps, draft a problem-focused GitHub issue with structured acceptance criteria, dispatch a rubber-duck subagent to critique it, then create the issue via gh. Runs before the RPIV pipeline to produce properly formatted issues without preempting RPIV Research or Plan.
   tools:
     - codebase exploration (search, grep, file reading)
     - terminal execution (git, gh)
@@ -269,8 +269,9 @@ issue-generator:
   templates: []
   guardrails:
     - must read AGENTS.md and DECISION-LOG.md before starting
-    - must run git history analysis to surface recurring fix patterns
-    - must structure every issue with all required sections (Problem, Proposed Solution, Technical Considerations, Known Pitfalls, Acceptance Criteria, Testing)
+    - must run git history analysis to surface recurring issue-quality gaps
+    - must structure every issue with only the required Problem and Acceptance Criteria sections
+    - must not include proposed solutions, technical considerations, implementation plans, architecture decisions, technology choices, dependency choices, API designs, file paths, or test-framework prescriptions unless explicitly provided by the user as problem context
     - must format acceptance criteria as markdown checkboxes with ACCEPTANCE_CRITERIA_START/END HTML markers
     - must dispatch a rubber-duck subagent to critique the draft before creating the issue
     - must incorporate rubber-duck feedback before issue creation

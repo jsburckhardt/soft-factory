@@ -13,6 +13,19 @@ README.md                                                   — Project overview
 .github/agents/planner.agent.md                       — Planner agent (ADRs, core-components, action plans, task breakdown, test plans)
 .github/agents/research.agent.md                      — Research agent (exploration, scope classification)
 .github/agents/issue-generator.agent.md               — Issue-generator agent (structured issue creation with acceptance criteria)
+.github/skills/README.md                              — Agent-to-Skill mapping and standalone Skill notes
+.github/skills/bootstrap/SKILL.md                     — Bootstrap Skill equivalent
+.github/skills/excali/SKILL.md                        — Excalidraw generation Skill equivalent
+.github/skills/harness-cli-it/SKILL.md                — Harness CLI Skill equivalent
+.github/skills/implementer/SKILL.md                   — Implementer Skill equivalent
+.github/skills/issue-generator/SKILL.md               — Issue-generator Skill equivalent
+.github/skills/justdoit/SKILL.md                      — JustDoIt Skill equivalent
+.github/skills/onboard-repo/SKILL.md                  — Onboard-repo Skill equivalent
+.github/skills/planner/SKILL.md                       — Planner Skill equivalent
+.github/skills/research/SKILL.md                      — Research Skill equivalent
+.github/skills/verifier/SKILL.md                      — Verifier Skill equivalent
+.github/skills/agnostic-prompt-standard/SKILL.md      — APS reference framework Skill
+.github/skills/pr-review-complement/SKILL.md          — Standalone PR review complement Skill
 .github/PULL_REQUEST_TEMPLATE.md                      — PR template (acceptance criteria, verification checklist)
 docs/README.md                                              — Application documentation index
 project/README.md                                             — Project documentation index
