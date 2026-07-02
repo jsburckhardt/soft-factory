@@ -44,6 +44,10 @@ The PR body MUST contain `Closes #<ISSUE_NUMBER>`.
 
 The skill MUST write `project/issues/<ISSUE_NUMBER>/verify/summary.md` after PR creation.
 
+The skill MUST load `.github/skills/templates/artifact-contract.md` before deriving artifact paths.
+
+The skill MUST load `.github/skills/templates/verify-summary.md` before generating the verify summary.
+
 The summary MUST avoid secrets, tokens, environment variables, raw command output, and absolute local filesystem paths.
 
 ## Success and error outcomes

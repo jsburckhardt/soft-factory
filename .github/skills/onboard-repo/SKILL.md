@@ -24,3 +24,8 @@ Onboard Repo is a workflow skill for agents that need to introduce Soft Factory 
   - `00-repository-onboarding-workflow.md` - existing-repository onboarding rules.
 - `processes/` - executable APS process documents.
   - `onboard-repository.md` - end-to-end repository onboarding workflow.
+- `../templates/` - shared Soft Factory artifact templates.
+  - `artifact-contract.md` - canonical artifact paths and ledger locations.
+  - `adr.md` - ADR output structure.
+  - `core-component.md` - core-component output structure.
+  - `decision-log.md` - decision ledger output structure.

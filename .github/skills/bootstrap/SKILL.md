@@ -24,3 +24,8 @@ Bootstrap is a workflow skill for agents that need to gather project identity an
   - `00-bootstrap-workflow.md` - project bootstrap, user confirmation, scaffolding, and architecture artifact rules.
 - `processes/` - executable APS process documents.
   - `bootstrap-project.md` - end-to-end bootstrap workflow.
+- `../templates/` - shared Soft Factory artifact templates.
+  - `artifact-contract.md` - canonical artifact paths and ledger locations.
+  - `adr.md` - ADR output structure.
+  - `core-component.md` - core-component output structure.
+  - `decision-log.md` - decision ledger output structure.

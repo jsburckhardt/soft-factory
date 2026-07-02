@@ -24,3 +24,6 @@ Verifier is a workflow skill for agents that need to validate completed work, sh
   - `00-verification-workflow.md` - verification, acceptance criteria, git, PR, and summary rules.
 - `processes/` - executable APS process documents.
   - `verify-delivery.md` - end-to-end verification and shipping workflow.
+- `../templates/` - shared Soft Factory artifact templates.
+  - `artifact-contract.md` - canonical artifact paths and ledger locations.
+  - `verify-summary.md` - verify summary output structure.

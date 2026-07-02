@@ -9,8 +9,10 @@ You MUST write implementation notes.
 
 <constants>
 ADR_DIR: "project/architecture/ADR"
+ARTIFACT_CONTRACT_PATH: ".github/skills/templates/artifact-contract.md"
 CORE_COMPONENT_DIR: "project/architecture/core-components"
 IMPLEMENTATION_NOTES_PATH: "project/issues/<ISSUE_NUMBER>/implementation/README.md"
+IMPLEMENTATION_NOTES_TEMPLATE_PATH: ".github/skills/templates/implementation-notes.md"
 TASK_BREAKDOWN_PATH: "project/issues/<ISSUE_NUMBER>/plan/02-task-breakdown.md"
 TEST_PLAN_PATH: "project/issues/<ISSUE_NUMBER>/plan/03-test-plan.md"
 </constants>
@@ -49,7 +51,9 @@ WHERE:
 COMPLETED_TASKS: []
 CURRENT_ISSUE_NUMBER: ""
 CURRENT_TASK_ID: ""
+ARTIFACT_CONTRACT: ""
 IMPLEMENTATION_LOG: []
+IMPLEMENTATION_NOTES_TEMPLATE: ""
 TASK_BREAKDOWN: ""
 TEST_PLAN: ""
 </runtime>
@@ -73,6 +77,10 @@ USE `Read` where: path=TASK_BREAKDOWN_PATH
 CAPTURE TASK_BREAKDOWN from `Read`
 USE `Read` where: path=TEST_PLAN_PATH
 CAPTURE TEST_PLAN from `Read`
+USE `Read` where: path=ARTIFACT_CONTRACT_PATH
+CAPTURE ARTIFACT_CONTRACT from `Read`
+USE `Read` where: path=IMPLEMENTATION_NOTES_TEMPLATE_PATH
+CAPTURE IMPLEMENTATION_NOTES_TEMPLATE from `Read`
 USE `Glob` where: path=".", pattern="project/architecture/ADR/ADR-*.md"
 CAPTURE ADR_FILES from `Glob`
 USE `Glob` where: path=".", pattern="project/architecture/core-components/CORE-COMPONENT-*.md"
@@ -98,7 +106,7 @@ SET COMPLETED_TASKS := COMPLETED_TASKS + [CURRENT_TASK_ID] (from "Agent Inferenc
 </process>
 
 <process id="write-implementation-notes" name="Write implementation notes">
-SET NOTES := <NOTES> (from "Agent Inference" using COMPLETED_TASKS, IMPLEMENTATION_STATUS_V1, TEST_OUTPUT)
+SET NOTES := <NOTES> (from "Agent Inference" using ARTIFACT_CONTRACT, COMPLETED_TASKS, IMPLEMENTATION_NOTES_TEMPLATE, IMPLEMENTATION_STATUS_V1, TEST_OUTPUT)
 USE `Write` where: content=NOTES, path=IMPLEMENTATION_NOTES_PATH
 </process>
 </processes>

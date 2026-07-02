@@ -9,6 +9,7 @@ You MUST report the failed stage when the pipeline stops.
 
 <constants>
 AGENTS_MD_PATH: "AGENTS.md"
+ARTIFACT_CONTRACT_PATH: ".github/skills/templates/artifact-contract.md"
 DECISION_LOG_PATH: "project/architecture/ADR/DECISION-LOG.md"
 ISSUES_DIR: "project/issues"
 STAGES: YAML<<
@@ -45,6 +46,7 @@ WHERE:
 
 <runtime>
 CURRENT_STAGE: ""
+ARTIFACT_CONTRACT: ""
 ISSUE_NUMBER: ""
 PIPELINE_STATUS: ""
 IMPLEMENT_RESULT: ""
@@ -74,6 +76,8 @@ USE `Read` where: path=AGENTS_MD_PATH
 CAPTURE PIPELINE_SPEC from `Read`
 USE `Read` where: path=DECISION_LOG_PATH
 CAPTURE DECISION_LOG from `Read`
+USE `Read` where: path=ARTIFACT_CONTRACT_PATH
+CAPTURE ARTIFACT_CONTRACT from `Read`
 SET ISSUE_NUMBER := <NUMBER> (from "Agent Inference" using USER_INPUT)
 USE `Shell` where: command="gh issue view <ISSUE_NUMBER> --json title,body,labels,assignees,milestone"
 CAPTURE ISSUE_JSON from `Shell`

@@ -10,7 +10,9 @@ You MUST NOT make architectural decisions.
 <constants>
 AC_END_MARKER: "<!-- ACCEPTANCE_CRITERIA_END -->"
 AC_START_MARKER: "<!-- ACCEPTANCE_CRITERIA_START -->"
+ARTIFACT_CONTRACT_PATH: ".github/skills/templates/artifact-contract.md"
 BRIEF_PATH_TEMPLATE: "project/issues/<ISSUE_NUMBER>/research/00-research.md"
+RESEARCH_BRIEF_TEMPLATE_PATH: ".github/skills/templates/research-brief.md"
 SCOPE_TYPES: YAML<<
 - architecture_decision
 - core_component
@@ -62,9 +64,12 @@ WHERE:
 
 <runtime>
 ACCEPTANCE_CRITERIA: ""
+ARTIFACT_CONTRACT: ""
 CURRENT_ISSUE_NUMBER: ""
 ISSUE_BODY: ""
 ISSUE_TITLE: ""
+RESEARCH_BRIEF_PATH: ""
+RESEARCH_BRIEF_TEMPLATE: ""
 SCOPE_TYPE: ""
 </runtime>
 
@@ -74,10 +79,18 @@ SCOPE_TYPE: ""
 
 <processes>
 <process id="research-issue" name="Research GitHub issue">
+RUN `load-artifact-templates`
 RUN `fetch-issue`
 RUN `gather-context`
 RUN `classify-scope`
 RUN `write-research-brief`
+</process>
+
+<process id="load-artifact-templates" name="Load artifact templates">
+USE `Read` where: path=ARTIFACT_CONTRACT_PATH
+CAPTURE ARTIFACT_CONTRACT from `Read`
+USE `Read` where: path=RESEARCH_BRIEF_TEMPLATE_PATH
+CAPTURE RESEARCH_BRIEF_TEMPLATE from `Read`
 </process>
 
 <process id="fetch-issue" name="Fetch issue and acceptance criteria">
@@ -107,8 +120,9 @@ SET SCOPE_TYPE := <SCOPE> (from "Agent Inference" using ISSUE_BODY, SCOPE_TYPES,
 </process>
 
 <process id="write-research-brief" name="Write research brief">
-SET BRIEF_CONTENT := <BRIEF> (from "Agent Inference" using RESEARCH_BRIEF_V1, ACCEPTANCE_CRITERIA, CURRENT_ISSUE_NUMBER, ISSUE_BODY, ISSUE_TITLE, SCOPE_TYPE)
-USE `Write` where: content=BRIEF_CONTENT, path=BRIEF_PATH_TEMPLATE
+SET RESEARCH_BRIEF_PATH := <PATH> (from "Agent Inference" using ARTIFACT_CONTRACT, BRIEF_PATH_TEMPLATE, CURRENT_ISSUE_NUMBER)
+SET BRIEF_CONTENT := <BRIEF> (from "Agent Inference" using ACCEPTANCE_CRITERIA, CURRENT_ISSUE_NUMBER, ISSUE_BODY, ISSUE_TITLE, RESEARCH_BRIEF_TEMPLATE, SCOPE_TYPE)
+USE `Write` where: content=BRIEF_CONTENT, path=RESEARCH_BRIEF_PATH
 </process>
 </processes>
 

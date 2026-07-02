@@ -24,3 +24,11 @@ Planner is a workflow skill for agents that need to transform a research brief i
   - `00-planning-workflow.md` - planning, architecture artifact, task breakdown, and test plan rules.
 - `processes/` - executable APS process documents.
   - `plan-issue.md` - end-to-end planning workflow.
+- `../templates/` - shared Soft Factory artifact templates.
+  - `artifact-contract.md` - canonical artifact paths and ledger locations.
+  - `action-plan.md` - action plan output structure.
+  - `task-breakdown.md` - task breakdown output structure.
+  - `test-plan.md` - test plan output structure.
+  - `adr.md` - ADR output structure.
+  - `core-component.md` - core-component output structure.
+  - `decision-log.md` - decision ledger output structure.

@@ -24,3 +24,6 @@ Research is a workflow skill for agents that need to fetch a GitHub issue, inspe
   - `00-research-workflow.md` - issue fetching, context gathering, scope classification, and research brief rules.
 - `processes/` - executable APS process documents.
   - `research-issue.md` - end-to-end research workflow.
+- `../templates/` - shared Soft Factory artifact templates.
+  - `artifact-contract.md` - canonical artifact paths and ledger locations.
+  - `research-brief.md` - research brief output structure.

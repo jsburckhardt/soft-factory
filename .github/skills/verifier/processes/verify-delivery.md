@@ -11,10 +11,12 @@ You MUST write a verify summary after PR creation.
 <constants>
 AC_END_MARKER: "<!-- ACCEPTANCE_CRITERIA_END -->"
 AC_START_MARKER: "<!-- ACCEPTANCE_CRITERIA_START -->"
+ARTIFACT_CONTRACT_PATH: ".github/skills/templates/artifact-contract.md"
 CO_AUTHOR_TRAILER: "Co-authored-by: github-copilot[bot] <175728472+github-copilot[bot]@users.noreply.github.com>"
 PR_TEMPLATE_PATH: ".github/PULL_REQUEST_TEMPLATE.md"
 SUMMARY_PATH: "project/issues/<ISSUE_NUMBER>/verify/summary.md"
 VERIFICATION_CONFIG_PATH: ".github/soft-factory/verification.yml"
+VERIFY_SUMMARY_TEMPLATE_PATH: ".github/skills/templates/verify-summary.md"
 </constants>
 
 <formats>
@@ -49,6 +51,7 @@ WHERE:
 <runtime>
 ACCEPTANCE_CRITERIA: []
 AC_VALIDATION_RESULTS: []
+ARTIFACT_CONTRACT: ""
 BRANCH_NAME: ""
 COMMITS: []
 CURRENT_BRANCH: ""
@@ -57,6 +60,7 @@ ISSUE_BODY: ""
 PR_TITLE: ""
 PR_URL: ""
 VERIFICATION_RESULTS: []
+VERIFY_SUMMARY_TEMPLATE: ""
 </runtime>
 
 <triggers>
@@ -82,6 +86,10 @@ RETURN: format="VERIFY_REPORT_V1", ac_summary=AC_VALIDATION_RESULTS, branch_name
 SET ISSUE_NUMBER := <ID> (from "Agent Inference" using USER_INPUT)
 USE `Read` where: path=VERIFICATION_CONFIG_PATH
 CAPTURE VERIFICATION_CONFIG from `Read`
+USE `Read` where: path=ARTIFACT_CONTRACT_PATH
+CAPTURE ARTIFACT_CONTRACT from `Read`
+USE `Read` where: path=VERIFY_SUMMARY_TEMPLATE_PATH
+CAPTURE VERIFY_SUMMARY_TEMPLATE from `Read`
 SET VERIFICATION_COMMANDS := <COMMANDS> (from "Agent Inference" using VERIFICATION_CONFIG)
 </process>
 
@@ -139,7 +147,7 @@ SET PR_URL := <URL> (from "Agent Inference" using PR_OUTPUT)
 </process>
 
 <process id="write-summary" name="Write verify summary">
-SET SUMMARY := <SUMMARY> (from "Agent Inference" using ISSUE_NUMBER, PR_URL, COMMITS, AC_VALIDATION_RESULTS, VERIFICATION_RESULTS)
+SET SUMMARY := <SUMMARY> (from "Agent Inference" using ARTIFACT_CONTRACT, ISSUE_NUMBER, PR_URL, COMMITS, AC_VALIDATION_RESULTS, VERIFICATION_RESULTS, VERIFY_SUMMARY_TEMPLATE)
 USE `Write` where: content=SUMMARY, path=SUMMARY_PATH
 </process>
 

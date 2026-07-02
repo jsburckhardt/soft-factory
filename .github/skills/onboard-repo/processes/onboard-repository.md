@@ -9,9 +9,11 @@ You MUST NOT make feature-level decisions.
 </instructions>
 
 <constants>
-ADR_TEMPLATE_PATH: "project/architecture/ADR/ADR-0001-template.md"
-CORE_COMPONENT_TEMPLATE_PATH: "project/architecture/core-components/CORE-COMPONENT-0001-template.md"
+ADR_TEMPLATE_PATH: ".github/skills/templates/adr.md"
+ARTIFACT_CONTRACT_PATH: ".github/skills/templates/artifact-contract.md"
+CORE_COMPONENT_TEMPLATE_PATH: ".github/skills/templates/core-component.md"
 DECISION_LOG_PATH: "project/architecture/ADR/DECISION-LOG.md"
+DECISION_LOG_TEMPLATE_PATH: ".github/skills/templates/decision-log.md"
 FIRST_ISSUE_TITLE: "Repository Understanding"
 LLM_TXT_PATH: "LLM.txt"
 ONBOARD_MARKER_PATTERN: "project/architecture/ADR/ADR-0002-*.md"
@@ -76,6 +78,8 @@ WHERE:
 <runtime>
 CREATED_ADRS: []
 CREATED_CORE_COMPONENTS: []
+ARTIFACT_CONTRACT: ""
+DECISION_LOG_TEMPLATE: ""
 DISCOVERED_CONCERNS: []
 FIRST_ISSUE_NUMBER: ""
 INFO_CONFIRMED: false
@@ -131,9 +135,13 @@ USE `Read` where: path=ADR_TEMPLATE_PATH
 CAPTURE ADR_TEMPLATE from `Read`
 USE `Read` where: path=CORE_COMPONENT_TEMPLATE_PATH
 CAPTURE CORE_COMPONENT_TEMPLATE from `Read`
+USE `Read` where: path=DECISION_LOG_TEMPLATE_PATH
+CAPTURE DECISION_LOG_TEMPLATE from `Read`
+USE `Read` where: path=ARTIFACT_CONTRACT_PATH
+CAPTURE ARTIFACT_CONTRACT from `Read`
 SET CREATED_ADRS := <ADRS> (from "Agent Inference" using ADR_TEMPLATE, DISCOVERED_ADRS)
 SET CREATED_CORE_COMPONENTS := <CORE_COMPONENTS> (from "Agent Inference" using CORE_COMPONENT_TEMPLATE, DISCOVERED_CONCERNS)
-SET UPDATED_DECISION_LOG := <LOG> (from "Agent Inference" using CREATED_ADRS, CREATED_CORE_COMPONENTS)
+SET UPDATED_DECISION_LOG := <LOG> (from "Agent Inference" using ARTIFACT_CONTRACT, CREATED_ADRS, CREATED_CORE_COMPONENTS, DECISION_LOG_TEMPLATE)
 USE `Write` where: content=UPDATED_DECISION_LOG, path=DECISION_LOG_PATH
 </process>
 

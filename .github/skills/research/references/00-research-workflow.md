@@ -24,6 +24,10 @@ The target issue MUST contain structured acceptance criteria as markdown checkbo
 
 The skill MUST write `project/issues/<ISSUE_NUMBER>/research/00-research.md`.
 
+The skill MUST load `.github/skills/templates/artifact-contract.md` before deriving the output path.
+
+The skill MUST load `.github/skills/templates/research-brief.md` before generating the research brief.
+
 The research brief MUST include:
 
 - The GitHub issue number and title.
