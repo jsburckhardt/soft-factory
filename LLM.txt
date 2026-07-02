@@ -24,6 +24,17 @@ README.md                                                   — Project overview
 .github/skills/planner/SKILL.md                       — Planner Skill equivalent
 .github/skills/research/SKILL.md                      — Research Skill equivalent
 .github/skills/verifier/SKILL.md                      — Verifier Skill equivalent
+.github/skills/templates/README.md                    — Shared Skill artifact template index
+.github/skills/templates/artifact-contract.md         — Shared RPIV artifact paths and ledger contract
+.github/skills/templates/research-brief.md            — Research brief template for Skills
+.github/skills/templates/action-plan.md               — Action plan template for Skills
+.github/skills/templates/task-breakdown.md            — Task breakdown template for Skills
+.github/skills/templates/test-plan.md                 — Test plan template for Skills
+.github/skills/templates/implementation-notes.md      — Implementation notes template for Skills
+.github/skills/templates/verify-summary.md            — Verify summary template for Skills
+.github/skills/templates/decision-log.md              — Decision log template for Skills
+.github/skills/templates/adr.md                       — ADR template for Skills
+.github/skills/templates/core-component.md            — Core-component template for Skills
 .github/skills/agnostic-prompt-standard/SKILL.md      — APS reference framework Skill
 .github/skills/pr-review-complement/SKILL.md          — Standalone PR review complement Skill
 .github/PULL_REQUEST_TEMPLATE.md                      — PR template (acceptance criteria, verification checklist)

@@ -24,3 +24,6 @@ Implementer is a workflow skill for agents that need to execute tasks from a pla
   - `00-implementation-workflow.md` - implementation, testing, and notes rules.
 - `processes/` - executable APS process documents.
   - `implement-plan.md` - end-to-end implementation workflow.
+- `../templates/` - shared Soft Factory artifact templates.
+  - `artifact-contract.md` - canonical artifact paths and ledger locations.
+  - `implementation-notes.md` - implementation notes output structure.

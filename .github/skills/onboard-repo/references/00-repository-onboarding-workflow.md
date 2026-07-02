@@ -18,6 +18,14 @@ The skill MUST scan the source tree to identify existing cross-cutting concerns.
 
 The skill MUST infer architectural decisions already embedded in the code and document them as ADRs.
 
+The skill MUST load `.github/skills/templates/artifact-contract.md` before deriving artifact paths.
+
+The skill MUST load `.github/skills/templates/adr.md` before creating ADR content.
+
+The skill MUST load `.github/skills/templates/core-component.md` before creating core-component content.
+
+The skill MUST load `.github/skills/templates/decision-log.md` before updating the decision log.
+
 The skill MUST NOT make new feature-level decisions.
 
 ## Required behavior

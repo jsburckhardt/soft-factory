@@ -26,6 +26,20 @@ The skill MUST produce:
 - `project/issues/<ISSUE_NUMBER>/plan/02-task-breakdown.md`.
 - `project/issues/<ISSUE_NUMBER>/plan/03-test-plan.md`.
 
+The skill MUST load `.github/skills/templates/artifact-contract.md` before deriving artifact paths.
+
+The skill MUST load `.github/skills/templates/action-plan.md` before generating an action plan.
+
+The skill MUST load `.github/skills/templates/task-breakdown.md` before generating a task breakdown.
+
+The skill MUST load `.github/skills/templates/test-plan.md` before generating a test plan.
+
+The skill MUST load `.github/skills/templates/adr.md` before creating ADR content.
+
+The skill MUST load `.github/skills/templates/core-component.md` before creating core-component content.
+
+The skill MUST load `.github/skills/templates/decision-log.md` before updating the decision log.
+
 Each task MUST include acceptance criteria.
 
 Each task MUST include explicit test coverage requirements.

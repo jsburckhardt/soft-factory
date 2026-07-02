@@ -12,6 +12,14 @@ The skill MUST read existing documentation under `docs/` and `project/` before m
 
 The skill MUST read the ADR and core-component templates before creating architecture artifacts.
 
+The skill MUST load `.github/skills/templates/artifact-contract.md` before deriving artifact paths.
+
+The skill MUST load `.github/skills/templates/adr.md` before creating ADR content.
+
+The skill MUST load `.github/skills/templates/core-component.md` before creating core-component content.
+
+The skill MUST load `.github/skills/templates/decision-log.md` before updating the decision log.
+
 The skill MUST gather project name, description, goal, tech stack, verification commands, and cross-cutting concerns from the user.
 
 The skill MUST NOT skip user confirmation before writing files.

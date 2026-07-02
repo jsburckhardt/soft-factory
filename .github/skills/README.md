@@ -32,4 +32,21 @@ Each converted workflow Skill has:
 - `references/00-*.md` with normative behavior, inputs, outputs, guardrails, and outcomes.
 - `processes/*.md` with an APS-style executable workflow.
 
+## Shared templates
+
+The `templates/` directory defines reusable artifact contracts for Skills that write RPIV or architecture artifacts.
+
+| Template | Contract |
+|----------|----------|
+| `templates/artifact-contract.md` | Canonical output paths and ledger locations. |
+| `templates/research-brief.md` | Research stage output structure. |
+| `templates/action-plan.md` | Plan stage action plan structure. |
+| `templates/task-breakdown.md` | Plan stage task breakdown structure. |
+| `templates/test-plan.md` | Plan stage test plan structure. |
+| `templates/implementation-notes.md` | Implement stage notes structure. |
+| `templates/verify-summary.md` | Verify stage summary structure. |
+| `templates/decision-log.md` | Decision ledger structure. |
+| `templates/adr.md` | ADR structure. |
+| `templates/core-component.md` | Core-component structure. |
+
 Existing Agents are not removed or replaced by these Skills.

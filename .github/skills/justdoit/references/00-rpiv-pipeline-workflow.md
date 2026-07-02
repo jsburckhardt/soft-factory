@@ -12,6 +12,8 @@ The skill MUST inspect documentation under `docs/` and `project/`.
 
 The skill MUST identify the GitHub issue number before dispatching stages.
 
+The skill MUST load `.github/skills/templates/artifact-contract.md` before checking stage output artifacts.
+
 The skill MUST execute stages in strict order: Research, Plan, Implement, Verify.
 
 The skill MUST NOT skip any stage.

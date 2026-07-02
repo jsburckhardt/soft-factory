@@ -24,3 +24,5 @@ JustDoIt is a coordinator workflow skill for agents that need to drive a GitHub 
   - `00-rpiv-pipeline-workflow.md` - full-pipeline orchestration rules.
 - `processes/` - executable APS process documents.
   - `run-rpiv-pipeline.md` - end-to-end RPIV orchestration workflow.
+- `../templates/` - shared Soft Factory artifact templates.
+  - `artifact-contract.md` - canonical artifact paths and ledger locations used to verify stage outputs.

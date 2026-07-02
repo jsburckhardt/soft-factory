@@ -30,6 +30,10 @@ The skill MAY refactor existing code only when required by a task.
 
 The skill MUST produce implementation notes at `project/issues/<ISSUE_NUMBER>/implementation/README.md`.
 
+The skill MUST load `.github/skills/templates/artifact-contract.md` before deriving artifact paths.
+
+The skill MUST load `.github/skills/templates/implementation-notes.md` before generating implementation notes.
+
 The notes MUST summarize completed tasks, files changed, test results, and any deviations or follow-up risks.
 
 ## Success and error outcomes
