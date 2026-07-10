@@ -436,10 +436,15 @@ FOREACH concern IN DISCOVERED_CONCERNS:
 TRY:
   USE `read/readFile` where: filePath=DECISION_LOG_PATH
   CAPTURE CURRENT_LOG from `read/readFile`
+  SET DECISION_LOG_EXISTS := true (from "Agent Inference")
 RECOVER (err):
   SET CURRENT_LOG := DECISION_LOG_SKELETON (from "Constant Lookup")
+  SET DECISION_LOG_EXISTS := false (from "Agent Inference")
 SET UPDATED_LOG := <LOG> (from "Agent Inference" using CURRENT_LOG, CREATED_ADRS, CREATED_CORE_COMPONENTS)
-USE `edit/createFile` where: content=UPDATED_LOG, filePath=DECISION_LOG_PATH
+IF DECISION_LOG_EXISTS is true:
+  USE `edit/editFiles` where: filePath=DECISION_LOG_PATH
+ELSE:
+  USE `edit/createFile` where: content=UPDATED_LOG, filePath=DECISION_LOG_PATH
 SET UPDATED_FILES := UPDATED_FILES + [DECISION_LOG_PATH] (from "Agent Inference")
 </process>
 

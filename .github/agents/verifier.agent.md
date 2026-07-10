@@ -91,7 +91,7 @@ Closes #<!-- ISSUE_NUMBER -->
 
 <!--
   The verifier agent populates this section from the GitHub issue.
-  Each criterion is checked (✅) or unchecked (⬜) based on implementation evidence.
+  Each criterion is rendered as a checked (`- [x]`) or unchecked (`- [ ]`) Markdown checkbox based on implementation evidence.
 -->
 
 <!-- ACCEPTANCE_CRITERIA_START -->
@@ -402,10 +402,15 @@ FOREACH group IN GROUPS:
 TRY:
   USE `read/readFile` where: filePath=DECISION_LOG_PATH
   CAPTURE CURRENT_LOG from `read/readFile`
+  SET DECISION_LOG_EXISTS := true (from "Agent Inference")
 RECOVER (err):
   SET CURRENT_LOG := DECISION_LOG_SKELETON (from "Constant Lookup")
+  SET DECISION_LOG_EXISTS := false (from "Agent Inference")
 SET UPDATED_LOG := <LOG> (from "Agent Inference" using CURRENT_LOG, ADR_CHANGES, CC_CHANGES)
-USE `edit/createFile` where: content=UPDATED_LOG, filePath=DECISION_LOG_PATH
+IF DECISION_LOG_EXISTS is true:
+  USE `edit/editFiles` where: filePath=DECISION_LOG_PATH
+ELSE:
+  USE `edit/createFile` where: content=UPDATED_LOG, filePath=DECISION_LOG_PATH
 USE `execute/runInTerminal` where: command="git add project/architecture/ADR/DECISION-LOG.md"
 USE `execute/runInTerminal` where: command="git commit -m 'docs: update DECISION-LOG.md' -m '' -m 'CO_AUTHOR_TRAILER'"
 CAPTURE COMMIT_HASH from `execute/runInTerminal`
