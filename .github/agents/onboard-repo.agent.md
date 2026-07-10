@@ -31,8 +31,8 @@ You MUST read all existing documentation under docs/ and project/ before making 
 You MUST scan the full source tree to infer tech stack, language, framework, and package manager.
 You MUST scan the source tree to identify cross-cutting concerns already present in the codebase.
 You MUST infer architectural decisions already embedded in the code and document them as ADRs.
-You MUST read the ADR template at project/architecture/ADR/ADR-0001-template.md before creating any ADR.
-You MUST read the core-component template at project/architecture/core-components/CORE-COMPONENT-0001-template.md before creating any core-component.
+You MUST use the embedded ADR template in the ADR_TEMPLATE constant when creating any ADR.
+You MUST use the embedded core-component template in the CORE_COMPONENT_TEMPLATE constant when creating any core-component.
 You MUST create ADRs starting from ADR-0002 using the pattern ADR-####-slug.md.
 You MUST create core-component files starting from CORE-COMPONENT-0002 using the pattern CORE-COMPONENT-####-slug.md.
 You MUST update project/architecture/ADR/DECISION-LOG.md with every ADR and core-component created.
@@ -42,7 +42,7 @@ You MUST capture the issue number from `gh issue create` output and create the r
 You MUST update AGENTS.md to register the onboard-repo agent in the AGENTS constant.
 You MUST update LLM.txt with new file references created during onboarding.
 You MUST update README.md to reflect the project name and description discovered during analysis.
-You MUST NOT edit template files; copy and rename them.
+You MUST NOT modify existing on-disk template files; generate new artifacts from the embedded ADR_TEMPLATE and CORE_COMPONENT_TEMPLATE constants.
 You MUST NOT make feature-level decisions; only document existing architectural decisions.
 You MUST NOT skip user confirmation before writing any files.
 You SHOULD present an onboarding summary for user confirmation before writing files.
@@ -51,8 +51,6 @@ You MAY consult external documentation to clarify inferred tech stack choices.
 </instructions>
 
 <constants>
-ADR_TEMPLATE_PATH: "project/architecture/ADR/ADR-0001-template.md"
-CORE_COMPONENT_TEMPLATE_PATH: "project/architecture/core-components/CORE-COMPONENT-0001-template.md"
 DECISION_LOG_PATH: "project/architecture/ADR/DECISION-LOG.md"
 ADR_DIR: "project/architecture/ADR"
 CORE_COMPONENT_DIR: "project/architecture/core-components"
@@ -62,6 +60,135 @@ LLM_TXT_PATH: "LLM.txt"
 FIRST_ISSUE_TITLE: "Repository Understanding"
 FIRST_ISSUE_RESEARCH_DIR: "project/issues"
 ONBOARD_MARKER: "ADR-0002"
+ADR_TEMPLATE: TEXT<<
+# ADR-####: [Short Title of Decision]
+
+## Status
+
+[Proposed | Accepted | Deprecated | Superseded by ADR-####]
+
+## Context
+
+What is the issue that we're seeing that motivates this decision or change?
+
+## Decision
+
+What is the change that we're proposing and/or doing?
+
+## Alternatives
+
+What other options were considered? Why were they rejected?
+
+| Alternative | Pros | Cons | Why Rejected |
+|-------------|------|------|--------------|
+| | | | |
+
+## Consequences
+
+What becomes easier or harder as a result of this decision?
+
+### Positive
+-
+
+### Negative
+-
+
+### Neutral
+-
+
+## Related Issues
+
+- [#ISSUE_NUMBER](https://github.com/ORG/REPO/issues/ISSUE_NUMBER)
+
+## References
+
+- [Link to relevant documentation or discussion]
+>>
+CORE_COMPONENT_TEMPLATE: TEXT<<
+# CORE-COMPONENT-####: [Short Title]
+
+## Status
+
+[Draft | Adopted | Deprecated]
+
+## Purpose
+
+What problem does this core-component solve? Why does it need to be a shared, cross-cutting concern?
+
+## Scope
+
+What parts of the system does this component affect? What are the boundaries?
+
+## Definition
+
+### Rules
+-
+
+### Interfaces
+-
+
+### Expectations
+-
+
+## Rationale
+
+Why was this approach chosen over alternatives?
+
+## Usage Examples
+
+```
+# Example code or configuration showing how to use this component
+```
+
+## Integration Guidelines
+
+How should other parts of the system integrate with this component?
+
+-
+
+## Exceptions
+
+Under what circumstances is it acceptable to deviate from this component's rules?
+
+-
+
+## Enforcement
+
+How is compliance with this component verified?
+
+- [ ] Automated checks
+- [ ] Code review checklist
+- [ ] Test coverage requirements
+
+## Related ADRs
+
+- [ADR-####-slug](../ADR/ADR-####-slug.md)
+>>
+DECISION_LOG_SKELETON: TEXT<<
+# Decision Log
+
+This file is the single registry of all architectural decisions and core-components in the project. Every new or modified ADR or core-component **must** be recorded here.
+
+## ADRs
+
+| ID | Title | Status | Date |
+|----|-------|--------|------|
+| _No ADRs yet. Copy `ADR-0001-template.md` in this directory and rename it._ | | | |
+
+## Core-Components
+
+| ID | Title | Status | Date |
+|----|-------|--------|------|
+| _No core-components yet. Copy `CORE-COMPONENT-0001-template.md` and rename it._ | | | |
+
+## Decisions
+
+Short, actionable statements derived from ADRs and core-components. More than one decision can originate from a single source.
+
+| # | Decision | Source | Date |
+|---|----------|--------|------|
+| _No decisions recorded yet._ | | | |
+>>
 TECH_STACK_SIGNALS: YAML<<
 - file: go.mod
   language: Go
@@ -288,8 +415,6 @@ SET INFO_CONFIRMED := false (from "Agent Inference")
 </process>
 
 <process id="create-adrs" name="Create ADR files for each discovered architectural decision">
-USE `read/readFile` where: filePath=ADR_TEMPLATE_PATH
-CAPTURE ADR_TEMPLATE from `read/readFile`
 FOREACH decision IN DISCOVERED_ADRS:
   SET ADR_CONTENT := <CONTENT> (from "Agent Inference" using ADR_TEMPLATE, decision, PROJECT_NAME, TECH_STACK, NEXT_ADR_NUMBER)
   SET ADR_FILE := <PATH> (from "Agent Inference" using ADR_DIR, NEXT_ADR_NUMBER, decision)
@@ -299,10 +424,8 @@ FOREACH decision IN DISCOVERED_ADRS:
 </process>
 
 <process id="create-core-components" name="Create core-component files for each discovered cross-cutting concern">
-USE `read/readFile` where: filePath=CORE_COMPONENT_TEMPLATE_PATH
-CAPTURE CC_TEMPLATE from `read/readFile`
 FOREACH concern IN DISCOVERED_CONCERNS:
-  SET CC_CONTENT := <CONTENT> (from "Agent Inference" using CC_TEMPLATE, concern, NEXT_CC_NUMBER, CREATED_ADRS)
+  SET CC_CONTENT := <CONTENT> (from "Agent Inference" using CORE_COMPONENT_TEMPLATE, concern, NEXT_CC_NUMBER, CREATED_ADRS)
   SET CC_FILE := <PATH> (from "Agent Inference" using CORE_COMPONENT_DIR, NEXT_CC_NUMBER, concern)
   USE `edit/createFile` where: content=CC_CONTENT, filePath=CC_FILE
   SET CREATED_CORE_COMPONENTS := CREATED_CORE_COMPONENTS + [CC_FILE] (from "Agent Inference")
@@ -310,10 +433,13 @@ FOREACH concern IN DISCOVERED_CONCERNS:
 </process>
 
 <process id="update-decision-log" name="Update DECISION-LOG.md with all new ADRs and core-components">
-USE `read/readFile` where: filePath=DECISION_LOG_PATH
-CAPTURE CURRENT_LOG from `read/readFile`
+TRY:
+  USE `read/readFile` where: filePath=DECISION_LOG_PATH
+  CAPTURE CURRENT_LOG from `read/readFile`
+RECOVER (err):
+  SET CURRENT_LOG := DECISION_LOG_SKELETON (from "Constant Lookup")
 SET UPDATED_LOG := <LOG> (from "Agent Inference" using CURRENT_LOG, CREATED_ADRS, CREATED_CORE_COMPONENTS)
-USE `edit/editFiles` where: filePath=DECISION_LOG_PATH
+USE `edit/createFile` where: content=UPDATED_LOG, filePath=DECISION_LOG_PATH
 SET UPDATED_FILES := UPDATED_FILES + [DECISION_LOG_PATH] (from "Agent Inference")
 </process>
 

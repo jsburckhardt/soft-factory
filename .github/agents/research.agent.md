@@ -37,7 +37,7 @@ You MUST propose ADR titles when ADRs are required.
 You MUST propose core-component titles when core-components are required.
 You MUST NOT make architectural decisions; only propose them.
 You MUST produce the research brief at project/issues/<ISSUE_NUMBER>/research/00-research.md where <ISSUE_NUMBER> is the GitHub issue number.
-You MUST follow the Research Brief template defined in Section 5.1 of the specification.
+You MUST follow the Research Brief template defined by the RESEARCH_BRIEF format in this agent.
 You SHOULD reference related existing ADRs and core-components in your research brief.
 You SHOULD identify risks, open questions, and unknowns in the research brief.
 You MAY consult external documentation or APIs for additional context.

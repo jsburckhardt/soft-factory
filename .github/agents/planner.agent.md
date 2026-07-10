@@ -19,9 +19,9 @@ target: vscode
 
 <instructions>
 You MUST read the research brief at project/issues/<ISSUE_NUMBER>/research/00-research.md before any planning work.
-You MUST read the ADR template at project/architecture/ADR/ADR-0001-template.md before creating any ADR.
-You MUST read the core-component template at project/architecture/core-components/CORE-COMPONENT-0001-template.md before creating any core-component.
-You MUST read the decision log at project/architecture/ADR/DECISION-LOG.md before creating any ADR or core-component.
+You MUST use the embedded ADR template in the ADR_TEMPLATE constant when creating any ADR.
+You MUST use the embedded core-component template in the CORE_COMPONENT_TEMPLATE constant when creating any core-component.
+You MUST read the decision log at DECISION_LOG_PATH before creating any ADR or core-component, initializing it from DECISION_LOG_SKELETON if absent.
 You MUST read all existing ADRs under project/architecture/ADR/ before creating new ones.
 You MUST read all existing core-components under project/architecture/core-components/ before creating new ones.
 You MUST inspect application source code before creating tasks.
@@ -53,8 +53,6 @@ You MAY split large tasks into smaller subtasks for clarity.
 </instructions>
 
 <constants>
-ADR_TEMPLATE_PATH: "project/architecture/ADR/ADR-0001-template.md"
-CORE_COMPONENT_TEMPLATE_PATH: "project/architecture/core-components/CORE-COMPONENT-0001-template.md"
 DECISION_LOG_PATH: "project/architecture/ADR/DECISION-LOG.md"
 ADR_DIR: "project/architecture/ADR"
 CORE_COMPONENT_DIR: "project/architecture/core-components"
@@ -62,6 +60,135 @@ ADR_PATTERN: "ADR-####-slug.md"
 CORE_COMPONENT_PATTERN: "CORE-COMPONENT-####-slug.md"
 TASK_BREAKDOWN_PATH: "project/issues/<ISSUE_NUMBER>/plan/02-task-breakdown.md"
 TEST_PLAN_PATH: "project/issues/<ISSUE_NUMBER>/plan/03-test-plan.md"
+ADR_TEMPLATE: TEXT<<
+# ADR-####: [Short Title of Decision]
+
+## Status
+
+[Proposed | Accepted | Deprecated | Superseded by ADR-####]
+
+## Context
+
+What is the issue that we're seeing that motivates this decision or change?
+
+## Decision
+
+What is the change that we're proposing and/or doing?
+
+## Alternatives
+
+What other options were considered? Why were they rejected?
+
+| Alternative | Pros | Cons | Why Rejected |
+|-------------|------|------|--------------|
+| | | | |
+
+## Consequences
+
+What becomes easier or harder as a result of this decision?
+
+### Positive
+-
+
+### Negative
+-
+
+### Neutral
+-
+
+## Related Issues
+
+- [#ISSUE_NUMBER](https://github.com/ORG/REPO/issues/ISSUE_NUMBER)
+
+## References
+
+- [Link to relevant documentation or discussion]
+>>
+CORE_COMPONENT_TEMPLATE: TEXT<<
+# CORE-COMPONENT-####: [Short Title]
+
+## Status
+
+[Draft | Adopted | Deprecated]
+
+## Purpose
+
+What problem does this core-component solve? Why does it need to be a shared, cross-cutting concern?
+
+## Scope
+
+What parts of the system does this component affect? What are the boundaries?
+
+## Definition
+
+### Rules
+-
+
+### Interfaces
+-
+
+### Expectations
+-
+
+## Rationale
+
+Why was this approach chosen over alternatives?
+
+## Usage Examples
+
+```
+# Example code or configuration showing how to use this component
+```
+
+## Integration Guidelines
+
+How should other parts of the system integrate with this component?
+
+-
+
+## Exceptions
+
+Under what circumstances is it acceptable to deviate from this component's rules?
+
+-
+
+## Enforcement
+
+How is compliance with this component verified?
+
+- [ ] Automated checks
+- [ ] Code review checklist
+- [ ] Test coverage requirements
+
+## Related ADRs
+
+- [ADR-####-slug](../ADR/ADR-####-slug.md)
+>>
+DECISION_LOG_SKELETON: TEXT<<
+# Decision Log
+
+This file is the single registry of all architectural decisions and core-components in the project. Every new or modified ADR or core-component **must** be recorded here.
+
+## ADRs
+
+| ID | Title | Status | Date |
+|----|-------|--------|------|
+| _No ADRs yet. Copy `ADR-0001-template.md` in this directory and rename it._ | | | |
+
+## Core-Components
+
+| ID | Title | Status | Date |
+|----|-------|--------|------|
+| _No core-components yet. Copy `CORE-COMPONENT-0001-template.md` and rename it._ | | | |
+
+## Decisions
+
+Short, actionable statements derived from ADRs and core-components. More than one decision can originate from a single source.
+
+| # | Decision | Source | Date |
+|---|----------|--------|------|
+| _No decisions recorded yet._ | | | |
+>>
 DECISION_GUIDANCE: TEXT<<
 Purpose:
   The Decisions section is the central quick-reference for every concrete commitment
@@ -236,16 +363,15 @@ IF TEST_PLAN_COMPLETE is false:
 RETURN: CREATED_ADRS, CREATED_CORE_COMPONENTS, TASKS, TESTS
 </process>
 
-<process id="load-context" name="Load research brief, templates, and existing artifacts">
+<process id="load-context" name="Load research brief and existing artifacts">
 SET CURRENT_ISSUE_NUMBER := <ID> (from "Agent Inference")
 USE `read/readFile` where: filePath="project/issues/<ISSUE_NUMBER>/research/00-research.md"
 CAPTURE RESEARCH_BRIEF from `read/readFile`
-USE `read/readFile` where: filePath=ADR_TEMPLATE_PATH
-CAPTURE ADR_TEMPLATE from `read/readFile`
-USE `read/readFile` where: filePath=CORE_COMPONENT_TEMPLATE_PATH
-CAPTURE CORE_COMPONENT_TEMPLATE from `read/readFile`
-USE `read/readFile` where: filePath=DECISION_LOG_PATH
-CAPTURE DECISION_LOG from `read/readFile`
+TRY:
+  USE `read/readFile` where: filePath=DECISION_LOG_PATH
+  CAPTURE DECISION_LOG from `read/readFile`
+RECOVER (err):
+  SET DECISION_LOG := DECISION_LOG_SKELETON (from "Constant Lookup")
 USE `search/fileSearch` where: pattern="project/architecture/ADR/ADR-*.md"
 CAPTURE EXISTING_ADRS from `search/fileSearch`
 SET NEXT_ADR_NUMBER := <NUM> (from "Agent Inference" using EXISTING_ADRS)
@@ -272,10 +398,13 @@ SET ARCHITECTURE_COMPLETE := true (from "Agent Inference")
 </process>
 
 <process id="update-decision-log" name="Update the decision log with new entries">
-USE `read/readFile` where: filePath=DECISION_LOG_PATH
-CAPTURE CURRENT_LOG from `read/readFile`
+TRY:
+  USE `read/readFile` where: filePath=DECISION_LOG_PATH
+  CAPTURE CURRENT_LOG from `read/readFile`
+RECOVER (err):
+  SET CURRENT_LOG := DECISION_LOG_SKELETON (from "Constant Lookup")
 SET UPDATED_LOG := <LOG> (from "Agent Inference" using CURRENT_LOG, CREATED_ADRS, CREATED_CORE_COMPONENTS, CREATED_DECISIONS)
-USE `edit/editFiles` where: filePath=DECISION_LOG_PATH
+USE `edit/createFile` where: content=UPDATED_LOG, filePath=DECISION_LOG_PATH
 </process>
 
 <process id="create-action-plan" name="Create the action plan for the issue">
