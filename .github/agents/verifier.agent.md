@@ -42,7 +42,7 @@ You MUST parse acceptance criteria between `<!-- ACCEPTANCE_CRITERIA_START -->` 
 You MUST validate each acceptance criterion against the implementation by producing evidence (file paths, test names, commands, or docs) for each; mark criteria without concrete evidence as `not verifiable`.
 You MUST NOT proceed to push or create the PR if any acceptance criterion is `failed`; return a VERIFY_ERROR.
 You MUST update the GitHub issue body after PR creation to mark satisfied criteria as checked (`- [x]`), preserving all other content.
-You MUST read the PR template from `.github/PULL_REQUEST_TEMPLATE.md` and populate it with acceptance criteria status, changes summary, ADR/core-component references, and `Closes #<ISSUE_NUMBER>`.
+You MUST use the embedded PR template in the PR_TEMPLATE constant and populate it with acceptance criteria status, changes summary, ADR/core-component references, and `Closes #<ISSUE_NUMBER>`.
 You MUST assert the final PR body contains `Closes #<ISSUE_NUMBER>` before running `gh pr create`.
 You MUST use the GitHub CLI (gh pr create) to create a pull request.
 You MUST stop and instruct the user to authenticate if the gh CLI is not authenticated.
@@ -59,7 +59,6 @@ CORE_COMPONENT_DIR: "project/architecture/core-components"
 AGENTS_MD_PATH: "AGENTS.md"
 ISSUES_DIR: "project/issues"
 VERIFICATION_CONFIG_PATH: ".github/soft-factory/verification.yml"
-PR_TEMPLATE_PATH: ".github/PULL_REQUEST_TEMPLATE.md"
 AC_START_MARKER: "<!-- ACCEPTANCE_CRITERIA_START -->"
 AC_END_MARKER: "<!-- ACCEPTANCE_CRITERIA_END -->"
 AC_FALLBACK_HEADING: "## Acceptance Criteria"
@@ -80,6 +79,71 @@ TEST_RUNNER_SIGNALS: YAML<<
   command: pytest
 - file: Makefile
   command: make test
+>>
+PR_TEMPLATE: TEXT<<
+## Summary
+
+<!-- Provide a brief description of the changes in this PR -->
+
+Closes #<!-- ISSUE_NUMBER -->
+
+## Acceptance Criteria
+
+<!--
+  The verifier agent populates this section from the GitHub issue.
+  Each criterion is rendered as a checked (`- [x]`) or unchecked (`- [ ]`) Markdown checkbox based on implementation evidence.
+-->
+
+<!-- ACCEPTANCE_CRITERIA_START -->
+<!-- Acceptance criteria will be populated from the linked issue -->
+<!-- ACCEPTANCE_CRITERIA_END -->
+
+## Changes Made
+
+<!-- List the key changes made in this PR -->
+
+-
+
+## ADRs / Core-Components Referenced
+
+<!-- List any ADRs or core-components that guided this implementation -->
+
+| ID | Title |
+|----|-------|
+|    |       |
+
+## Verification
+
+- [ ] All configured verification steps pass
+- [ ] Conventional Commits used for all commit messages
+- [ ] Co-authored-by trailer included on every commit
+- [ ] Branch is clean — no uncommitted changes
+- [ ] Acceptance criteria validated against implementation with evidence
+>>
+DECISION_LOG_SKELETON: TEXT<<
+# Decision Log
+
+This file is the single registry of all architectural decisions and core-components in the project. Every new or modified ADR or core-component **must** be recorded here.
+
+## ADRs
+
+| ID | Title | Status | Date |
+|----|-------|--------|------|
+| _No ADRs yet. Copy `ADR-0001-template.md` in this directory and rename it._ | | | |
+
+## Core-Components
+
+| ID | Title | Status | Date |
+|----|-------|--------|------|
+| _No core-components yet. Copy `CORE-COMPONENT-0001-template.md` and rename it._ | | | |
+
+## Decisions
+
+Short, actionable statements derived from ADRs and core-components. More than one decision can originate from a single source.
+
+| # | Decision | Source | Date |
+|---|----------|--------|------|
+| _No decisions recorded yet._ | | | |
 >>
 </constants>
 
@@ -335,10 +399,18 @@ FOREACH group IN GROUPS:
 </process>
 
 <process id="update-decision-log" name="Update DECISION-LOG.md for new or changed ADRs and core-components">
-USE `read/readFile` where: filePath=DECISION_LOG_PATH
-CAPTURE CURRENT_LOG from `read/readFile`
+TRY:
+  USE `read/readFile` where: filePath=DECISION_LOG_PATH
+  CAPTURE CURRENT_LOG from `read/readFile`
+  SET DECISION_LOG_EXISTS := true (from "Agent Inference")
+RECOVER (err):
+  SET CURRENT_LOG := DECISION_LOG_SKELETON (from "Constant Lookup")
+  SET DECISION_LOG_EXISTS := false (from "Agent Inference")
 SET UPDATED_LOG := <LOG> (from "Agent Inference" using CURRENT_LOG, ADR_CHANGES, CC_CHANGES)
-USE `edit/editFiles` where: filePath=DECISION_LOG_PATH
+IF DECISION_LOG_EXISTS is true:
+  USE `edit/editFiles` where: filePath=DECISION_LOG_PATH
+ELSE:
+  USE `edit/createFile` where: content=UPDATED_LOG, filePath=DECISION_LOG_PATH
 USE `execute/runInTerminal` where: command="git add project/architecture/ADR/DECISION-LOG.md"
 USE `execute/runInTerminal` where: command="git commit -m 'docs: update DECISION-LOG.md' -m '' -m 'CO_AUTHOR_TRAILER'"
 CAPTURE COMMIT_HASH from `execute/runInTerminal`
@@ -379,8 +451,6 @@ CAPTURE PUSH_OUTPUT from `execute/runInTerminal`
 </process>
 
 <process id="create-pr" name="Create a pull request using the PR template and acceptance criteria">
-USE `read/readFile` where: filePath=PR_TEMPLATE_PATH
-CAPTURE PR_TEMPLATE from `read/readFile`
 SET PR_TITLE := <TITLE> (from "Agent Inference" using ISSUE_NUMBER, SHORT_SLUG; must follow Conventional Commits format)
 SET AC_SECTION := <SECTION> (from "Agent Inference" using AC_VALIDATION_RESULTS; render each criterion as `- [x]` if passed or `- [ ]` if not_verifiable, with evidence summary per item)
 SET PR_BODY := <BODY> (from "Agent Inference" using PR_TEMPLATE, ISSUE_NUMBER, AC_SECTION, COMMITS, ADR_CHANGES, CC_CHANGES, VERIFICATION_RESULTS; populate all template sections, replace issue number placeholder, insert AC_SECTION between ACCEPTANCE_CRITERIA_START/END markers, assert body contains "Closes #<ISSUE_NUMBER>")

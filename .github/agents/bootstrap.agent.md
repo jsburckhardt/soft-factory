@@ -27,8 +27,8 @@ handoffs:
 You MUST check whether the project has already been bootstrapped before proceeding.
 You MUST refuse to run if the project is already bootstrapped and explain why.
 You MUST read all existing documentation under docs/ and project/ before making changes.
-You MUST read the ADR template at project/architecture/ADR/ADR-0001-template.md before creating any ADR.
-You MUST read the core-component template at project/architecture/core-components/CORE-COMPONENT-0001-template.md before creating any core-component.
+You MUST use the embedded ADR template in the ADR_TEMPLATE constant when creating any ADR.
+You MUST use the embedded core-component template in the CORE_COMPONENT_TEMPLATE constant when creating any core-component.
 You MUST gather the project name, description, and goal from the user interactively.
 You MUST ask the user to choose a tech stack including language, framework, package manager, and test runner.
 You MUST ask the user to identify cross-cutting concerns such as logging, error handling, authentication, or observability.
@@ -57,8 +57,6 @@ You MAY suggest common cross-cutting concerns the user has not mentioned.
 </instructions>
 
 <constants>
-ADR_TEMPLATE_PATH: "project/architecture/ADR/ADR-0001-template.md"
-CORE_COMPONENT_TEMPLATE_PATH: "project/architecture/core-components/CORE-COMPONENT-0001-template.md"
 DECISION_LOG_PATH: "project/architecture/ADR/DECISION-LOG.md"
 ADR_DIR: "project/architecture/ADR"
 CORE_COMPONENT_DIR: "project/architecture/core-components"
@@ -69,6 +67,135 @@ LLM_TXT_PATH: "LLM.txt"
 DEVCONTAINER_PATH: ".devcontainer/devcontainer.json"
 BOOTSTRAP_MARKER: "ADR-0002"
 VERIFICATION_CONFIG_PATH: ".github/soft-factory/verification.yml"
+ADR_TEMPLATE: TEXT<<
+# ADR-####: [Short Title of Decision]
+
+## Status
+
+[Proposed | Accepted | Deprecated | Superseded by ADR-####]
+
+## Context
+
+What is the issue that we're seeing that motivates this decision or change?
+
+## Decision
+
+What is the change that we're proposing and/or doing?
+
+## Alternatives
+
+What other options were considered? Why were they rejected?
+
+| Alternative | Pros | Cons | Why Rejected |
+|-------------|------|------|--------------|
+| | | | |
+
+## Consequences
+
+What becomes easier or harder as a result of this decision?
+
+### Positive
+-
+
+### Negative
+-
+
+### Neutral
+-
+
+## Related Issues
+
+- [#ISSUE_NUMBER](https://github.com/ORG/REPO/issues/ISSUE_NUMBER)
+
+## References
+
+- [Link to relevant documentation or discussion]
+>>
+CORE_COMPONENT_TEMPLATE: TEXT<<
+# CORE-COMPONENT-####: [Short Title]
+
+## Status
+
+[Draft | Adopted | Deprecated]
+
+## Purpose
+
+What problem does this core-component solve? Why does it need to be a shared, cross-cutting concern?
+
+## Scope
+
+What parts of the system does this component affect? What are the boundaries?
+
+## Definition
+
+### Rules
+-
+
+### Interfaces
+-
+
+### Expectations
+-
+
+## Rationale
+
+Why was this approach chosen over alternatives?
+
+## Usage Examples
+
+```
+# Example code or configuration showing how to use this component
+```
+
+## Integration Guidelines
+
+How should other parts of the system integrate with this component?
+
+-
+
+## Exceptions
+
+Under what circumstances is it acceptable to deviate from this component's rules?
+
+-
+
+## Enforcement
+
+How is compliance with this component verified?
+
+- [ ] Automated checks
+- [ ] Code review checklist
+- [ ] Test coverage requirements
+
+## Related ADRs
+
+- [ADR-####-slug](../ADR/ADR-####-slug.md)
+>>
+DECISION_LOG_SKELETON: TEXT<<
+# Decision Log
+
+This file is the single registry of all architectural decisions and core-components in the project. Every new or modified ADR or core-component **must** be recorded here.
+
+## ADRs
+
+| ID | Title | Status | Date |
+|----|-------|--------|------|
+| _No ADRs yet. Copy `ADR-0001-template.md` in this directory and rename it._ | | | |
+
+## Core-Components
+
+| ID | Title | Status | Date |
+|----|-------|--------|------|
+| _No core-components yet. Copy `CORE-COMPONENT-0001-template.md` and rename it._ | | | |
+
+## Decisions
+
+Short, actionable statements derived from ADRs and core-components. More than one decision can originate from a single source.
+
+| # | Decision | Source | Date |
+|---|----------|--------|------|
+| _No decisions recorded yet._ | | | |
+>>
 TECH_STACK_INIT: YAML<<
 - language: python
   commands:
@@ -381,8 +508,6 @@ SET UPDATED_FILES := UPDATED_FILES + ["Project scaffold"] (from "Agent Inference
 </process>
 
 <process id="create-tech-stack-adr" name="Create the foundational tech stack ADR">
-USE `read/readFile` where: filePath=ADR_TEMPLATE_PATH
-CAPTURE ADR_TEMPLATE from `read/readFile`
 SET ADR_CONTENT := <CONTENT> (from "Agent Inference" using ADR_TEMPLATE, LANGUAGE, FRAMEWORK, PACKAGE_MANAGER, TEST_RUNNER, NEXT_ADR_NUMBER)
 SET ADR_FILE := <PATH> (from "Agent Inference" using ADR_DIR, NEXT_ADR_NUMBER)
 USE `edit/createFile` where: content=ADR_CONTENT, filePath=ADR_FILE
@@ -391,10 +516,8 @@ SET NEXT_ADR_NUMBER := NEXT_ADR_NUMBER + 1 (from "Agent Inference")
 </process>
 
 <process id="create-core-components" name="Create core-component files for each cross-cutting concern">
-USE `read/readFile` where: filePath=CORE_COMPONENT_TEMPLATE_PATH
-CAPTURE CC_TEMPLATE from `read/readFile`
 FOREACH concern IN CROSS_CUTTING_CONCERNS:
-  SET CC_CONTENT := <CONTENT> (from "Agent Inference" using CC_TEMPLATE, concern, NEXT_CC_NUMBER, CREATED_ADRS)
+  SET CC_CONTENT := <CONTENT> (from "Agent Inference" using CORE_COMPONENT_TEMPLATE, concern, NEXT_CC_NUMBER, CREATED_ADRS)
   SET CC_FILE := <PATH> (from "Agent Inference" using CORE_COMPONENT_DIR, NEXT_CC_NUMBER, concern)
   USE `edit/createFile` where: content=CC_CONTENT, filePath=CC_FILE
   SET CREATED_CORE_COMPONENTS := CREATED_CORE_COMPONENTS + [CC_FILE] (from "Agent Inference")
@@ -402,9 +525,7 @@ FOREACH concern IN CROSS_CUTTING_CONCERNS:
 </process>
 
 <process id="create-development-standards" name="Create the development standards core-component">
-USE `read/readFile` where: filePath=CORE_COMPONENT_TEMPLATE_PATH
-CAPTURE CC_TEMPLATE from `read/readFile`
-SET DEV_STD_CONTENT := <CONTENT> (from "Agent Inference" using CC_TEMPLATE, DEVELOPMENT_STANDARDS, LANGUAGE, NEXT_CC_NUMBER, CREATED_ADRS)
+SET DEV_STD_CONTENT := <CONTENT> (from "Agent Inference" using CORE_COMPONENT_TEMPLATE, DEVELOPMENT_STANDARDS, LANGUAGE, NEXT_CC_NUMBER, CREATED_ADRS)
 SET DEV_STD_FILE := <PATH> (from "Agent Inference" using CORE_COMPONENT_DIR, NEXT_CC_NUMBER, "development-standards")
 USE `edit/createFile` where: content=DEV_STD_CONTENT, filePath=DEV_STD_FILE
 SET CREATED_CORE_COMPONENTS := CREATED_CORE_COMPONENTS + [DEV_STD_FILE] (from "Agent Inference")
@@ -413,10 +534,18 @@ SET NEXT_CC_NUMBER := NEXT_CC_NUMBER + 1 (from "Agent Inference")
 </process>
 
 <process id="update-decision-log" name="Update DECISION-LOG.md with all new ADRs and core-components">
-USE `read/readFile` where: filePath=DECISION_LOG_PATH
-CAPTURE CURRENT_LOG from `read/readFile`
+TRY:
+  USE `read/readFile` where: filePath=DECISION_LOG_PATH
+  CAPTURE CURRENT_LOG from `read/readFile`
+  SET DECISION_LOG_EXISTS := true (from "Agent Inference")
+RECOVER (err):
+  SET CURRENT_LOG := DECISION_LOG_SKELETON (from "Constant Lookup")
+  SET DECISION_LOG_EXISTS := false (from "Agent Inference")
 SET UPDATED_LOG := <LOG> (from "Agent Inference" using CURRENT_LOG, CREATED_ADRS, CREATED_CORE_COMPONENTS, DEV_STD_DECISIONS)
-USE `edit/editFiles` where: filePath=DECISION_LOG_PATH
+IF DECISION_LOG_EXISTS is true:
+  USE `edit/editFiles` where: filePath=DECISION_LOG_PATH
+ELSE:
+  USE `edit/createFile` where: content=UPDATED_LOG, filePath=DECISION_LOG_PATH
 SET UPDATED_FILES := UPDATED_FILES + [DECISION_LOG_PATH] (from "Agent Inference")
 </process>
 
