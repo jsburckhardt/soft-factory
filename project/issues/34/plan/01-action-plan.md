@@ -30,19 +30,19 @@ Standardize the user-discoverable RPIV workflow names across agent metadata, ski
 
 ### Scope resolutions
 
-- Keep physical agent file paths unchanged:
-  - `.github/agents/research.agent.md`
-  - `.github/agents/planner.agent.md`
-  - `.github/agents/implementer.agent.md`
-  - `.github/agents/verifier.agent.md`
-  - `.github/agents/justdoit.agent.md`
-- Keep physical skill directory paths unchanged:
-  - `.github/skills/research/`
-  - `.github/skills/planner/`
-  - `.github/skills/implementer/`
-  - `.github/skills/verifier/`
-  - `.github/skills/justdoit/`
-- Update front-matter `name:` fields and user-facing references instead of renaming files/directories.
+- Rename physical RPIV agent file paths:
+  - `.github/agents/research.agent.md` to `.github/agents/rpiv-research.agent.md`
+  - `.github/agents/planner.agent.md` to `.github/agents/rpiv-planner.agent.md`
+  - `.github/agents/implementer.agent.md` to `.github/agents/rpiv-implementer.agent.md`
+  - `.github/agents/verifier.agent.md` to `.github/agents/rpiv-verifier.agent.md`
+  - `.github/agents/justdoit.agent.md` to `.github/agents/rpiv.agent.md`
+- Rename physical RPIV skill directory paths:
+  - `.github/skills/research/` to `.github/skills/rpiv-research/`
+  - `.github/skills/planner/` to `.github/skills/rpiv-planner/`
+  - `.github/skills/implementer/` to `.github/skills/rpiv-implementer/`
+  - `.github/skills/verifier/` to `.github/skills/rpiv-verifier/`
+  - `.github/skills/justdoit/` to `.github/skills/rpiv/`
+- Update front-matter `name:` fields and all user-facing path references to match the renamed RPIV files/directories.
 - Update active dispatch references that resolve agents or skills by name.
 - Keep stage IDs, artifact directory names, process names, and historical references unchanged when they are not primary user-facing workflow names.
 - Do not rewrite historical issue, pull request, or commit records solely for this naming change.
@@ -57,14 +57,14 @@ Standardize the user-discoverable RPIV workflow names across agent metadata, ski
 2. **T2 - Update RPIV skill discovery metadata and skill dispatch references**
    - Update RPIV skill front-matter `name:` values.
    - Update RPIV coordinator skill text and subagent skill references.
-   - Preserve physical skill directory names.
+   - Rename physical skill directory names.
 3. **T3 - Update documentation and repo maps**
    - Update `AGENTS.md`, `LLM.txt`, `.github/skills/README.md`, and relevant contributor documentation so RPIV workflow names are consistently shown as `rpiv-*` and `rpiv`.
    - Rename RPIV entries/keys in repo maps where they serve as user-facing identifiers.
    - Preserve non-RPIV workflow names.
 4. **T4 - Run final naming audit and acceptance verification**
    - Confirm no primary RPIV discovery surface still presents `research`, `planner`, `implementer`, `verifier`, or `justdoit`.
-   - Confirm remaining legacy terms are limited to allowed path segments, internal stage concepts, or historical/current issue documentation.
+   - Confirm remaining legacy terms are limited to internal stage concepts or historical/current issue documentation.
    - Confirm no ADR, core-component, or decision-log changes were made.
 
 ## Non-Goals
@@ -72,6 +72,5 @@ Standardize the user-discoverable RPIV workflow names across agent metadata, ski
 - Do not create ADRs.
 - Do not create core-components.
 - Do not update `project/architecture/ADR/DECISION-LOG.md`.
-- Do not rename physical agent files or skill directories.
 - Do not change non-RPIV workflow discovery names.
 - Do not rewrite historical issue, PR, or commit references solely for this change.

@@ -2,7 +2,7 @@
 
 ## Summary
 
-Standardized RPIV user-facing workflow names while keeping physical agent files and skill directories unchanged.
+Standardized RPIV user-facing workflow names and renamed the physical RPIV agent files and skill directories.
 
 Required names implemented:
 
@@ -16,19 +16,19 @@ No ADR, core-component, or `project/architecture/ADR/DECISION-LOG.md` changes we
 
 ## Files Changed
 
-- `.github/agents/research.agent.md`
-- `.github/agents/planner.agent.md`
-- `.github/agents/implementer.agent.md`
-- `.github/agents/verifier.agent.md`
-- `.github/agents/justdoit.agent.md`
+- `.github/agents/rpiv-research.agent.md`
+- `.github/agents/rpiv-planner.agent.md`
+- `.github/agents/rpiv-implementer.agent.md`
+- `.github/agents/rpiv-verifier.agent.md`
+- `.github/agents/rpiv.agent.md`
 - `.github/agents/bootstrap.agent.md`
 - `.github/agents/onboard-repo.agent.md`
-- `.github/skills/research/SKILL.md`
-- `.github/skills/planner/SKILL.md`
-- `.github/skills/implementer/SKILL.md`
-- `.github/skills/verifier/SKILL.md`
-- `.github/skills/justdoit/SKILL.md`
-- `.github/skills/justdoit/processes/run-rpiv-pipeline.md`
+- `.github/skills/rpiv-research/SKILL.md`
+- `.github/skills/rpiv-planner/SKILL.md`
+- `.github/skills/rpiv-implementer/SKILL.md`
+- `.github/skills/rpiv-verifier/SKILL.md`
+- `.github/skills/rpiv/SKILL.md`
+- `.github/skills/rpiv/processes/run-rpiv-pipeline.md`
 - `.github/skills/README.md`
 - `AGENTS.md`
 - `LLM.txt`
@@ -44,9 +44,9 @@ No ADR, core-component, or `project/architecture/ADR/DECISION-LOG.md` changes we
 ### Changes Summary
 
 - Updated RPIV agent front-matter names to `rpiv-research`, `rpiv-planner`, `rpiv-implementer`, `rpiv-verifier`, and `rpiv`.
-- Updated `.github/agents/justdoit.agent.md` coordinator `agents:` list, `STAGE_AGENTS`, `agent/runSubagent` dispatch targets, and recovery `@...` references to standardized RPIV names.
+- Updated `.github/agents/rpiv.agent.md` coordinator `agents:` list, `STAGE_AGENTS`, `agent/runSubagent` dispatch targets, and recovery `@...` references to standardized RPIV names.
 - Updated bootstrap/onboard handoff and next-step guidance to target `rpiv-research`.
-- Preserved all physical agent file paths.
+- Renamed all physical RPIV agent file paths to standardized RPIV names.
 
 ### Test Results
 
@@ -65,8 +65,8 @@ No ADR, core-component, or `project/architecture/ADR/DECISION-LOG.md` changes we
 
 - Updated RPIV skill front-matter names to `rpiv-research`, `rpiv-planner`, `rpiv-implementer`, `rpiv-verifier`, and `rpiv`.
 - Updated RPIV skill entrypoint headings and introductory text to show standardized names.
-- Updated `.github/skills/justdoit/processes/run-rpiv-pipeline.md` `Subagent` skill arguments to `rpiv-research`, `rpiv-planner`, `rpiv-implementer`, and `rpiv-verifier`.
-- Preserved all physical skill directory paths.
+- Updated `.github/skills/rpiv/processes/run-rpiv-pipeline.md` `Subagent` skill arguments to `rpiv-research`, `rpiv-planner`, `rpiv-implementer`, and `rpiv-verifier`.
+- Renamed all physical RPIV skill directory paths to standardized RPIV names.
 
 ### Test Results
 
@@ -93,7 +93,7 @@ No ADR, core-component, or `project/architecture/ADR/DECISION-LOG.md` changes we
 
 - Ran TEST-003 documentation review.
 - Confirmed docs and repo maps present standardized RPIV workflow names.
-- Reviewed remaining old terms and classified them as allowed physical path segments, internal stage IDs, artifact path segments, stage labels, or current issue documentation context.
+- Reviewed remaining old terms and classified them as internal stage IDs, artifact path segments, stage labels, or current issue documentation context.
 - Confirmed non-RPIV documentation names were preserved.
 
 ## Task T4: Run final naming audit and acceptance verification
@@ -111,8 +111,8 @@ No ADR, core-component, or `project/architecture/ADR/DECISION-LOG.md` changes we
 
 - Ran TEST-004 non-RPIV preservation and physical path checks.
 - Ran TEST-005 final acceptance and architecture-boundary audit.
-- Confirmed original RPIV physical agent paths and skill directories still exist.
-- Confirmed no replacement `rpiv-*` physical agent files or skill directories were introduced.
+- Confirmed renamed RPIV physical agent paths and skill directories exist.
+- Confirmed old RPIV physical agent files and skill directories were removed.
 - Confirmed `git diff --name-only -- project/architecture/ADR project/architecture/core-components` produced no architecture changes.
 - No commit or PR was created during Implement; Verify should use a Conventional Commits-compliant title such as `chore: standardize rpiv workflow naming` per CORE-COMPONENT-0002.
 
@@ -123,14 +123,14 @@ No ADR, core-component, or `project/architecture/ADR/DECISION-LOG.md` changes we
 | TEST-001 | Passed | Static front-matter and dispatch checks for `.github/agents/*` RPIV files plus bootstrap/onboard handoffs. |
 | TEST-002 | Passed | Static front-matter and `Subagent` skill checks for `.github/skills/*` RPIV files. |
 | TEST-003 | Passed | Static review of `AGENTS.md`, `LLM.txt`, `.github/skills/README.md`, and `CONTRIBUTING.md`. |
-| TEST-004 | Passed | Non-RPIV front-matter names unchanged; original RPIV physical paths exist; no replacement physical RPIV paths found. |
+| TEST-004 | Passed | Non-RPIV front-matter names unchanged; renamed RPIV physical paths exist; old physical RPIV paths removed. |
 | TEST-005 | Passed | Final active naming audit and `git diff --name-only` architecture-boundary check completed. |
 
 ## Acceptance Evidence
 
 - RPIV discovery names: `.github/agents/*.agent.md` and `.github/skills/*/SKILL.md` front-matter now expose `rpiv-research`, `rpiv-planner`, `rpiv-implementer`, `rpiv-verifier`, and `rpiv`.
-- Active agent dispatch: `.github/agents/justdoit.agent.md` uses standardized `rpiv-*` agent names in the coordinator metadata, constants, `agent/runSubagent` calls, and recovery guidance.
-- Active skill dispatch: `.github/skills/justdoit/processes/run-rpiv-pipeline.md` uses standardized `rpiv-*` skill names in all `Subagent` calls.
+- Active agent dispatch: `.github/agents/rpiv.agent.md` uses standardized `rpiv-*` agent names in the coordinator metadata, constants, `agent/runSubagent` calls, and recovery guidance.
+- Active skill dispatch: `.github/skills/rpiv/processes/run-rpiv-pipeline.md` uses standardized `rpiv-*` skill names in all `Subagent` calls.
 - Documentation/repo maps: `AGENTS.md`, `LLM.txt`, `.github/skills/README.md`, and `CONTRIBUTING.md` present standardized RPIV workflow names and retain physical path context where needed.
 - Non-RPIV preservation: non-RPIV agent/skill front-matter names were verified unchanged.
 - Architecture boundary: no ADR files, core-component files, or decision-log files were modified.

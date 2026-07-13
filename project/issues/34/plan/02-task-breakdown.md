@@ -12,41 +12,42 @@
 
 Update RPIV agent front-matter and active agent-name references so agent discovery and subagent dispatch use the standardized RPIV names.
 
-Target RPIV agent files:
+Target RPIV agent file renames:
 
-- `.github/agents/research.agent.md`
-- `.github/agents/planner.agent.md`
-- `.github/agents/implementer.agent.md`
-- `.github/agents/verifier.agent.md`
-- `.github/agents/justdoit.agent.md`
+- `.github/agents/research.agent.md` to `.github/agents/rpiv-research.agent.md`
+- `.github/agents/planner.agent.md` to `.github/agents/rpiv-planner.agent.md`
+- `.github/agents/implementer.agent.md` to `.github/agents/rpiv-implementer.agent.md`
+- `.github/agents/verifier.agent.md` to `.github/agents/rpiv-verifier.agent.md`
+- `.github/agents/justdoit.agent.md` to `.github/agents/rpiv.agent.md`
 
 Also inspect active handoff references in non-RPIV agents such as:
 
 - `.github/agents/bootstrap.agent.md`
 - `.github/agents/onboard-repo.agent.md`
 
-Physical file names must remain unchanged.
+Physical RPIV file names must be renamed to match the standardized RPIV workflow names.
 
 ### Acceptance Criteria
 
-- [ ] `.github/agents/research.agent.md` front-matter uses `name: rpiv-research`.
-- [ ] `.github/agents/planner.agent.md` front-matter uses `name: rpiv-planner`.
-- [ ] `.github/agents/implementer.agent.md` front-matter uses `name: rpiv-implementer`.
-- [ ] `.github/agents/verifier.agent.md` front-matter uses `name: rpiv-verifier`.
-- [ ] `.github/agents/justdoit.agent.md` front-matter uses `name: rpiv`.
-- [ ] `.github/agents/justdoit.agent.md` `agents:` list references `rpiv-research`, `rpiv-planner`, `rpiv-implementer`, and `rpiv-verifier`.
-- [ ] `.github/agents/justdoit.agent.md` `STAGE_AGENTS` entries reference the standardized RPIV agent names.
-- [ ] `.github/agents/justdoit.agent.md` subagent dispatch calls use the standardized RPIV agent names.
-- [ ] `.github/agents/justdoit.agent.md` recovery guidance uses `@rpiv-research`, `@rpiv-planner`, `@rpiv-implementer`, and `@rpiv-verifier`.
+- [ ] `.github/agents/rpiv-research.agent.md` front-matter uses `name: rpiv-research`.
+- [ ] `.github/agents/rpiv-planner.agent.md` front-matter uses `name: rpiv-planner`.
+- [ ] `.github/agents/rpiv-implementer.agent.md` front-matter uses `name: rpiv-implementer`.
+- [ ] `.github/agents/rpiv-verifier.agent.md` front-matter uses `name: rpiv-verifier`.
+- [ ] `.github/agents/rpiv.agent.md` front-matter uses `name: rpiv`.
+- [ ] `.github/agents/rpiv.agent.md` `agents:` list references `rpiv-research`, `rpiv-planner`, `rpiv-implementer`, and `rpiv-verifier`.
+- [ ] `.github/agents/rpiv.agent.md` `STAGE_AGENTS` entries reference the standardized RPIV agent names.
+- [ ] `.github/agents/rpiv.agent.md` subagent dispatch calls use the standardized RPIV agent names.
+- [ ] `.github/agents/rpiv.agent.md` recovery guidance uses `@rpiv-research`, `@rpiv-planner`, `@rpiv-implementer`, and `@rpiv-verifier`.
 - [ ] Active handoff references from non-RPIV agents to the Research stage target `rpiv-research`.
 - [ ] Non-RPIV agent front-matter `name:` values remain unchanged.
-- [ ] Physical agent file paths remain unchanged.
+- [ ] Old physical RPIV agent file paths are removed.
+- [ ] Renamed physical RPIV agent file paths exist.
 
 ### Test Coverage
 
 - [ ] Static front-matter inspection confirms all RPIV agent `name:` values match the required names.
 - [ ] Static search confirms no RPIV agent front-matter still uses `name: research`, `name: planner`, `name: implementer`, `name: verifier`, or `name: justdoit`.
-- [ ] Static search confirms `.github/agents/justdoit.agent.md` contains no active dispatch references to `agent="research"`, `agent="planner"`, `agent="implementer"`, `agent="verifier"`, `agent: research`, `agent: planner`, `agent: implementer`, or `agent: verifier`.
+- [ ] Static search confirms `.github/agents/rpiv.agent.md` contains no active dispatch references to `agent="research"`, `agent="planner"`, `agent="implementer"`, `agent="verifier"`, `agent: research`, `agent: planner`, `agent: implementer`, or `agent: verifier`.
 - [ ] Static search confirms recovery references use `@rpiv-research`, `@rpiv-planner`, `@rpiv-implementer`, and `@rpiv-verifier`.
 - [ ] Static inspection confirms non-RPIV agent names remain `bootstrap`, `onboard-repo`, `excali`, `issue-generator`, `harness-cli-it`, and `APS v1.2.2 Agent`.
 
@@ -62,29 +63,29 @@ Physical file names must remain unchanged.
 
 Update RPIV skill front-matter and active skill-name dispatch references so skill discovery and coordinator execution use the standardized RPIV names.
 
-Target RPIV skill files:
+Target RPIV skill directory renames:
 
-- `.github/skills/research/SKILL.md`
-- `.github/skills/planner/SKILL.md`
-- `.github/skills/implementer/SKILL.md`
-- `.github/skills/verifier/SKILL.md`
-- `.github/skills/justdoit/SKILL.md`
-- `.github/skills/justdoit/processes/run-rpiv-pipeline.md`
+- `.github/skills/research/` to `.github/skills/rpiv-research/`
+- `.github/skills/planner/` to `.github/skills/rpiv-planner/`
+- `.github/skills/implementer/` to `.github/skills/rpiv-implementer/`
+- `.github/skills/verifier/` to `.github/skills/rpiv-verifier/`
+- `.github/skills/justdoit/` to `.github/skills/rpiv/`
 
-Physical skill directory names must remain unchanged.
+Physical RPIV skill directory names must be renamed to match the standardized RPIV workflow names.
 
 ### Acceptance Criteria
 
-- [ ] `.github/skills/research/SKILL.md` front-matter uses `name: rpiv-research`.
-- [ ] `.github/skills/planner/SKILL.md` front-matter uses `name: rpiv-planner`.
-- [ ] `.github/skills/implementer/SKILL.md` front-matter uses `name: rpiv-implementer`.
-- [ ] `.github/skills/verifier/SKILL.md` front-matter uses `name: rpiv-verifier`.
-- [ ] `.github/skills/justdoit/SKILL.md` front-matter uses `name: rpiv`.
+- [ ] `.github/skills/rpiv-research/SKILL.md` front-matter uses `name: rpiv-research`.
+- [ ] `.github/skills/rpiv-planner/SKILL.md` front-matter uses `name: rpiv-planner`.
+- [ ] `.github/skills/rpiv-implementer/SKILL.md` front-matter uses `name: rpiv-implementer`.
+- [ ] `.github/skills/rpiv-verifier/SKILL.md` front-matter uses `name: rpiv-verifier`.
+- [ ] `.github/skills/rpiv/SKILL.md` front-matter uses `name: rpiv`.
 - [ ] RPIV skill entrypoint headings and introductory user-facing text use the standardized RPIV names.
-- [ ] `.github/skills/justdoit/processes/run-rpiv-pipeline.md` uses `skill="rpiv-research"`, `skill="rpiv-planner"`, `skill="rpiv-implementer"`, and `skill="rpiv-verifier"`.
+- [ ] `.github/skills/rpiv/processes/run-rpiv-pipeline.md` uses `skill="rpiv-research"`, `skill="rpiv-planner"`, `skill="rpiv-implementer"`, and `skill="rpiv-verifier"`.
 - [ ] No RPIV `Subagent` call still uses `skill="research"`, `skill="planner"`, `skill="implementer"`, or `skill="verifier"`.
 - [ ] Non-RPIV skill front-matter `name:` values remain unchanged.
-- [ ] Physical skill directory paths remain unchanged.
+- [ ] Old physical RPIV skill directory paths are removed.
+- [ ] Renamed physical RPIV skill directory paths exist.
 
 ### Test Coverage
 
@@ -103,7 +104,7 @@ Physical skill directory names must remain unchanged.
 
 ### Description
 
-Update user-facing documentation and repository maps so they consistently present RPIV workflows by the standardized names while preserving path references where paths remain unchanged.
+Update user-facing documentation and repository maps so they consistently present RPIV workflows by the standardized names and renamed physical paths.
 
 Target files include:
 
@@ -122,7 +123,7 @@ The implementer should also inspect nearby documentation for additional user-fac
 - [ ] `LLM.txt` describes RPIV agent and skill entries using the standardized RPIV names.
 - [ ] `.github/skills/README.md` maps RPIV agent/skill paths to standardized user-facing names.
 - [ ] `CONTRIBUTING.md` presents the pipeline invocation/workflow names as `rpiv`, `rpiv-research`, `rpiv-planner`, `rpiv-implementer`, and `rpiv-verifier` where user-facing workflow names are discussed.
-- [ ] Documentation distinguishes retained physical paths from standardized user-facing names when needed.
+- [ ] Documentation uses renamed RPIV physical paths where paths are referenced.
 - [ ] Non-RPIV documentation entries keep their existing user-facing names.
 - [ ] Historical issue, pull request, and commit references are not rewritten solely for this change.
 
@@ -130,7 +131,7 @@ The implementer should also inspect nearby documentation for additional user-fac
 
 - [ ] Static review confirms `AGENTS.md`, `LLM.txt`, `.github/skills/README.md`, and `CONTRIBUTING.md` use standardized RPIV names in user-facing contexts.
 - [ ] Static search confirms old RPIV names are not presented as primary workflow names in repo maps.
-- [ ] Manual review confirms any remaining old terms are path segments, internal stage labels, or explicitly documented legacy/path context.
+- [ ] Manual review confirms any remaining old terms are internal stage labels or explicitly documented historical/current issue context.
 - [ ] Manual review confirms non-RPIV names are unchanged in documentation and maps.
 
 ## Task T4: Run final naming audit and acceptance verification
@@ -145,7 +146,7 @@ The implementer should also inspect nearby documentation for additional user-fac
 
 Perform a repository-wide audit after implementation to verify all acceptance criteria are satisfied and no unintended architecture artifacts or unrelated workflow renames were introduced.
 
-The audit should focus on active discovery surfaces, active dispatch references, documentation, and repo maps. It should allow retained physical paths and historical issue/PR/commit references.
+The audit should focus on active discovery surfaces, active dispatch references, renamed physical paths, documentation, and repo maps. It should allow historical issue/PR/commit references.
 
 ### Acceptance Criteria
 
@@ -154,7 +155,8 @@ The audit should focus on active discovery surfaces, active dispatch references,
 - [ ] Active RPIV agent and skill dispatch references use standardized RPIV names.
 - [ ] Documentation and repo maps consistently present standardized RPIV names.
 - [ ] Non-RPIV workflows keep their existing user-facing names.
-- [ ] Physical RPIV file and directory paths remain unchanged.
+- [ ] Old physical RPIV file and directory paths are removed.
+- [ ] Renamed physical RPIV file and directory paths exist.
 - [ ] Historical issue, pull request, and commit references are not rewritten solely for this change.
 - [ ] No ADR files are created or modified.
 - [ ] No core-component files are created or modified.

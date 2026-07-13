@@ -150,11 +150,11 @@ RETRY_COUNT: 0
 </runtime>
 
 <triggers>
-<trigger event="user_message" target="justdoit-router" />
+<trigger event="user_message" target="rpiv-router" />
 </triggers>
 
 <processes>
-<process id="justdoit-router" name="Drive task through all RPIV pipeline stages">
+<process id="rpiv-router" name="Drive task through all RPIV pipeline stages">
 RUN `init-pipeline`
 RUN `dispatch-research`
 IF PIPELINE_STATUS = "error":

@@ -23,25 +23,25 @@ The fix is a naming and metadata change: stage workflows should be user-discover
 
 | File | Current `name` | Required `name` |
 |------|----------------|-----------------|
-| `.github/agents/research.agent.md:2` | `research` | `rpiv-research` |
-| `.github/agents/planner.agent.md:2` | `planner` | `rpiv-planner` |
-| `.github/agents/implementer.agent.md:2` | `implementer` | `rpiv-implementer` |
-| `.github/agents/verifier.agent.md:2` | `verifier` | `rpiv-verifier` |
-| `.github/agents/justdoit.agent.md:2` | `justdoit` | `rpiv` |
+| `.github/agents/rpiv-research.agent.md:2` | `research` | `rpiv-research` |
+| `.github/agents/rpiv-planner.agent.md:2` | `planner` | `rpiv-planner` |
+| `.github/agents/rpiv-implementer.agent.md:2` | `implementer` | `rpiv-implementer` |
+| `.github/agents/rpiv-verifier.agent.md:2` | `verifier` | `rpiv-verifier` |
+| `.github/agents/rpiv.agent.md:2` | `justdoit` | `rpiv` |
 
 #### Skill files - `name:` front-matter field
 
 | File | Current `name` | Required `name` |
 |------|----------------|-----------------|
-| `.github/skills/research/SKILL.md:2` | `research` | `rpiv-research` |
-| `.github/skills/planner/SKILL.md:2` | `planner` | `rpiv-planner` |
-| `.github/skills/implementer/SKILL.md:2` | `implementer` | `rpiv-implementer` |
-| `.github/skills/verifier/SKILL.md:2` | `verifier` | `rpiv-verifier` |
-| `.github/skills/justdoit/SKILL.md:2` | `justdoit` | `rpiv` |
+| `.github/skills/rpiv-research/SKILL.md:2` | `research` | `rpiv-research` |
+| `.github/skills/rpiv-planner/SKILL.md:2` | `planner` | `rpiv-planner` |
+| `.github/skills/rpiv-implementer/SKILL.md:2` | `implementer` | `rpiv-implementer` |
+| `.github/skills/rpiv-verifier/SKILL.md:2` | `verifier` | `rpiv-verifier` |
+| `.github/skills/rpiv/SKILL.md:2` | `justdoit` | `rpiv` |
 
 #### `justdoit` agent - sub-agent and recovery references
 
-`.github/agents/justdoit.agent.md` references stage agents by name in these locations:
+`.github/agents/rpiv.agent.md` references stage agents by name in these locations:
 
 - Front-matter `agents:` list: `research`, `planner`, `implementer`, `verifier`
 - `STAGE_AGENTS` constant: `agent: research`, `agent: planner`, `agent: implementer`, `agent: verifier`
@@ -51,12 +51,12 @@ These internal sub-agent dispatch references must be updated to the new names to
 
 #### `justdoit` skill process - sub-agent skill references
 
-`.github/skills/justdoit/processes/run-rpiv-pipeline.md` references stage workflows by skill name in `Subagent` calls: `skill="research"`, `skill="planner"`, `skill="implementer"`, `skill="verifier"`. These must be updated.
+`.github/skills/rpiv/processes/run-rpiv-pipeline.md` references stage workflows by skill name in `Subagent` calls: `skill="research"`, `skill="planner"`, `skill="implementer"`, `skill="verifier"`. These must be updated.
 
 #### Documentation and repo maps
 
 - `AGENTS.md` `PIPELINE_STAGES` constant identifies the stage agents as `research`, `planner`, `implementer`, and `verifier`.
-- `AGENTS.md` `AGENTS` constant uses current RPIV keys and references `.github/agents/justdoit.agent.md` as `justdoit`.
+- `AGENTS.md` `AGENTS` constant uses standardized RPIV keys and references `.github/agents/rpiv.agent.md` as `rpiv`.
 - `LLM.txt` names agent files and skills using the current identifiers.
 - `.github/skills/README.md` maps agents to skills with current identifiers.
 
@@ -118,6 +118,6 @@ None required. This change does not introduce reusable cross-cutting behavior.
 
 ### Open Questions
 
-1. Should physical directory names such as `.github/skills/justdoit/` and `.github/skills/research/` be renamed, or should only front-matter names and user-facing references change?
+1. Should physical directory names be renamed, or should only front-matter names and user-facing references change? Follow-up user feedback resolved this in favor of renaming RPIV agent files and skill directories to the standardized RPIV names.
 2. Should YAML keys in `AGENTS.md` be renamed to the standardized RPIV names, or should only display/discovery references change?
 3. Are there external integrations that reference the old agent or skill names directly? No `.github/workflows/` dependency was identified during research.

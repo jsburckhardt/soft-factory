@@ -25,11 +25,11 @@ Delivered standardized RPIV user-facing workflow names across agent and skill di
 
 | Status | Criterion | Evidence |
 |--------|-----------|----------|
-| ✅ passed | The Research stage workflow is user-discoverable as `rpiv-research`. | `.github/agents/research.agent.md` and `.github/skills/research/SKILL.md` front matter use `name: rpiv-research`. |
-| ✅ passed | The Planner stage workflow is user-discoverable as `rpiv-planner`. | `.github/agents/planner.agent.md` and `.github/skills/planner/SKILL.md` front matter use `name: rpiv-planner`. |
-| ✅ passed | The Implementer stage workflow is user-discoverable as `rpiv-implementer`. | `.github/agents/implementer.agent.md` and `.github/skills/implementer/SKILL.md` front matter use `name: rpiv-implementer`. |
-| ✅ passed | The Verifier stage workflow is user-discoverable as `rpiv-verifier`. | `.github/agents/verifier.agent.md` and `.github/skills/verifier/SKILL.md` front matter use `name: rpiv-verifier`. |
-| ✅ passed | The full RPIV pipeline coordinator is user-discoverable as `rpiv` instead of `justdoit`. | `.github/agents/justdoit.agent.md` and `.github/skills/justdoit/SKILL.md` front matter use `name: rpiv`. |
+| ✅ passed | The Research stage workflow is user-discoverable as `rpiv-research`. | `.github/agents/rpiv-research.agent.md` and `.github/skills/rpiv-research/SKILL.md` front matter use `name: rpiv-research`. |
+| ✅ passed | The Planner stage workflow is user-discoverable as `rpiv-planner`. | `.github/agents/rpiv-planner.agent.md` and `.github/skills/rpiv-planner/SKILL.md` front matter use `name: rpiv-planner`. |
+| ✅ passed | The Implementer stage workflow is user-discoverable as `rpiv-implementer`. | `.github/agents/rpiv-implementer.agent.md` and `.github/skills/rpiv-implementer/SKILL.md` front matter use `name: rpiv-implementer`. |
+| ✅ passed | The Verifier stage workflow is user-discoverable as `rpiv-verifier`. | `.github/agents/rpiv-verifier.agent.md` and `.github/skills/rpiv-verifier/SKILL.md` front matter use `name: rpiv-verifier`. |
+| ✅ passed | The full RPIV pipeline coordinator is user-discoverable as `rpiv` instead of `justdoit`. | `.github/agents/rpiv.agent.md` and `.github/skills/rpiv/SKILL.md` front matter use `name: rpiv`. |
 | ✅ passed | User-facing references to the RPIV workflow set use the standardized RPIV names consistently. | `AGENTS.md`, `LLM.txt`, `.github/skills/README.md`, and `CONTRIBUTING.md` reference `rpiv`, `rpiv-research`, `rpiv-planner`, `rpiv-implementer`, and `rpiv-verifier`. |
 | ✅ passed | Non-RPIV workflows keep their existing user-facing names. | Static front-matter verification confirmed non-RPIV names remain `bootstrap`, `onboard-repo`, `excali`, `issue-generator`, `harness-cli-it`, `agnostic-prompt-standard`, `pr-review-complement`, and `APS v1.2.2 Agent`. |
 | ✅ passed | Historical issue, pull request, and commit references do not need to be rewritten solely to satisfy this change. | Changed-file scope verification is limited to RPIV naming metadata, docs/repo maps, and Issue #34 artifacts. |
@@ -48,10 +48,11 @@ Delivered standardized RPIV user-facing workflow names across agent and skill di
 |----------|---------|--------|
 | Static inspection | Shell static RPIV naming verification from Issue #34 test plan | ✅ passed |
 | Search guard | Legacy RPIV primary discovery/dispatch grep guard | ✅ passed |
+| Physical paths | Old RPIV agent files and skill directories removed; renamed `rpiv-*` and `rpiv` paths present | ✅ passed |
 | Architecture boundary | ADR/core-component/DECISION-LOG change guard | ✅ passed |
 | Change scope | Issue #34 changed-file scope guard | ✅ passed |
 | Commit signatures | GitHub commit signature verification for pushed commits | ✅ passed |
 
 ## Generated At
 
-2026-07-13T07:41:59Z
+2026-07-13T07:50:39Z

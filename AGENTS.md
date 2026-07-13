@@ -125,7 +125,7 @@ bootstrap:
     - must not set up CI/CD pipelines or infrastructure
     - must not make feature-level decisions
 rpiv:
-  file: .github/agents/justdoit.agent.md
+  file: .github/agents/rpiv.agent.md
   purpose: Coordinate the full RPIV pipeline for a GitHub issue by dispatching Research, Plan, Implement, and Verify stages in order.
   tools:
     - subagent dispatch
@@ -147,7 +147,7 @@ rpiv:
     - must validate each stage artifact before proceeding
     - must stop with a pipeline error when a stage fails
 rpiv-research:
-  file: .github/agents/research.agent.md
+  file: .github/agents/rpiv-research.agent.md
   purpose: Explore the problem space, classify scope, and produce a research brief that hands off cleanly to the Plan stage.
   tools:
     - web search and documentation lookup
@@ -174,7 +174,7 @@ rpiv-research:
     - propose ADR titles and core-component titles when applicable
     - never make architectural decisions — only propose them
 rpiv-planner:
-  file: .github/agents/planner.agent.md
+  file: .github/agents/rpiv-planner.agent.md
   purpose: Own the Plan stage — read the research brief, commit architectural decisions via ADRs and core-components, then produce the action plan, task breakdown, and test plan.
   tools:
     - codebase exploration (grep, glob, file reading)
@@ -209,7 +209,7 @@ rpiv-planner:
     - every task must have explicit test coverage requirements
     - tasks must reference relevant ADRs and core-components
 rpiv-implementer:
-  file: .github/agents/implementer.agent.md
+  file: .github/agents/rpiv-implementer.agent.md
   purpose: Execute tasks from the plan, produce code and tests, and verify implementation against the test plan.
   tools:
     - code generation and editing
@@ -231,7 +231,7 @@ rpiv-implementer:
     - implementation must satisfy the test plan
     - must not skip tests defined in the test plan
 rpiv-verifier:
-  file: .github/agents/verifier.agent.md
+  file: .github/agents/rpiv-verifier.agent.md
   purpose: Verify completed work — run tests, validate acceptance criteria, create commits following Conventional Commits, push, and open a PR for review.
   tools:
     - terminal execution (git, gh, test runners)

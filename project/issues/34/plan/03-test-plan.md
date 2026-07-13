@@ -13,12 +13,12 @@ Complete Task T1.
 ### Steps
 
 1. Inspect front-matter in:
-   - `.github/agents/research.agent.md`
-   - `.github/agents/planner.agent.md`
-   - `.github/agents/implementer.agent.md`
-   - `.github/agents/verifier.agent.md`
-   - `.github/agents/justdoit.agent.md`
-2. Inspect `.github/agents/justdoit.agent.md` for:
+   - `.github/agents/rpiv-research.agent.md`
+   - `.github/agents/rpiv-planner.agent.md`
+   - `.github/agents/rpiv-implementer.agent.md`
+   - `.github/agents/rpiv-verifier.agent.md`
+   - `.github/agents/rpiv.agent.md`
+2. Inspect `.github/agents/rpiv.agent.md` for:
    - `agents:` list values
    - `STAGE_AGENTS` agent values
    - `agent/runSubagent` agent arguments
@@ -31,7 +31,7 @@ Complete Task T1.
 - RPIV agent front-matter names are `rpiv-research`, `rpiv-planner`, `rpiv-implementer`, `rpiv-verifier`, and `rpiv`.
 - Active RPIV dispatch and recovery references use standardized RPIV names.
 - Non-RPIV agent names remain unchanged.
-- Physical agent file paths remain unchanged.
+- Renamed RPIV agent file paths exist and old RPIV agent file paths are removed.
 
 ## Test TEST-002: RPIV skill discovery metadata and skill orchestration references
 
@@ -46,12 +46,12 @@ Complete Task T2.
 ### Steps
 
 1. Inspect front-matter in:
-   - `.github/skills/research/SKILL.md`
-   - `.github/skills/planner/SKILL.md`
-   - `.github/skills/implementer/SKILL.md`
-   - `.github/skills/verifier/SKILL.md`
-   - `.github/skills/justdoit/SKILL.md`
-2. Inspect `.github/skills/justdoit/processes/run-rpiv-pipeline.md` for `Subagent` skill arguments.
+   - `.github/skills/rpiv-research/SKILL.md`
+   - `.github/skills/rpiv-planner/SKILL.md`
+   - `.github/skills/rpiv-implementer/SKILL.md`
+   - `.github/skills/rpiv-verifier/SKILL.md`
+   - `.github/skills/rpiv/SKILL.md`
+2. Inspect `.github/skills/rpiv/processes/run-rpiv-pipeline.md` for `Subagent` skill arguments.
 3. Inspect RPIV skill entrypoint headings and introductory text.
 4. Inspect non-RPIV skill front-matter names.
 
@@ -60,7 +60,7 @@ Complete Task T2.
 - RPIV skill front-matter names are `rpiv-research`, `rpiv-planner`, `rpiv-implementer`, `rpiv-verifier`, and `rpiv`.
 - RPIV coordinator skill dispatches `rpiv-research`, `rpiv-planner`, `rpiv-implementer`, and `rpiv-verifier`.
 - Non-RPIV skill names remain unchanged.
-- Physical skill directory paths remain unchanged.
+- Renamed RPIV skill directory paths exist and old RPIV skill directory paths are removed.
 
 ## Test TEST-003: Documentation and repo map naming consistency
 
@@ -80,7 +80,6 @@ Complete Tasks T1, T2, and T3.
 4. Review `CONTRIBUTING.md`.
 5. Search these files for user-facing references to `research`, `planner`, `implementer`, `verifier`, and `justdoit`.
 6. Classify any remaining legacy terms as either:
-   - allowed physical path references,
    - allowed internal stage labels,
    - allowed historical/current issue context,
    - or disallowed primary workflow names.
@@ -118,14 +117,14 @@ Complete all implementation tasks.
    - `harness-cli-it`
    - `agnostic-prompt-standard`
    - `pr-review-complement`
-3. Confirm RPIV physical file and directory paths still exist at their original paths.
-4. Confirm no replacement RPIV physical paths were introduced solely for naming.
+3. Confirm renamed RPIV physical file and directory paths exist.
+4. Confirm old RPIV physical file and directory paths were removed.
 
 ### Expected Result
 
 - Non-RPIV workflow names are unchanged.
-- RPIV physical paths remain unchanged.
-- Standardization is limited to user-discoverable names, active dispatch references, and documentation/repo maps.
+- Renamed RPIV physical paths exist.
+- Old RPIV physical paths are removed.
 
 ## Test TEST-005: Final acceptance and architecture-boundary audit
 
