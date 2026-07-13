@@ -89,7 +89,7 @@ IF HAS_ACCEPTANCE_CRITERIA is false:
 
 <process id="run-research" name="Run Research stage">
 SET CURRENT_STAGE := "research" (from "Agent Inference")
-USE `Subagent` where: prompt="Research GitHub issue <ISSUE_NUMBER> and write project/issues/<ISSUE_NUMBER>/research/00-research.md", skill="research"
+USE `Subagent` where: prompt="Research GitHub issue <ISSUE_NUMBER> and write project/issues/<ISSUE_NUMBER>/research/00-research.md", skill="rpiv-research"
 CAPTURE RESEARCH_RESULT from `Subagent`
 USE `Read` where: path="project/issues/<ISSUE_NUMBER>/research/00-research.md"
 CAPTURE RESEARCH_ARTIFACT from `Read`
@@ -98,7 +98,7 @@ SET STAGE_RESULTS := STAGE_RESULTS + ["Research complete"] (from "Agent Inferenc
 
 <process id="run-plan" name="Run Plan stage">
 SET CURRENT_STAGE := "plan" (from "Agent Inference")
-USE `Subagent` where: prompt="Plan GitHub issue <ISSUE_NUMBER> using the research brief and write action, task, and test plans", skill="planner"
+USE `Subagent` where: prompt="Plan GitHub issue <ISSUE_NUMBER> using the research brief and write action, task, and test plans", skill="rpiv-planner"
 CAPTURE PLAN_RESULT from `Subagent`
 USE `Read` where: path="project/issues/<ISSUE_NUMBER>/plan/01-action-plan.md"
 CAPTURE PLAN_ARTIFACT from `Read`
@@ -107,7 +107,7 @@ SET STAGE_RESULTS := STAGE_RESULTS + ["Plan complete"] (from "Agent Inference")
 
 <process id="run-implement" name="Run Implement stage">
 SET CURRENT_STAGE := "implement" (from "Agent Inference")
-USE `Subagent` where: prompt="Implement GitHub issue <ISSUE_NUMBER> using the task breakdown and test plan", skill="implementer"
+USE `Subagent` where: prompt="Implement GitHub issue <ISSUE_NUMBER> using the task breakdown and test plan", skill="rpiv-implementer"
 CAPTURE IMPLEMENT_RESULT from `Subagent`
 USE `Read` where: path="project/issues/<ISSUE_NUMBER>/implementation/README.md"
 CAPTURE IMPLEMENT_ARTIFACT from `Read`
@@ -116,7 +116,7 @@ SET STAGE_RESULTS := STAGE_RESULTS + ["Implement complete"] (from "Agent Inferen
 
 <process id="run-verify" name="Run Verify stage">
 SET CURRENT_STAGE := "verify" (from "Agent Inference")
-USE `Subagent` where: prompt="Verify and ship GitHub issue <ISSUE_NUMBER>", skill="verifier"
+USE `Subagent` where: prompt="Verify and ship GitHub issue <ISSUE_NUMBER>", skill="rpiv-verifier"
 CAPTURE VERIFY_RESULT from `Subagent`
 USE `Read` where: path="project/issues/<ISSUE_NUMBER>/verify/summary.md"
 CAPTURE VERIFY_ARTIFACT from `Read`

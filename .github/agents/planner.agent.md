@@ -1,5 +1,5 @@
 ---
-name: planner
+name: rpiv-planner
 description: "Own the Plan stage of the RPIV pipeline — read the research brief, commit architectural decisions via ADRs and core-components, then produce the action plan, task breakdown, and test plan."
 tools:
   - search/codebase

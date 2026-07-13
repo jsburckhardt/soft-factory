@@ -1,5 +1,5 @@
 ---
-name: justdoit
+name: rpiv
 description: "Execute the full RPIV pipeline for a GitHub issue from Research through Verify."
 license: MIT
 metadata:
@@ -9,9 +9,9 @@ metadata:
   last_updated: "2026-07-01"
 ---
 
-# JustDoIt
+# rpiv
 
-JustDoIt is a coordinator workflow skill for agents that need to drive a GitHub issue through Research, Plan, Implement, and Verify in strict order.
+`rpiv` is a coordinator workflow skill for agents that need to drive a GitHub issue through Research, Plan, Implement, and Verify in strict order.
 
 ## References
 

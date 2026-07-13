@@ -1,5 +1,5 @@
 ---
-name: verifier
+name: rpiv-verifier
 description: "Own the Verify stage of the RPIV pipeline — run tests, validate implementation, create commits following Conventional Commits, push, and open a PR for review."
 tools:
   - search/codebase
@@ -90,7 +90,7 @@ Closes #<!-- ISSUE_NUMBER -->
 ## Acceptance Criteria
 
 <!--
-  The verifier agent populates this section from the GitHub issue.
+  The rpiv-verifier agent populates this section from the GitHub issue.
   Each criterion is rendered as a checked (`- [x]`) or unchecked (`- [ ]`) Markdown checkbox based on implementation evidence.
 -->
 
