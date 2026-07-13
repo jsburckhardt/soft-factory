@@ -1,5 +1,5 @@
 ---
-name: research
+name: rpiv-research
 description: "Fetch a GitHub issue, explore the problem space, classify scope, and produce a research brief for the Plan stage."
 license: MIT
 metadata:
@@ -9,9 +9,9 @@ metadata:
   last_updated: "2026-07-01"
 ---
 
-# Research
+# rpiv-research
 
-Research is a workflow skill for agents that need to fetch a GitHub issue, inspect existing repository context, classify the issue scope, and write the research brief that hands off to the Plan stage.
+`rpiv-research` is a workflow skill for agents that need to fetch a GitHub issue, inspect existing repository context, classify the issue scope, and write the research brief that hands off to the Plan stage.
 
 ## References
 

@@ -1,5 +1,5 @@
 ---
-name: research
+name: rpiv-research
 description: "Fetch a GitHub issue, explore the problem space, classify scope, and produce a research brief that hands off cleanly to the Plan stage."
 tools:
   - search/codebase

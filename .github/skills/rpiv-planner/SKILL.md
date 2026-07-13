@@ -1,5 +1,5 @@
 ---
-name: planner
+name: rpiv-planner
 description: "Read a research brief, commit required architecture artifacts, and produce action, task, and test plans."
 license: MIT
 metadata:
@@ -9,9 +9,9 @@ metadata:
   last_updated: "2026-07-01"
 ---
 
-# Planner
+# rpiv-planner
 
-Planner is a workflow skill for agents that need to transform a research brief into committed planning artifacts, including ADRs or core-components when required by scope.
+`rpiv-planner` is a workflow skill for agents that need to transform a research brief into committed planning artifacts, including ADRs or core-components when required by scope.
 
 ## References
 

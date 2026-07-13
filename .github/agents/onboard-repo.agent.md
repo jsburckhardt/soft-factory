@@ -18,7 +18,7 @@ disable-model-invocation: true
 target: vscode
 handoffs:
   - label: Start First Issue
-    agent: research
+    agent: rpiv-research
     prompt: Research and classify the first GitHub issue for this repository.
     send: false
 ---
@@ -371,7 +371,7 @@ RISKS: ""
 <process id="onboard-router" name="Route onboarding request">
 RUN `check-onboarded`
 IF IS_ONBOARDED is true:
-  RETURN: format="ONBOARD_BLOCKED", reason="Repository already has the Soft Factory engineering flow", evidence=ONBOARD_EVIDENCE, suggestion="Use the research agent to start working on a GitHub issue"
+  RETURN: format="ONBOARD_BLOCKED", reason="Repository already has the Soft Factory engineering flow", evidence=ONBOARD_EVIDENCE, suggestion="Use the rpiv-research agent to start working on a GitHub issue"
 RUN `analyse-repository`
 SET ARTIFACT_LIST := <LIST> (from "Agent Inference" using DISCOVERED_ADRS, DISCOVERED_CONCERNS, NEXT_ADR_NUMBER, NEXT_CC_NUMBER)
 SET UPDATE_LIST := <LIST> (from "Agent Inference" using README_PATH, AGENTS_MD_PATH, LLM_TXT_PATH, DECISION_LOG_PATH)
@@ -383,7 +383,7 @@ IF DISCOVERED_CONCERNS is not empty:
 RUN `update-decision-log`
 RUN `create-first-issue`
 RUN `update-project-docs`
-RETURN: format="ONBOARD_REPORT", project_name=PROJECT_NAME, project_description=PROJECT_DESCRIPTION, tech_stack=TECH_STACK, adr_list=CREATED_ADRS, core_component_list=CREATED_CORE_COMPONENTS, files_updated=UPDATED_FILES, status="Onboarded", next_steps="Use the research agent to start working on GitHub issue #<FIRST_ISSUE_NUMBER>"
+RETURN: format="ONBOARD_REPORT", project_name=PROJECT_NAME, project_description=PROJECT_DESCRIPTION, tech_stack=TECH_STACK, adr_list=CREATED_ADRS, core_component_list=CREATED_CORE_COMPONENTS, files_updated=UPDATED_FILES, status="Onboarded", next_steps="Use the rpiv-research agent to start working on GitHub issue #<FIRST_ISSUE_NUMBER>"
 </process>
 
 <process id="check-onboarded" name="Check if the repository already has the Soft Factory engineering flow">

@@ -21,19 +21,19 @@ APS_BADGE: "[![APS version](https://img.shields.io/badge/APS-v1.2.2-blue?logo=gi
 PIPELINE_STAGES: YAML<<
 - id: research
   name: Research
-  agent: research
+  agent: rpiv-research
   purpose: Explore the problem space, classify scope, produce a research brief
 - id: plan
   name: Plan
-  agent: planner
+  agent: rpiv-planner
   purpose: Commit architectural decisions via ADRs and core-components, then produce the action plan, task breakdown, and test plan
 - id: implement
   name: Implement
-  agent: implementer
+  agent: rpiv-implementer
   purpose: Execute tasks, write code and tests, verify against the plan
 - id: verify
   name: Verify
-  agent: verifier
+  agent: rpiv-verifier
   purpose: Run tests, commit, push, and open a pull request for review
 >>
 AGENTS: YAML<<
@@ -124,8 +124,30 @@ bootstrap:
     - must ask user to confirm or customize proposed verification commands
     - must not set up CI/CD pipelines or infrastructure
     - must not make feature-level decisions
-research:
-  file: .github/agents/research.agent.md
+rpiv:
+  file: .github/agents/rpiv.agent.md
+  purpose: Coordinate the full RPIV pipeline for a GitHub issue by dispatching Research, Plan, Implement, and Verify stages in order.
+  tools:
+    - subagent dispatch
+    - codebase exploration and reading
+    - terminal execution
+    - file creation
+  read_paths:
+    - AGENTS.md
+    - project/architecture/ADR/DECISION-LOG.md
+    - docs/
+    - project/
+    - project/issues/<ISSUE_NUMBER>/
+  write_paths:
+    - project/issues/<ISSUE_NUMBER>/
+  templates: []
+  guardrails:
+    - must execute Research, Plan, Implement, and Verify in strict order
+    - must delegate stage work to rpiv-research, rpiv-planner, rpiv-implementer, and rpiv-verifier
+    - must validate each stage artifact before proceeding
+    - must stop with a pipeline error when a stage fails
+rpiv-research:
+  file: .github/agents/rpiv-research.agent.md
   purpose: Explore the problem space, classify scope, and produce a research brief that hands off cleanly to the Plan stage.
   tools:
     - web search and documentation lookup
@@ -151,8 +173,8 @@ research:
     - explicitly state if ADRs or core-components are required
     - propose ADR titles and core-component titles when applicable
     - never make architectural decisions — only propose them
-planner:
-  file: .github/agents/planner.agent.md
+rpiv-planner:
+  file: .github/agents/rpiv-planner.agent.md
   purpose: Own the Plan stage — read the research brief, commit architectural decisions via ADRs and core-components, then produce the action plan, task breakdown, and test plan.
   tools:
     - codebase exploration (grep, glob, file reading)
@@ -186,8 +208,8 @@ planner:
     - every task must have acceptance criteria
     - every task must have explicit test coverage requirements
     - tasks must reference relevant ADRs and core-components
-implementer:
-  file: .github/agents/implementer.agent.md
+rpiv-implementer:
+  file: .github/agents/rpiv-implementer.agent.md
   purpose: Execute tasks from the plan, produce code and tests, and verify implementation against the test plan.
   tools:
     - code generation and editing
@@ -208,8 +230,8 @@ implementer:
     - deviations from ADRs or core-components require returning to the Plan stage
     - implementation must satisfy the test plan
     - must not skip tests defined in the test plan
-verifier:
-  file: .github/agents/verifier.agent.md
+rpiv-verifier:
+  file: .github/agents/rpiv-verifier.agent.md
   purpose: Verify completed work — run tests, validate acceptance criteria, create commits following Conventional Commits, push, and open a PR for review.
   tools:
     - terminal execution (git, gh, test runners)

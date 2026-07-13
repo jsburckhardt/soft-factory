@@ -1,5 +1,5 @@
 ---
-name: verifier
+name: rpiv-verifier
 description: "Run verification, validate acceptance criteria, create commits, push a branch, and open a pull request."
 license: MIT
 metadata:
@@ -9,9 +9,9 @@ metadata:
   last_updated: "2026-07-01"
 ---
 
-# Verifier
+# rpiv-verifier
 
-Verifier is a workflow skill for agents that need to validate completed work, ship it through git and GitHub, and record a reviewable delivery summary.
+`rpiv-verifier` is a workflow skill for agents that need to validate completed work, ship it through git and GitHub, and record a reviewable delivery summary.
 
 ## References
 

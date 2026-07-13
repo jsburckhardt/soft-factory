@@ -1,5 +1,5 @@
 ---
-name: implementer
+name: rpiv-implementer
 description: "Execute planned tasks, produce code and tests, and record implementation notes."
 license: MIT
 metadata:
@@ -9,9 +9,9 @@ metadata:
   last_updated: "2026-07-01"
 ---
 
-# Implementer
+# rpiv-implementer
 
-Implementer is a workflow skill for agents that need to execute tasks from a plan, follow the test plan, respect architecture boundaries, and document implementation outcomes.
+`rpiv-implementer` is a workflow skill for agents that need to execute tasks from a plan, follow the test plan, respect architecture boundaries, and document implementation outcomes.
 
 ## References
 

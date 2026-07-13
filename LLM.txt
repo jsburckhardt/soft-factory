@@ -6,24 +6,24 @@ README.md                                                   — Project overview
 .github/agents/aps-v1.2.2.agent.md                         — APS prompt generator agent
 .github/agents/bootstrap.agent.md                           — Bootstrap agent (new project scaffolding)
 .github/agents/excali.agent.md                              — Excalidraw diagram agent
-.github/agents/justdoit.agent.md                            — JustDoIt agent (single-pass RPIV for small issues)
+.github/agents/rpiv.agent.md                                — rpiv agent (full RPIV pipeline coordinator)
 .github/agents/onboard-repo.agent.md                        — Onboard-repo agent (introduce Soft Factory to existing repos)
-.github/agents/verifier.agent.md                      — Verifier agent (test validation, commits, PR creation)
-.github/agents/implementer.agent.md                   — Implementer agent (code, tests, verification)
-.github/agents/planner.agent.md                       — Planner agent (ADRs, core-components, action plans, task breakdown, test plans)
-.github/agents/research.agent.md                      — Research agent (exploration, scope classification)
+.github/agents/rpiv-verifier.agent.md                 — rpiv-verifier agent (test validation, commits, PR creation)
+.github/agents/rpiv-implementer.agent.md              — rpiv-implementer agent (code, tests, verification)
+.github/agents/rpiv-planner.agent.md                  — rpiv-planner agent (ADRs, core-components, action plans, task breakdown, test plans)
+.github/agents/rpiv-research.agent.md                 — rpiv-research agent (exploration, scope classification)
 .github/agents/issue-generator.agent.md               — Issue-generator agent (structured issue creation with acceptance criteria)
 .github/skills/README.md                              — Agent-to-Skill mapping and standalone Skill notes
 .github/skills/bootstrap/SKILL.md                     — Bootstrap Skill equivalent
 .github/skills/excali/SKILL.md                        — Excalidraw generation Skill equivalent
 .github/skills/harness-cli-it/SKILL.md                — Harness CLI Skill equivalent
-.github/skills/implementer/SKILL.md                   — Implementer Skill equivalent
+.github/skills/rpiv-implementer/SKILL.md              — rpiv-implementer Skill equivalent
 .github/skills/issue-generator/SKILL.md               — Issue-generator Skill equivalent
-.github/skills/justdoit/SKILL.md                      — JustDoIt Skill equivalent
+.github/skills/rpiv/SKILL.md                          — rpiv Skill equivalent
 .github/skills/onboard-repo/SKILL.md                  — Onboard-repo Skill equivalent
-.github/skills/planner/SKILL.md                       — Planner Skill equivalent
-.github/skills/research/SKILL.md                      — Research Skill equivalent
-.github/skills/verifier/SKILL.md                      — Verifier Skill equivalent
+.github/skills/rpiv-planner/SKILL.md                  — rpiv-planner Skill equivalent
+.github/skills/rpiv-research/SKILL.md                 — rpiv-research Skill equivalent
+.github/skills/rpiv-verifier/SKILL.md                 — rpiv-verifier Skill equivalent
 .github/skills/templates/README.md                    — Shared Skill artifact template index
 .github/skills/templates/artifact-contract.md         — Shared RPIV artifact paths and ledger contract
 .github/skills/templates/research-brief.md            — Research brief template for Skills
