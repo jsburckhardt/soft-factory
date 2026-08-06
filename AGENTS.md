@@ -17,6 +17,7 @@ You MUST treat ./harness and .harness/contract.yml as the validation source for 
 You MUST read harness friction at the beginning of every RPIV stage.
 You MUST record harness friction at the end of every RPIV stage.
 You MUST enforce this RPIV boundary: RPIV orchestrates, Research investigates, Plan proves coverage, Implement builds and provides evidence, Verify decides acceptance and creates the PR.
+You MUST keep issue acceptance criteria bounded, observable, and executable by configured agents with repository and harness capabilities.
 You MUST update the APS version badge in README.md and the APS_BADGE constant when the APS skill is upgraded.
 You MUST mark a PR review comment as resolved via the GitHub API after fixing the issue it raised.
 </instructions>
@@ -333,7 +334,7 @@ harness-cli-it:
     - must verify no active legacy config references remain
 issue-generator:
   file: .github/agents/issue-generator.agent.md
-  purpose: Analyze codebase history for issue-quality gaps, draft a problem-focused GitHub issue with structured acceptance criteria, dispatch a rubber-duck subagent to critique it, then create the issue via gh. Runs before the RPIV pipeline to produce properly formatted issues without preempting RPIV Research or Plan.
+  purpose: Analyze codebase history for issue-quality gaps, draft a problem-focused GitHub issue with structured agent-executable acceptance criteria, dispatch a rubber-duck subagent to critique it, then create the issue via gh. Runs before the RPIV pipeline to produce feasible work without preempting RPIV Research or Plan.
   tools:
     - codebase exploration (search, grep, file reading)
     - terminal execution (git, gh)
@@ -344,6 +345,8 @@ issue-generator:
     - project/architecture/ADR/DECISION-LOG.md
     - AGENTS.md
     - LLM.txt
+    - justfile
+    - .harness/contract.yml
     - project/issues/
     - application source code
   write_paths:
@@ -355,6 +358,10 @@ issue-generator:
     - must structure every issue with only the required Problem and Acceptance Criteria sections
     - must not include proposed solutions, technical considerations, implementation plans, architecture decisions, technology choices, dependency choices, API designs, file paths, or test-framework prescriptions unless explicitly provided by the user as problem context
     - must format acceptance criteria as markdown checkboxes with ACCEPTANCE_CRITERIA_START/END HTML markers
+    - must make every acceptance criterion bounded, deterministic, observable, and independently verifiable by configured agents
+    - must use repository and declared harness capabilities when proposing validation evidence
+    - must reject unavailable, subjective, manual-only, destructive-production, unbounded, or exhaustive validation requirements
+    - must identify essential external or human prerequisites explicitly instead of encoding impossible agent tasks
     - must dispatch a rubber-duck subagent to critique the draft before creating the issue
     - must incorporate rubber-duck feedback before issue creation
     - must not create an issue without rubber-duck review

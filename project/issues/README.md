@@ -59,4 +59,9 @@ Acceptance criteria must be formatted as markdown checkboxes wrapped with HTML c
 
 - Exactly one `<!-- ACCEPTANCE_CRITERIA_START -->` and one `<!-- ACCEPTANCE_CRITERIA_END -->` marker
 - Only `- [ ]` checkbox list items between the markers (plus optional group headings)
+- Every criterion is bounded, deterministic, observable, and independently verifiable by configured agents
+- Validation uses repository tools or declared harness capabilities and produces inspectable evidence
+- Criteria do not require unavailable credentials, inaccessible systems, unsupported hardware, indefinite observation, exhaustive proof, or subjective manual judgment
+- Essential external or human prerequisites are stated explicitly instead of being encoded as impossible agent acceptance criteria
+- Criteria describe required outcomes without prescribing implementation or test frameworks
 - The verifier agent validates each criterion and marks satisfied ones as `- [x]` in both the issue and the PR description

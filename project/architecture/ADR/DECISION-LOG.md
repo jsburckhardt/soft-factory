@@ -15,6 +15,7 @@ This file is the single registry of all architectural decisions and core-compone
 | CORE-COMPONENT-0002 | Commit Standards | Adopted | 2026-05-05 |
 | CORE-COMPONENT-0003 | RPIV Stage Contract | Adopted | 2026-08-06 |
 | CORE-COMPONENT-0004 | Project Command Interface | Adopted | 2026-08-06 |
+| CORE-COMPONENT-0005 | Agent-Executable Acceptance Criteria | Adopted | 2026-08-06 |
 
 ## Decisions
 
@@ -37,3 +38,6 @@ Short, actionable statements derived from ADRs and core-components. More than on
 | 13 | Remove the legacy verification config after harness migration | CORE-COMPONENT-0004 | 2026-08-06 |
 | 14 | Read friction before and record friction after every RPIV stage | CORE-COMPONENT-0003 | 2026-08-06 |
 | 15 | Require phase-aware JSON friction commands in the harness | CORE-COMPONENT-0004 | 2026-08-06 |
+| 16 | Require acceptance criteria to be bounded, observable, and executable by configured agents | CORE-COMPONENT-0005 | 2026-08-06 |
+| 17 | Require acceptance evidence to use safe, repeatable repository or harness capabilities | CORE-COMPONENT-0005 | 2026-08-06 |
+| 18 | Identify unavailable human or external prerequisites instead of encoding impossible agent tasks | CORE-COMPONENT-0005 | 2026-08-06 |
