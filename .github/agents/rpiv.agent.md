@@ -75,7 +75,7 @@ STAGE_AGENTS: YAML<<
   purpose: Assign stable acceptance IDs and prove task, validation, and evidence coverage
   stage: plan
 - agent: rpiv-implementer
-  output: project/issues/<ISSUE_NUMBER>/implementation/README.md
+  output: project/issues/<ISSUE_NUMBER>/implementation/00-implementation.md
   purpose: Implement tasks, run configured validation, record evidence, and commit
   stage: implement
 - agent: rpiv-verifier
@@ -261,7 +261,7 @@ SET CURRENT_STAGE := "implement" (from "Agent Inference")
 SET IMPLEMENT_PROMPT := <PROMPT> (from "Agent Inference" using ISSUE_NUMBER, BRANCH_NAME, PLAN_HANDOFF, VERIFY_RESULT)
 USE `agent/runSubagent` where: agent="rpiv-implementer", prompt=IMPLEMENT_PROMPT
 CAPTURE IMPLEMENT_RESULT from `agent/runSubagent`
-USE `read/readFile` where: filePath="project/issues/<ISSUE_NUMBER>/implementation/README.md"
+USE `read/readFile` where: filePath="project/issues/<ISSUE_NUMBER>/implementation/00-implementation.md"
 CAPTURE IMPLEMENTATION_EVIDENCE from `read/readFile`
 USE `execute/runInTerminal` where: command="git branch --show-current"
 CAPTURE HANDOFF_BRANCH from `execute/runInTerminal`

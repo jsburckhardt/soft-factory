@@ -15,7 +15,7 @@ project/issues/42/
     02-task-breakdown.md    ← Tasks with acceptance criteria and test requirements
     03-test-plan.md         ← Full test coverage requirements
   implementation/
-    README.md               ← Implementation notes and decisions made during coding
+    00-implementation.md    ← Implementation notes and decisions made during coding
   verify/
     summary.md              ← Feature delivery summary (commits, AC status, verification)
 ```

@@ -256,7 +256,7 @@ rpiv-implementer:
     - application source code
     - test files
     - project/issues/<ISSUE_NUMBER>/plan/02-task-breakdown.md
-    - project/issues/<ISSUE_NUMBER>/implementation/README.md
+    - project/issues/<ISSUE_NUMBER>/implementation/00-implementation.md
   templates: []
   guardrails:
     - must implement within architectural boundaries defined by ADRs and core-components

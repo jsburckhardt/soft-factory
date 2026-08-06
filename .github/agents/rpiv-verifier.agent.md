@@ -54,7 +54,7 @@ You MUST NOT force-push or use --no-verify.
 ACTION_PLAN_PATH: "project/issues/<ISSUE_NUMBER>/plan/01-action-plan.md"
 TASK_BREAKDOWN_PATH: "project/issues/<ISSUE_NUMBER>/plan/02-task-breakdown.md"
 TEST_PLAN_PATH: "project/issues/<ISSUE_NUMBER>/plan/03-test-plan.md"
-IMPLEMENTATION_NOTES_PATH: "project/issues/<ISSUE_NUMBER>/implementation/README.md"
+IMPLEMENTATION_NOTES_PATH: "project/issues/<ISSUE_NUMBER>/implementation/00-implementation.md"
 VERIFY_SUMMARY_PATH: "project/issues/<ISSUE_NUMBER>/verify/summary.md"
 HARNESS_PATH: "./harness"
 HARNESS_CONTRACT_PATH: ".harness/contract.yml"

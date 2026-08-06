@@ -38,7 +38,7 @@ Each stage has clear inputs, outputs, and artifact locations. No stage may be sk
 
 - The `rpiv-implementer` workflow executes tasks from the task breakdown
 - Writes tests as specified in the test plan
-- Documents implementation notes in `project/issues/<ISSUE_NUMBER>/implementation/README.md`
+- Documents implementation notes in `project/issues/<ISSUE_NUMBER>/implementation/00-implementation.md`
 - Deviations from ADRs or core-components require returning to the Plan stage
 
 ## Stage 4 — Verify
@@ -57,7 +57,7 @@ Each stage has clear inputs, outputs, and artifact locations. No stage may be sk
 | Action plans | `project/issues/<ISSUE_NUMBER>/plan/01-action-plan.md` |
 | Task breakdowns | `project/issues/<ISSUE_NUMBER>/plan/02-task-breakdown.md` |
 | Test plans | `project/issues/<ISSUE_NUMBER>/plan/03-test-plan.md` |
-| Implementation notes | `project/issues/<ISSUE_NUMBER>/implementation/README.md` |
+| Implementation notes | `project/issues/<ISSUE_NUMBER>/implementation/00-implementation.md` |
 | ADRs | `project/architecture/ADR/` (global, not issue-scoped) |
 | Core-Components | `project/architecture/core-components/` (global, not issue-scoped) |
 | Decision log | `project/architecture/ADR/DECISION-LOG.md` |

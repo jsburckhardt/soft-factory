@@ -30,6 +30,7 @@ This contract applies to the RPIV coordinator, all four RPIV stage agents, their
 
 ### Interfaces
 - Plan hands Implement the acceptance catalog, tasks, test plan, ADRs, and core-components.
+- Implement writes task completion, validation results, and `AC-*` evidence to `project/issues/<ISSUE_NUMBER>/implementation/00-implementation.md`.
 - Implement hands Verify the branch, commit SHA, clean-tree proof, `AC-*` evidence, and validation results.
 - Every action plan, task breakdown, test plan, implementation note, verification summary, and pull request carries stable `AC-*` IDs.
 
