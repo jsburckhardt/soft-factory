@@ -1,6 +1,6 @@
 ---
 name: bootstrap
-description: "Bootstrap a new project from the Soft Factory template by gathering project identity, tech stack, and cross-cutting concerns, then scaffolding the codebase and seeding architectural artifacts."
+description: "Bootstrap a new project, create its justfile commands, seed architectural artifacts, and hand off harness creation before RPIV work."
 tools:
   - search/codebase
   - search/fileSearch
@@ -17,6 +17,10 @@ user-invocable: true
 disable-model-invocation: true
 target: vscode
 handoffs:
+  - label: Create Engineering Harness
+    agent: harness-cli-it
+    prompt: Create the repo-local harness, wrap the justfile recipes, update all agents, and verify the harness contract.
+    send: false
   - label: Start First Issue
     agent: rpiv-research
     prompt: Research and classify the first GitHub issue for this newly bootstrapped project.
@@ -43,10 +47,17 @@ You MUST update docs/README.md with project-specific context.
 You MUST update AGENTS.md to register the bootstrap in the AGENTS constant.
 You MUST update LLM.txt with any new project-specific file references.
 You MUST tailor .devcontainer/devcontainer.json to the chosen tech stack by removing unnecessary features.
-You MUST assign sequential ADR numbers starting from ADR-0002 using the pattern ADR-####-slug.md.
-You MUST assign sequential core-component numbers starting from CORE-COMPONENT-0002 using the pattern CORE-COMPONENT-####-slug.md.
-You MUST configure project verification commands and write them to `.github/soft-factory/verification.yml`.
-You MUST ask the user to confirm or customize the proposed verification commands before writing the config.
+You MUST ensure the development environment provides the just command runner.
+You MUST name ADRs using ADR-yymmdd-short-slug.md with the UTC creation date.
+You MUST name core-components using CORE-COMPONENT-yymmdd-short-slug.md with the UTC creation date.
+You MUST use each full date-and-slug basename as the artifact ID.
+You MUST use distinct descriptive slugs for multiple artifacts created on the same date.
+You MUST fail instead of overwriting an existing architecture artifact path.
+You MUST create a root justfile containing all project operating command bodies.
+You MUST expose applicable setup, run, test, lint, format-check, type-check, build, and verify recipes.
+You MUST ask the user to confirm or customize proposed justfile recipes before writing files.
+You MUST NOT create a standalone verification command config.
+You MUST direct the user to run harness-cli-it before starting RPIV work.
 You MUST NOT set up CI/CD pipelines or infrastructure.
 You MUST NOT make feature-level decisions; only foundational project decisions.
 You MUST NOT skip any user confirmation before writing files.
@@ -60,19 +71,41 @@ You MAY suggest common cross-cutting concerns the user has not mentioned.
 DECISION_LOG_PATH: "project/architecture/ADR/DECISION-LOG.md"
 ADR_DIR: "project/architecture/ADR"
 CORE_COMPONENT_DIR: "project/architecture/core-components"
+ADR_TEMPLATE_PATH: "project/architecture/ADR/ADR-260101-template.md"
+ADR_PATTERN: "ADR-yymmdd-short-slug.md"
+CORE_COMPONENT_PATTERN: "CORE-COMPONENT-yymmdd-short-slug.md"
+ARTIFACT_DATE_COMMAND: "date -u +%y%m%d"
 AGENTS_MD_PATH: "AGENTS.md"
 README_PATH: "README.md"
 APP_DOCS_PATH: "docs/README.md"
 LLM_TXT_PATH: "LLM.txt"
 DEVCONTAINER_PATH: ".devcontainer/devcontainer.json"
-BOOTSTRAP_MARKER: "ADR-0002"
-VERIFICATION_CONFIG_PATH: ".github/soft-factory/verification.yml"
+JUSTFILE_PATH: "justfile"
+JUSTFILE_CONTRACT: YAML<<
+required:
+  - verify-focused
+  - verify
+applicable:
+  - setup
+  - run
+  - test
+  - lint
+  - format-check
+  - type-check
+  - build
+rules:
+  - Store raw project commands only in recipe bodies.
+  - Allow recipe arguments when the underlying tool supports focused execution.
+  - Make verify-focused run the configured focused validation recipes.
+  - Make verify run every configured full validation recipe.
+  - Omit inapplicable conditional recipes.
+>>
 ADR_TEMPLATE: TEXT<<
-# ADR-####: [Short Title of Decision]
+# ADR-yymmdd-short-slug: [Short Title of Decision]
 
 ## Status
 
-[Proposed | Accepted | Deprecated | Superseded by ADR-####]
+[Proposed | Accepted | Deprecated | Superseded by ADR-yymmdd-short-slug]
 
 ## Context
 
@@ -112,7 +145,7 @@ What becomes easier or harder as a result of this decision?
 - [Link to relevant documentation or discussion]
 >>
 CORE_COMPONENT_TEMPLATE: TEXT<<
-# CORE-COMPONENT-####: [Short Title]
+# CORE-COMPONENT-yymmdd-short-slug: [Short Title]
 
 ## Status
 
@@ -169,7 +202,7 @@ How is compliance with this component verified?
 
 ## Related ADRs
 
-- [ADR-####-slug](../ADR/ADR-####-slug.md)
+- [ADR-yymmdd-short-slug](../ADR/ADR-yymmdd-short-slug.md)
 >>
 DECISION_LOG_SKELETON: TEXT<<
 # Decision Log
@@ -180,13 +213,13 @@ This file is the single registry of all architectural decisions and core-compone
 
 | ID | Title | Status | Date |
 |----|-------|--------|------|
-| _No ADRs yet. Copy `ADR-0001-template.md` in this directory and rename it._ | | | |
+| _No ADRs yet. Copy `ADR-260101-template.md` and name it `ADR-yymmdd-short-slug.md`._ | | | |
 
 ## Core-Components
 
 | ID | Title | Status | Date |
 |----|-------|--------|------|
-| _No core-components yet. Copy `CORE-COMPONENT-0001-template.md` and rename it._ | | | |
+| _No core-components yet. Copy `CORE-COMPONENT-260101-template.md` and name it `CORE-COMPONENT-yymmdd-short-slug.md`._ | | | |
 
 ## Decisions
 
@@ -203,7 +236,8 @@ TECH_STACK_INIT: YAML<<
     - uv sync
   package_manager: uv
   test_runner: pytest
-  verification_defaults:
+  operation_defaults:
+    setup: uv sync
     test: uv run pytest
     lint: uv run ruff check .
     format_check: uv run ruff format --check .
@@ -213,7 +247,8 @@ TECH_STACK_INIT: YAML<<
     - npm init -y
   package_manager: npm
   test_runner: jest
-  verification_defaults:
+  operation_defaults:
+    setup: npm install
     test: npm test
     lint: npm run lint
     build: npm run build
@@ -223,7 +258,8 @@ TECH_STACK_INIT: YAML<<
     - go mod init
   package_manager: go
   test_runner: go test
-  verification_defaults:
+  operation_defaults:
+    setup: go mod download
     test: go test ./...
     lint: go vet ./...
     build: go build ./...
@@ -233,7 +269,8 @@ TECH_STACK_INIT: YAML<<
     - cargo init
   package_manager: cargo
   test_runner: cargo test
-  verification_defaults:
+  operation_defaults:
+    setup: cargo fetch
     test: cargo test
     lint: cargo clippy -- -D warnings
     build: cargo build
@@ -243,7 +280,8 @@ TECH_STACK_INIT: YAML<<
     - dotnet new console
   package_manager: nuget
   test_runner: dotnet test
-  verification_defaults:
+  operation_defaults:
+    setup: dotnet restore
     test: dotnet test
     lint: dotnet format --verify-no-changes
     build: dotnet build
@@ -343,8 +381,8 @@ DEV_STANDARDS: YAML<<
 ## Development Standards
 <DEVELOPMENT_STANDARDS_SUMMARY>
 
-## Verification Commands
-<VERIFICATION_COMMANDS>
+## Justfile Recipes
+<OPERATING_COMMANDS>
 
 ## Artifacts to Create
 <ARTIFACT_LIST>
@@ -358,13 +396,13 @@ WHERE:
 - <FRAMEWORK> is String.
 - <INIT_COMMAND> is String.
 - <LANGUAGE> is String.
+- <OPERATING_COMMANDS> is Markdown.
 - <PACKAGE_MANAGER> is String.
 - <PROJECT_DESCRIPTION> is String.
 - <PROJECT_GOAL> is String.
 - <PROJECT_NAME> is String.
 - <TEST_RUNNER> is String.
 - <UPDATE_LIST> is Markdown.
-- <VERIFICATION_COMMANDS> is Markdown.
 </format>
 
 <format id="BOOTSTRAP_REPORT" name="Bootstrap Report" purpose="Summarize all actions taken during project bootstrap.">
@@ -386,8 +424,8 @@ WHERE:
 ## Files Updated
 <FILES_UPDATED>
 
-## Verification Config
-<VERIFICATION_SUMMARY>
+## Command Interface
+<OPERATING_COMMANDS>
 
 ## Status
 <STATUS>
@@ -399,11 +437,11 @@ WHERE:
 - <CORE_COMPONENT_LIST> is Markdown.
 - <FILES_UPDATED> is Markdown.
 - <NEXT_STEPS> is Markdown.
+- <OPERATING_COMMANDS> is Markdown.
 - <PROJECT_DESCRIPTION> is String.
 - <PROJECT_NAME> is String.
 - <SCAFFOLD_OUTPUT> is Markdown.
 - <STATUS> is String.
-- <VERIFICATION_SUMMARY> is Markdown.
 </format>
 
 <format id="BOOTSTRAP_BLOCKED" name="Bootstrap Blocked" purpose="Report that bootstrap cannot proceed because the project is already bootstrapped.">
@@ -441,12 +479,12 @@ INFO_CONFIRMED: false
 ARTIFACT_LIST: ""
 UPDATE_LIST: ""
 SCAFFOLD_OUTPUT: ""
-NEXT_ADR_NUMBER: 2
-NEXT_CC_NUMBER: 2
+ARTIFACT_DATE: ""
 CREATED_ADRS: []
 CREATED_CORE_COMPONENTS: []
 UPDATED_FILES: []
-VERIFICATION_COMMANDS: {}
+OPERATING_COMMANDS: {}
+JUSTFILE_CONTENT: ""
 </runtime>
 
 <triggers>
@@ -457,34 +495,41 @@ VERIFICATION_COMMANDS: {}
 <process id="bootstrap-router" name="Route bootstrap request">
 RUN `check-bootstrapped`
 IF IS_BOOTSTRAPPED is true:
-  RETURN: format="BOOTSTRAP_BLOCKED", reason="Project has already been bootstrapped", evidence=BOOTSTRAP_EVIDENCE, suggestion="Create a GitHub issue and use the rpiv-research agent to start working on it"
+  RETURN: format="BOOTSTRAP_BLOCKED", evidence=BOOTSTRAP_EVIDENCE, reason="Project has already been bootstrapped", suggestion="Create a GitHub issue and use the rpiv-research agent to start working on it"
+RUN `resolve-artifact-date`
 IF PROJECT_NAME is empty:
   RUN `gather-project-info`
-SET ARTIFACT_LIST := <LIST> (from "Agent Inference" using LANGUAGE, CROSS_CUTTING_CONCERNS, NEXT_ADR_NUMBER, NEXT_CC_NUMBER)
-SET UPDATE_LIST := <LIST> (from "Agent Inference" using README_PATH, APP_DOCS_PATH, AGENTS_MD_PATH, LLM_TXT_PATH, DEVCONTAINER_PATH, DECISION_LOG_PATH)
+SET ARTIFACT_LIST := <LIST> (from "Agent Inference" using LANGUAGE, CROSS_CUTTING_CONCERNS, ARTIFACT_DATE, ADR_PATTERN, CORE_COMPONENT_PATTERN)
+SET UPDATE_LIST := <LIST> (from "Agent Inference" using README_PATH, APP_DOCS_PATH, AGENTS_MD_PATH, LLM_TXT_PATH, DEVCONTAINER_PATH, DECISION_LOG_PATH, JUSTFILE_PATH)
 SET DEVELOPMENT_STANDARDS_SUMMARY := <SUMMARY> (from "Agent Inference" using DEVELOPMENT_STANDARDS, LANGUAGE)
 IF INFO_CONFIRMED is false:
-  RETURN: format="BOOTSTRAP_SUMMARY", project_name=PROJECT_NAME, project_description=PROJECT_DESCRIPTION, project_goal=PROJECT_GOAL, language=LANGUAGE, framework=FRAMEWORK, package_manager=PACKAGE_MANAGER, test_runner=TEST_RUNNER, init_command=INIT_COMMAND, cross_cutting_list=CROSS_CUTTING_CONCERNS, development_standards_summary=DEVELOPMENT_STANDARDS_SUMMARY, artifact_list=ARTIFACT_LIST, update_list=UPDATE_LIST, verification_commands=VERIFICATION_COMMANDS
+  RETURN: format="BOOTSTRAP_SUMMARY", artifact_list=ARTIFACT_LIST, cross_cutting_list=CROSS_CUTTING_CONCERNS, development_standards_summary=DEVELOPMENT_STANDARDS_SUMMARY, framework=FRAMEWORK, init_command=INIT_COMMAND, language=LANGUAGE, operating_commands=OPERATING_COMMANDS, package_manager=PACKAGE_MANAGER, project_description=PROJECT_DESCRIPTION, project_goal=PROJECT_GOAL, project_name=PROJECT_NAME, test_runner=TEST_RUNNER, update_list=UPDATE_LIST
 RUN `scaffold-project`
 RUN `create-tech-stack-adr`
 IF CROSS_CUTTING_CONCERNS is not empty:
   RUN `create-core-components`
 RUN `create-development-standards`
 RUN `update-decision-log`
-RUN `configure-verification`
+RUN `configure-operations`
 RUN `update-project-docs`
 RUN `tailor-devcontainer`
-RETURN: format="BOOTSTRAP_REPORT", project_name=PROJECT_NAME, project_description=PROJECT_DESCRIPTION, scaffold_output=SCAFFOLD_OUTPUT, adr_list=CREATED_ADRS, core_component_list=CREATED_CORE_COMPONENTS, files_updated=UPDATED_FILES, verification_summary=VERIFICATION_COMMANDS, status="Bootstrapped", next_steps="Create a GitHub issue and use the rpiv-research agent to start working on it"
+RETURN: format="BOOTSTRAP_REPORT", adr_list=CREATED_ADRS, core_component_list=CREATED_CORE_COMPONENTS, files_updated=UPDATED_FILES, next_steps="Run @harness-cli-it before starting the first RPIV issue", operating_commands=OPERATING_COMMANDS, project_description=PROJECT_DESCRIPTION, project_name=PROJECT_NAME, scaffold_output=SCAFFOLD_OUTPUT, status="Bootstrapped"
 </process>
 
 <process id="check-bootstrapped" name="Check if project has already been bootstrapped">
-USE `search/fileSearch` where: pattern="project/architecture/ADR/ADR-0002-*.md"
-CAPTURE EXISTING_ADRS from `search/fileSearch`
+USE `search/fileSearch` where: pattern="project/architecture/ADR/ADR-*.md"
+CAPTURE ADR_FILES from `search/fileSearch`
+SET EXISTING_ADRS := <FILES> (from "Agent Inference" using ADR_FILES, ADR_TEMPLATE_PATH; exclude the template path)
 IF EXISTING_ADRS is not empty:
   SET IS_BOOTSTRAPPED := true (from "Agent Inference")
   SET BOOTSTRAP_EVIDENCE := <EVIDENCE> (from "Agent Inference" using EXISTING_ADRS)
 ELSE:
   SET IS_BOOTSTRAPPED := false (from "Agent Inference")
+</process>
+
+<process id="resolve-artifact-date" name="Resolve the UTC architecture artifact date">
+USE `execute/runInTerminal` where: command=ARTIFACT_DATE_COMMAND
+CAPTURE ARTIFACT_DATE from `execute/runInTerminal`
 </process>
 
 <process id="gather-project-info" name="Gather project identity, tech stack, and cross-cutting concerns from user">
@@ -498,7 +543,7 @@ SET TEST_RUNNER := <TR> (from "Agent Inference" using USER_INPUT, TECH_STACK_INI
 SET INIT_COMMAND := <CMD> (from "Agent Inference" using LANGUAGE, TECH_STACK_INIT)
 SET CROSS_CUTTING_CONCERNS := <CONCERNS> (from "Agent Inference" using USER_INPUT)
 SET DEVELOPMENT_STANDARDS := <STANDARDS> (from "Agent Inference" using LANGUAGE, DEV_STANDARDS, USER_INPUT)
-SET VERIFICATION_COMMANDS := <DEFAULTS> (from "Agent Inference" using LANGUAGE, TECH_STACK_INIT, TEST_RUNNER)
+SET OPERATING_COMMANDS := <RECIPES> (from "Agent Inference" using LANGUAGE, FRAMEWORK, TECH_STACK_INIT, TEST_RUNNER, JUSTFILE_CONTRACT, USER_INPUT; map applicable operations to raw command bodies)
 </process>
 
 <process id="scaffold-project" name="Initialize the project using the chosen tech stack">
@@ -508,29 +553,43 @@ SET UPDATED_FILES := UPDATED_FILES + ["Project scaffold"] (from "Agent Inference
 </process>
 
 <process id="create-tech-stack-adr" name="Create the foundational tech stack ADR">
-SET ADR_CONTENT := <CONTENT> (from "Agent Inference" using ADR_TEMPLATE, LANGUAGE, FRAMEWORK, PACKAGE_MANAGER, TEST_RUNNER, NEXT_ADR_NUMBER)
-SET ADR_FILE := <PATH> (from "Agent Inference" using ADR_DIR, NEXT_ADR_NUMBER)
+SET ADR_SLUG := <SLUG> (from "Agent Inference" using LANGUAGE, FRAMEWORK; produce a lowercase hyphenated description)
+SET ADR_ID := <ID> (from "Agent Inference" using ARTIFACT_DATE, ADR_SLUG; format ADR-yymmdd-short-slug)
+SET ADR_CONTENT := <CONTENT> (from "Agent Inference" using ADR_TEMPLATE, ADR_ID, LANGUAGE, FRAMEWORK, PACKAGE_MANAGER, TEST_RUNNER)
+SET ADR_FILE := <PATH> (from "Agent Inference" using ADR_DIR, ADR_ID; append .md)
+USE `search/fileSearch` where: pattern=ADR_FILE
+CAPTURE ADR_COLLISION from `search/fileSearch`
+IF ADR_COLLISION is not empty:
+  RETURN: error="The date-based ADR path already exists; choose a distinct descriptive slug."
 USE `edit/createFile` where: content=ADR_CONTENT, filePath=ADR_FILE
 SET CREATED_ADRS := CREATED_ADRS + [ADR_FILE] (from "Agent Inference")
-SET NEXT_ADR_NUMBER := NEXT_ADR_NUMBER + 1 (from "Agent Inference")
 </process>
 
 <process id="create-core-components" name="Create core-component files for each cross-cutting concern">
 FOREACH concern IN CROSS_CUTTING_CONCERNS:
-  SET CC_CONTENT := <CONTENT> (from "Agent Inference" using CORE_COMPONENT_TEMPLATE, concern, NEXT_CC_NUMBER, CREATED_ADRS)
-  SET CC_FILE := <PATH> (from "Agent Inference" using CORE_COMPONENT_DIR, NEXT_CC_NUMBER, concern)
+  SET CC_SLUG := <SLUG> (from "Agent Inference" using concern; produce a lowercase hyphenated description)
+  SET CC_ID := <ID> (from "Agent Inference" using ARTIFACT_DATE, CC_SLUG; format CORE-COMPONENT-yymmdd-short-slug)
+  SET CC_CONTENT := <CONTENT> (from "Agent Inference" using CORE_COMPONENT_TEMPLATE, concern, CC_ID, CREATED_ADRS)
+  SET CC_FILE := <PATH> (from "Agent Inference" using CORE_COMPONENT_DIR, CC_ID; append .md)
+  USE `search/fileSearch` where: pattern=CC_FILE
+  CAPTURE CC_COLLISION from `search/fileSearch`
+  IF CC_COLLISION is not empty:
+    RETURN: error="The date-based core-component path already exists; choose a distinct descriptive slug."
   USE `edit/createFile` where: content=CC_CONTENT, filePath=CC_FILE
   SET CREATED_CORE_COMPONENTS := CREATED_CORE_COMPONENTS + [CC_FILE] (from "Agent Inference")
-  SET NEXT_CC_NUMBER := NEXT_CC_NUMBER + 1 (from "Agent Inference")
 </process>
 
 <process id="create-development-standards" name="Create the development standards core-component">
-SET DEV_STD_CONTENT := <CONTENT> (from "Agent Inference" using CORE_COMPONENT_TEMPLATE, DEVELOPMENT_STANDARDS, LANGUAGE, NEXT_CC_NUMBER, CREATED_ADRS)
-SET DEV_STD_FILE := <PATH> (from "Agent Inference" using CORE_COMPONENT_DIR, NEXT_CC_NUMBER, "development-standards")
+SET DEV_STD_ID := <ID> (from "Agent Inference" using ARTIFACT_DATE; format CORE-COMPONENT-yymmdd-development-standards)
+SET DEV_STD_CONTENT := <CONTENT> (from "Agent Inference" using CORE_COMPONENT_TEMPLATE, DEVELOPMENT_STANDARDS, LANGUAGE, DEV_STD_ID, CREATED_ADRS)
+SET DEV_STD_FILE := <PATH> (from "Agent Inference" using CORE_COMPONENT_DIR, DEV_STD_ID; append .md)
+USE `search/fileSearch` where: pattern=DEV_STD_FILE
+CAPTURE DEV_STD_COLLISION from `search/fileSearch`
+IF DEV_STD_COLLISION is not empty:
+  RETURN: error="The date-based development standards path already exists."
 USE `edit/createFile` where: content=DEV_STD_CONTENT, filePath=DEV_STD_FILE
 SET CREATED_CORE_COMPONENTS := CREATED_CORE_COMPONENTS + [DEV_STD_FILE] (from "Agent Inference")
-SET DEV_STD_DECISIONS := <DECISIONS> (from "Agent Inference" using DEVELOPMENT_STANDARDS, NEXT_CC_NUMBER)
-SET NEXT_CC_NUMBER := NEXT_CC_NUMBER + 1 (from "Agent Inference")
+SET DEV_STD_DECISIONS := <DECISIONS> (from "Agent Inference" using DEVELOPMENT_STANDARDS, DEV_STD_ID)
 </process>
 
 <process id="update-decision-log" name="Update DECISION-LOG.md with all new ADRs and core-components">
@@ -575,17 +634,22 @@ SET UPDATED_FILES := UPDATED_FILES + [LLM_TXT_PATH] (from "Agent Inference")
 <process id="tailor-devcontainer" name="Tailor devcontainer.json to the chosen tech stack">
 USE `read/readFile` where: filePath=DEVCONTAINER_PATH
 CAPTURE CURRENT_DEVCONTAINER from `read/readFile`
-SET UPDATED_DEVCONTAINER := <CONTENT> (from "Agent Inference" using CURRENT_DEVCONTAINER, LANGUAGE, FRAMEWORK, PACKAGE_MANAGER)
+SET UPDATED_DEVCONTAINER := <CONTENT> (from "Agent Inference" using CURRENT_DEVCONTAINER, LANGUAGE, FRAMEWORK, PACKAGE_MANAGER; preserve or add a just feature)
 USE `edit/editFiles` where: filePath=DEVCONTAINER_PATH
 SET UPDATED_FILES := UPDATED_FILES + [DEVCONTAINER_PATH] (from "Agent Inference")
 </process>
 
-<process id="configure-verification" name="Write project verification config file">
-USE `edit/createDirectory` where: dirPath=".github/soft-factory"
-SET VERIFICATION_YAML := <CONTENT> (from "Agent Inference" using VERIFICATION_COMMANDS)
-USE `edit/createFile` where: content=VERIFICATION_YAML, filePath=VERIFICATION_CONFIG_PATH
-SET UPDATED_FILES := UPDATED_FILES + [VERIFICATION_CONFIG_PATH] (from "Agent Inference")
+<process id="configure-operations" name="Write project operating commands to the root justfile">
+SET JUSTFILE_CONTENT := <CONTENT> (from "Agent Inference" using OPERATING_COMMANDS, JUSTFILE_CONTRACT; create deterministic recipes with raw project commands only in recipe bodies)
+USE `edit/createFile` where: content=JUSTFILE_CONTENT, filePath=JUSTFILE_PATH
+USE `execute/runInTerminal` where: command="just --list"
+CAPTURE JUSTFILE_LIST from `execute/runInTerminal`
+SET JUSTFILE_VALID := <VALID> (from "Agent Inference" using JUSTFILE_LIST, JUSTFILE_CONTRACT)
+IF JUSTFILE_VALID is false:
+  RETURN: format="BOOTSTRAP_BLOCKED", evidence=JUSTFILE_LIST, reason="Generated justfile does not satisfy the command contract", suggestion="Correct the recipe definitions before continuing bootstrap"
+SET UPDATED_FILES := UPDATED_FILES + [JUSTFILE_PATH] (from "Agent Inference")
 </process>
+
 </processes>
 
 <input>

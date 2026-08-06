@@ -13,38 +13,20 @@ README.md                                                   — Project overview
 .github/agents/rpiv-planner.agent.md                  — rpiv-planner agent (ADRs, core-components, action plans, task breakdown, test plans)
 .github/agents/rpiv-research.agent.md                 — rpiv-research agent (exploration, scope classification)
 .github/agents/issue-generator.agent.md               — Issue-generator agent (structured issue creation with acceptance criteria)
-.github/skills/README.md                              — Agent-to-Skill mapping and standalone Skill notes
-.github/skills/bootstrap/SKILL.md                     — Bootstrap Skill equivalent
-.github/skills/excali/SKILL.md                        — Excalidraw generation Skill equivalent
-.github/skills/harness-cli-it/SKILL.md                — Harness CLI Skill equivalent
-.github/skills/rpiv-implementer/SKILL.md              — rpiv-implementer Skill equivalent
-.github/skills/issue-generator/SKILL.md               — Issue-generator Skill equivalent
-.github/skills/rpiv/SKILL.md                          — rpiv Skill equivalent
-.github/skills/onboard-repo/SKILL.md                  — Onboard-repo Skill equivalent
-.github/skills/rpiv-planner/SKILL.md                  — rpiv-planner Skill equivalent
-.github/skills/rpiv-research/SKILL.md                 — rpiv-research Skill equivalent
-.github/skills/rpiv-verifier/SKILL.md                 — rpiv-verifier Skill equivalent
-.github/skills/templates/README.md                    — Shared Skill artifact template index
-.github/skills/templates/artifact-contract.md         — Shared RPIV artifact paths and ledger contract
-.github/skills/templates/research-brief.md            — Research brief template for Skills
-.github/skills/templates/action-plan.md               — Action plan template for Skills
-.github/skills/templates/task-breakdown.md            — Task breakdown template for Skills
-.github/skills/templates/test-plan.md                 — Test plan template for Skills
-.github/skills/templates/implementation-notes.md      — Implementation notes template for Skills
-.github/skills/templates/verify-summary.md            — Verify summary template for Skills
-.github/skills/templates/decision-log.md              — Decision log template for Skills
-.github/skills/templates/adr.md                       — ADR template for Skills
-.github/skills/templates/core-component.md            — Core-component template for Skills
+.github/skills/README.md                              — APS Skill index
 .github/skills/agnostic-prompt-standard/SKILL.md      — APS reference framework Skill
-.github/skills/pr-review-complement/SKILL.md          — Standalone PR review complement Skill
 .github/PULL_REQUEST_TEMPLATE.md                      — PR template (acceptance criteria, verification checklist)
 docs/README.md                                              — Application documentation index
 project/README.md                                             — Project documentation index
 project/architecture/README.md                                 — Architecture documentation index
 project/architecture/soft-factory-pipeline.excalidraw          — Pipeline diagram source
-project/architecture/ADR/ADR-0001-template.md                  — ADR template (read-only, copy to create new)
+project/architecture/ADR/ADR-260101-template.md                — ADR template (read-only, copy to create date-based artifacts)
 project/architecture/ADR/DECISION-LOG.md                       — Registry of all ADR and core-component decisions
-project/architecture/core-components/CORE-COMPONENT-0001-template.md — Core-component template (read-only, copy to create new)
-project/architecture/core-components/CORE-COMPONENT-0002-commit-standards.md — Commit standards (Conventional Commits, Co-authored-by)
+project/architecture/core-components/CORE-COMPONENT-260101-template.md — Core-component template (read-only, copy to create date-based artifacts)
+project/architecture/core-components/CORE-COMPONENT-260505-commit-standards.md — Commit standards (Conventional Commits, Co-authored-by)
+project/architecture/core-components/CORE-COMPONENT-260806-rpiv-stage-contract.md — RPIV stage ownership and handoff contract
+project/architecture/core-components/CORE-COMPONENT-260806-project-command-interface.md — Harness and justfile command contract
+project/architecture/core-components/CORE-COMPONENT-260806-agent-executable-acceptance-criteria.md — Agent-executable issue criteria contract
+project/architecture/core-components/CORE-COMPONENT-260806-architecture-artifact-naming.md — Date-based architecture artifact naming contract
 project/architecture/core-components/README.md                 — Core-components index
 project/issues/README.md                                       — Issues index and canonical structure

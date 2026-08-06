@@ -1,10 +1,17 @@
 {
     "name": "soft-factory",
-    "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
-    // "runArgs": [
-    //     "--network","host"
-    // ],
-    // "forwardPorts": [12346],
+    "build": {
+        "dockerfile": "Dockerfile",
+        "args": {
+            "NPM_CONFIG_REGISTRY": "${localEnv:NPM_CONFIG_REGISTRY}",
+            "PIP_INDEX_URL": "${localEnv:PIP_INDEX_URL}",
+            "RestoreSources": "${localEnv:RestoreSources}"
+        }
+    },
+    "runArgs": [
+        "--name",
+        "soft-factory"
+    ],
     "features": {
         "ghcr.io/devcontainers/features/common-utils:2": {
             "configureZshAsDefaultShell": true,
@@ -25,12 +32,12 @@
         //     "version": "latest"
         // },
         "ghcr.io/stuartleeks/dev-container-features/shell-history": {},
-        // "ghcr.io/jsburckhardt/devcontainer-features/opencode:latest": {},
         "ghcr.io/jsburckhardt/devcontainer-features/just": {},
         "ghcr.io/devcontainers/features/github-cli": {},
         "ghcr.io/devcontainers/features/copilot-cli": {},
         "ghcr.io/rosstaco/devcontainer-features/copilot-persistence:1": {},
-        "ghcr.io/jsburckhardt/devcontainer-features/tmux": {}
+        "ghcr.io/jsburckhardt/devcontainer-features/tmux": {},
+        "ghcr.io/jsburckhardt/devcontainer-features/glow": {}
     },
     "customizations": {
         "vscode": {
@@ -72,7 +79,7 @@
         "GIT_PAGER": "",
         "GH_PAGER": ""
     },
-    "postStartCommand": "tmux -S .devcontainer/.tmux-shared has-session -t soft-factory 2>/dev/null || tmux -S .devcontainer/.tmux-shared new -d -s soft-factory",
+    "postStartCommand": "tmux -S .devcontainer/.tmux-shared has-session -t soft-factory 2>/dev/null || tmux -S .devcontainer/.tmux-shared new -d -s soft-factory -c ~/.devcontainer && tmux -S .devcontainer/.tmux-shared source-file .devcontainer/tmux.conf",
     "remoteUser": "vscode",
     "hostRequirements": {
         "memory": "4gb"

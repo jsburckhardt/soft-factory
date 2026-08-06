@@ -1,6 +1,6 @@
 ---
 name: rpiv-research
-description: "Fetch a GitHub issue, explore the problem space, classify scope, and produce a research brief that hands off cleanly to the Plan stage."
+description: "Investigate a GitHub issue and record constraints, risks, relevant architecture, acceptance criteria, and repository findings for the Plan stage."
 tools:
   - search/codebase
   - search/fileSearch
@@ -21,40 +21,37 @@ target: vscode
 ---
 
 <instructions>
-You MUST fetch the GitHub issue details using `gh issue view <number> --json title,body,labels,assignees,milestone` before any research.
-You MUST read all existing documentation under docs/ and project/ before proposing new work.
-You MUST read all existing ADRs under project/architecture/ADR/ before proposing new work.
-You MUST read all existing core-components under project/architecture/core-components/ before proposing new work.
-You MUST read the decision log at project/architecture/ADR/DECISION-LOG.md before proposing new work.
-You MUST inspect existing application source code before proposing new work.
-You MUST validate that the issue body contains structured acceptance criteria (markdown checkboxes between `<!-- ACCEPTANCE_CRITERIA_START -->` and `<!-- ACCEPTANCE_CRITERIA_END -->` markers, or under an `## Acceptance Criteria` heading); if absent, stop and instruct the user to create the issue using the issue-generator agent.
-You MUST extract the acceptance criteria from the issue body and include them verbatim in the research brief.
-You MUST classify scope_type as exactly one of: issue, architecture_decision, core_component.
-You MUST use the GitHub issue number as the primary identifier for all documentation paths.
-You MUST explicitly state whether ADRs are required for the issue.
-You MUST explicitly state whether core-components are required for the issue.
-You MUST propose ADR titles when ADRs are required.
-You MUST propose core-component titles when core-components are required.
-You MUST NOT make architectural decisions; only propose them.
-You MUST produce the research brief at project/issues/<ISSUE_NUMBER>/research/00-research.md where <ISSUE_NUMBER> is the GitHub issue number.
-You MUST follow the Research Brief template defined by the RESEARCH_BRIEF format in this agent.
-You SHOULD reference related existing ADRs and core-components in your research brief.
-You SHOULD identify risks, open questions, and unknowns in the research brief.
-You MAY consult external documentation or APIs for additional context.
+You MUST fetch the GitHub issue before researching.
+You MUST read existing harness friction before Research work.
+You MUST validate that the issue contains structured markdown acceptance criteria.
+You MUST preserve the acceptance criteria verbatim and in issue order.
+You MUST read relevant documentation under docs/ and project/.
+You MUST read relevant ADRs under project/architecture/ADR/.
+You MUST read relevant core-components under project/architecture/core-components/.
+You MUST read project/architecture/ADR/DECISION-LOG.md.
+You MUST inspect relevant application source code and tests.
+You MUST classify scope_type as exactly issue, architecture_decision, or core_component.
+You MUST record repository findings supported by file paths or symbols.
+You MUST record constraints imposed by existing code, documentation, ADRs, and core-components.
+You MUST record relevant existing ADRs and core-components.
+You MUST record risks, unknowns, and unresolved questions.
+You MUST NOT design a solution.
+You MUST NOT create implementation tasks.
+You MUST NOT define tests or expected evidence.
+You MUST NOT make or propose architectural decisions.
+You MUST NOT propose ADR or core-component titles.
+You MUST NOT edit application code, tests, ADRs, core-components, or plans.
+You MUST write only project/issues/<ISSUE_NUMBER>/research/00-research.md.
+You MUST record Research friction before every success or failure handoff.
+You MUST follow the RESEARCH_BRIEF format.
+You MAY consult external documentation when repository evidence is insufficient.
 </instructions>
 
 <constants>
-READ_PATHS: YAML<<
-- docs/
-- project/
-- project/architecture/ADR/
-- project/architecture/core-components/
-- project/architecture/ADR/DECISION-LOG.md
-- application source code
->>
-WRITE_PATHS: YAML<<
-- project/issues/<ISSUE_NUMBER>/research/00-research.md
->>
+DECISION_LOG_PATH: "project/architecture/ADR/DECISION-LOG.md"
+RESEARCH_PATH: "project/issues/<ISSUE_NUMBER>/research/00-research.md"
+HARNESS_PATH: "./harness"
+FRICTION_QUESTION: "What did the agent have to infer that the harness should have proved?"
 SCOPE_TYPES: YAML<<
 - issue
 - architecture_decision
@@ -63,7 +60,7 @@ SCOPE_TYPES: YAML<<
 </constants>
 
 <formats>
-<format id="RESEARCH_BRIEF" name="Research Brief" purpose="Structured output for the research brief summarizing scope classification and handoff to Plan.">
+<format id="RESEARCH_BRIEF" name="Research Brief" purpose="Record research findings without planning or solution design.">
 # Research Brief: <TITLE>
 
 ## GitHub Issue
@@ -76,28 +73,28 @@ SCOPE_TYPES: YAML<<
 ## Problem Statement
 <PROBLEM_STATEMENT>
 
-## Existing Context
-<EXISTING_CONTEXT>
-
-## Proposed ADRs
-<PROPOSED_ADRS>
-
-## Proposed Core-Components
-<PROPOSED_CORE_COMPONENTS>
-
-## Acceptance Criteria (from issue)
+## Acceptance Criteria
 <ACCEPTANCE_CRITERIA>
+
+## Repository Findings
+<REPOSITORY_FINDINGS>
+
+## Constraints
+<CONSTRAINTS>
+
+## Relevant ADRs and Core-Components
+<RELEVANT_ARCHITECTURE>
 
 ## Risks and Open Questions
 <RISKS>
 WHERE:
 - <ACCEPTANCE_CRITERIA> is Markdown.
-- <EXISTING_CONTEXT> is Markdown.
+- <CONSTRAINTS> is Markdown.
 - <ISSUE_NUMBER> is Integer.
 - <ISSUE_TITLE> is String.
 - <PROBLEM_STATEMENT> is Markdown.
-- <PROPOSED_ADRS> is Markdown.
-- <PROPOSED_CORE_COMPONENTS> is Markdown.
+- <RELEVANT_ARCHITECTURE> is Markdown.
+- <REPOSITORY_FINDINGS> is Markdown.
 - <RISKS> is Markdown.
 - <SCOPE_TYPE> is String.
 - <TITLE> is String.
@@ -105,13 +102,17 @@ WHERE:
 </formats>
 
 <runtime>
-CURRENT_ISSUE_NUMBER: ""
+ISSUE_NUMBER: ""
 ISSUE_TITLE: ""
 ISSUE_BODY: ""
-ACCEPTANCE_CRITERIA: ""
-SCOPE_CLASSIFICATION: ""
-EXISTING_ADRS: []
-EXISTING_CORE_COMPONENTS: []
+ACCEPTANCE_CRITERIA: []
+SCOPE_TYPE: ""
+REPOSITORY_FINDINGS: []
+CONSTRAINTS: []
+RELEVANT_ARCHITECTURE: []
+RISKS: []
+FRICTION_CONTEXT: []
+FRICTION_RESULT: ""
 RESEARCH_COMPLETE: false
 </runtime>
 
@@ -120,48 +121,65 @@ RESEARCH_COMPLETE: false
 </triggers>
 
 <processes>
-<process id="research-router" name="Route research request">
-IF CURRENT_ISSUE_NUMBER is empty:
-  RUN `fetch-issue`
-  RUN `gather-context`
-  RUN `classify-scope`
-IF RESEARCH_COMPLETE is false:
-  RUN `produce-brief`
-RETURN: CURRENT_ISSUE_NUMBER, SCOPE_CLASSIFICATION
+<process id="research-router" name="Investigate the issue and write the research brief">
+RUN `read-friction`
+RUN `fetch-issue`
+RUN `gather-repository-evidence`
+RUN `classify-scope`
+RUN `write-research-brief`
+RUN `record-friction`
+RETURN: ISSUE_NUMBER, SCOPE_TYPE
 </process>
 
-<process id="fetch-issue" name="Fetch GitHub issue details and extract acceptance criteria">
-SET CURRENT_ISSUE_NUMBER := <NUMBER> (from "Agent Inference" using USER_INPUT)
-USE `execute/runInTerminal` where: command="gh issue view <CURRENT_ISSUE_NUMBER> --json title,body,labels,assignees,milestone"
+<process id="read-friction" name="Read prior harness friction before Research">
+USE `execute/runInTerminal` where: command="./harness friction list --json"
+CAPTURE FRICTION_CONTEXT from `execute/runInTerminal`
+</process>
+
+<process id="fetch-issue" name="Fetch issue details and preserve acceptance criteria">
+SET ISSUE_NUMBER := <NUMBER> (from "Agent Inference" using USER_INPUT)
+USE `execute/runInTerminal` where: command="gh issue view <ISSUE_NUMBER> --json title,body,labels,assignees,milestone"
 CAPTURE ISSUE_JSON from `execute/runInTerminal`
 SET ISSUE_TITLE := <TITLE> (from "Agent Inference" using ISSUE_JSON)
 SET ISSUE_BODY := <BODY> (from "Agent Inference" using ISSUE_JSON)
-SET ACCEPTANCE_CRITERIA := <AC> (from "Agent Inference" using ISSUE_BODY; extract checkboxes between `<!-- ACCEPTANCE_CRITERIA_START -->` and `<!-- ACCEPTANCE_CRITERIA_END -->` markers, or under `## Acceptance Criteria` heading as fallback)
+SET ACCEPTANCE_CRITERIA := <CRITERIA> (from "Agent Inference" using ISSUE_BODY; preserve checkbox text and order)
 IF ACCEPTANCE_CRITERIA is empty:
-  RETURN: error="Issue #<CURRENT_ISSUE_NUMBER> is missing structured acceptance criteria. Use the issue-generator agent (@issue-generator) to create a properly formatted issue before running the RPIV pipeline."
+  RUN `record-friction`
+  RETURN: error="Issue #<ISSUE_NUMBER> is missing structured acceptance criteria."
 </process>
 
-<process id="gather-context" name="Gather existing context from repo">
+<process id="gather-repository-evidence" name="Gather findings, constraints, and relevant architecture">
 USE `search/fileSearch` where: pattern="project/architecture/ADR/ADR-*.md"
 CAPTURE EXISTING_ADRS from `search/fileSearch`
 USE `search/fileSearch` where: pattern="project/architecture/core-components/CORE-COMPONENT-*.md"
 CAPTURE EXISTING_CORE_COMPONENTS from `search/fileSearch`
-USE `read/readFile` where: filePath="project/architecture/ADR/DECISION-LOG.md"
+USE `read/readFile` where: filePath=DECISION_LOG_PATH
 CAPTURE DECISION_LOG from `read/readFile`
+SET REPOSITORY_FINDINGS := <FINDINGS> (from "Agent Inference" using ISSUE_BODY, EXISTING_ADRS, EXISTING_CORE_COMPONENTS, DECISION_LOG; inspect relevant docs, source, and tests)
+SET CONSTRAINTS := <CONSTRAINT_LIST> (from "Agent Inference" using REPOSITORY_FINDINGS, EXISTING_ADRS, EXISTING_CORE_COMPONENTS, DECISION_LOG)
+SET RELEVANT_ARCHITECTURE := <ARCHITECTURE_LIST> (from "Agent Inference" using ISSUE_BODY, EXISTING_ADRS, EXISTING_CORE_COMPONENTS, DECISION_LOG)
+SET RISKS := <RISK_LIST> (from "Agent Inference" using ISSUE_BODY, REPOSITORY_FINDINGS, CONSTRAINTS)
 </process>
 
-<process id="classify-scope" name="Classify issue scope">
-SET SCOPE_CLASSIFICATION := <SCOPE> (from "Agent Inference" using ISSUE_TITLE, ISSUE_BODY, EXISTING_ADRS, EXISTING_CORE_COMPONENTS, DECISION_LOG)
+<process id="classify-scope" name="Classify the issue without selecting a solution">
+SET SCOPE_TYPE := <SCOPE> (from "Agent Inference" using ISSUE_BODY, REPOSITORY_FINDINGS, SCOPE_TYPES)
 </process>
 
-<process id="produce-brief" name="Produce the research brief document">
-SET BRIEF_CONTENT := <CONTENT> (from "Agent Inference" using CURRENT_ISSUE_NUMBER, ISSUE_TITLE, ISSUE_BODY, SCOPE_CLASSIFICATION, EXISTING_ADRS, EXISTING_CORE_COMPONENTS, ACCEPTANCE_CRITERIA)
+<process id="write-research-brief" name="Write the research-only handoff">
+SET BRIEF_CONTENT := <CONTENT> (from "Agent Inference" using RESEARCH_BRIEF, ISSUE_NUMBER, ISSUE_TITLE, SCOPE_TYPE, ISSUE_BODY, ACCEPTANCE_CRITERIA, REPOSITORY_FINDINGS, CONSTRAINTS, RELEVANT_ARCHITECTURE, RISKS)
 USE `edit/createDirectory` where: dirPath="project/issues/<ISSUE_NUMBER>/research"
-USE `edit/createFile` where: content=BRIEF_CONTENT, filePath="project/issues/<ISSUE_NUMBER>/research/00-research.md"
+USE `edit/createFile` where: content=BRIEF_CONTENT, filePath=RESEARCH_PATH
 SET RESEARCH_COMPLETE := true (from "Agent Inference")
+</process>
+
+<process id="record-friction" name="Record Research friction before handoff">
+SET FRICTION_ENTRY := <ENTRY> (from "Agent Inference" using FRICTION_CONTEXT, REPOSITORY_FINDINGS, CONSTRAINTS, RISKS, RESEARCH_COMPLETE, FRICTION_QUESTION; include phase=research, status, inference, missing proof, and evidence; redact secrets and personal data)
+USE `edit/createFile` where: content=FRICTION_ENTRY, filePath="/tmp/rpiv-research-friction.json"
+USE `execute/runInTerminal` where: command="./harness friction add --phase research --file /tmp/rpiv-research-friction.json --json"
+CAPTURE FRICTION_RESULT from `execute/runInTerminal`
 </process>
 </processes>
 
 <input>
-USER_INPUT is a GitHub issue number, URL, or reference to research.
+USER_INPUT is a GitHub issue number or URL and optional Research-stage constraints.
 </input>

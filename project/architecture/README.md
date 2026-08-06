@@ -19,5 +19,7 @@ Core-components define reusable, cross-cutting behavioral contracts. They are **
 
 ### Templates
 Templates are read-only references — copy and rename them, don't edit them directly:
-- `ADR/ADR-0001-template.md` — copy within `ADR/` to create a new ADR
-- `core-components/CORE-COMPONENT-0001-template.md` — copy within `core-components/` to create a new core-component
+- `ADR/ADR-260101-template.md` — copy within `ADR/` and name the artifact `ADR-yymmdd-short-slug.md`
+- `core-components/CORE-COMPONENT-260101-template.md` — copy within `core-components/` and name the artifact `CORE-COMPONENT-yymmdd-short-slug.md`
+
+Use the UTC creation date for `yymmdd`. The full date-and-slug basename is the artifact ID, and the date remains unchanged after later edits.

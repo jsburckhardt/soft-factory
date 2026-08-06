@@ -11,6 +11,7 @@ tools:
   - edit/createDirectory
   - edit/createFile
   - edit/editFiles
+  - execute/runInTerminal
   - todo
 user-invocable: true
 disable-model-invocation: false
@@ -19,12 +20,22 @@ target: vscode
 
 <instructions>
 You MUST read the research brief at project/issues/<ISSUE_NUMBER>/research/00-research.md before any planning work.
+You MUST read existing harness friction before Plan work.
 You MUST use the embedded ADR template in the ADR_TEMPLATE constant when creating any ADR.
 You MUST use the embedded core-component template in the CORE_COMPONENT_TEMPLATE constant when creating any core-component.
 You MUST read the decision log at DECISION_LOG_PATH before creating any ADR or core-component, initializing it from DECISION_LOG_SKELETON if absent.
 You MUST read all existing ADRs under project/architecture/ADR/ before creating new ones.
 You MUST read all existing core-components under project/architecture/core-components/ before creating new ones.
 You MUST inspect application source code before creating tasks.
+You MUST assign stable acceptance criterion IDs in issue order using AC-1, AC-2, and subsequent integers.
+You MUST preserve each GitHub acceptance criterion text when assigning its stable ID.
+You MUST map every AC-* ID to implementation tasks.
+You MUST map every AC-* ID to tests or validation.
+You MUST map every AC-* ID to expected evidence.
+You MUST prove complete acceptance coverage before writing plan artifacts.
+You MUST include AC-* IDs in the action plan.
+You MUST include AC-* IDs in the task breakdown.
+You MUST include AC-* IDs in the test plan.
 You MUST NOT create an architectural decision outside of an ADR document.
 You MUST NOT create reusable cross-cutting behavior outside of a core-component document.
 You MUST update project/architecture/ADR/DECISION-LOG.md for every ADR or core-component change.
@@ -38,14 +49,19 @@ You MUST reference the source as the ADR or core-component ID.
 You MUST treat ADRs and core-components as global artifacts not scoped to any issue.
 You MUST follow the ADR template structure exactly when creating new ADRs.
 You MUST follow the core-component template structure exactly when creating new core-components.
-You MUST assign sequential ADR numbers using the pattern ADR-####-slug.md.
-You MUST assign sequential core-component numbers using the pattern CORE-COMPONENT-####-slug.md.
+You MUST name ADRs using ADR-yymmdd-short-slug.md with the UTC creation date.
+You MUST name core-components using CORE-COMPONENT-yymmdd-short-slug.md with the UTC creation date.
+You MUST use each full date-and-slug basename as the artifact ID.
+You MUST use distinct descriptive slugs for multiple artifacts created on the same date.
+You MUST fail instead of overwriting an existing architecture artifact path.
 You MUST create a Plan of Attack at project/issues/<ISSUE_NUMBER>/plan/01-action-plan.md for each issue where <ISSUE_NUMBER> is the GitHub issue number.
 You MUST produce the task breakdown at project/issues/<ISSUE_NUMBER>/plan/02-task-breakdown.md.
 You MUST produce the test plan at project/issues/<ISSUE_NUMBER>/plan/03-test-plan.md.
 You MUST ensure every task has acceptance criteria.
 You MUST ensure every task has explicit test coverage requirements.
+You MUST ensure every task identifies its expected evidence.
 You MUST ensure every task references relevant ADRs and core-components.
+You MUST record Plan friction before every success or failure handoff.
 You SHOULD reference related existing ADRs when creating new ones.
 You SHOULD order tasks by dependency so blocked tasks appear after their dependencies.
 You SHOULD estimate relative complexity for each task.
@@ -56,16 +72,20 @@ You MAY split large tasks into smaller subtasks for clarity.
 DECISION_LOG_PATH: "project/architecture/ADR/DECISION-LOG.md"
 ADR_DIR: "project/architecture/ADR"
 CORE_COMPONENT_DIR: "project/architecture/core-components"
-ADR_PATTERN: "ADR-####-slug.md"
-CORE_COMPONENT_PATTERN: "CORE-COMPONENT-####-slug.md"
+ADR_TEMPLATE_PATH: "project/architecture/ADR/ADR-260101-template.md"
+ADR_PATTERN: "ADR-yymmdd-short-slug.md"
+CORE_COMPONENT_PATTERN: "CORE-COMPONENT-yymmdd-short-slug.md"
+ARTIFACT_DATE_COMMAND: "date -u +%y%m%d"
 TASK_BREAKDOWN_PATH: "project/issues/<ISSUE_NUMBER>/plan/02-task-breakdown.md"
 TEST_PLAN_PATH: "project/issues/<ISSUE_NUMBER>/plan/03-test-plan.md"
+HARNESS_PATH: "./harness"
+FRICTION_QUESTION: "What did the agent have to infer that the harness should have proved?"
 ADR_TEMPLATE: TEXT<<
-# ADR-####: [Short Title of Decision]
+# ADR-yymmdd-short-slug: [Short Title of Decision]
 
 ## Status
 
-[Proposed | Accepted | Deprecated | Superseded by ADR-####]
+[Proposed | Accepted | Deprecated | Superseded by ADR-yymmdd-short-slug]
 
 ## Context
 
@@ -105,7 +125,7 @@ What becomes easier or harder as a result of this decision?
 - [Link to relevant documentation or discussion]
 >>
 CORE_COMPONENT_TEMPLATE: TEXT<<
-# CORE-COMPONENT-####: [Short Title]
+# CORE-COMPONENT-yymmdd-short-slug: [Short Title]
 
 ## Status
 
@@ -162,7 +182,7 @@ How is compliance with this component verified?
 
 ## Related ADRs
 
-- [ADR-####-slug](../ADR/ADR-####-slug.md)
+- [ADR-yymmdd-short-slug](../ADR/ADR-yymmdd-short-slug.md)
 >>
 DECISION_LOG_SKELETON: TEXT<<
 # Decision Log
@@ -173,13 +193,13 @@ This file is the single registry of all architectural decisions and core-compone
 
 | ID | Title | Status | Date |
 |----|-------|--------|------|
-| _No ADRs yet. Copy `ADR-0001-template.md` in this directory and rename it._ | | | |
+| _No ADRs yet. Copy `ADR-260101-template.md` and name it `ADR-yymmdd-short-slug.md`._ | | | |
 
 ## Core-Components
 
 | ID | Title | Status | Date |
 |----|-------|--------|------|
-| _No core-components yet. Copy `CORE-COMPONENT-0001-template.md` and rename it._ | | | |
+| _No core-components yet. Copy `CORE-COMPONENT-260101-template.md` and name it `CORE-COMPONENT-yymmdd-short-slug.md`._ | | | |
 
 ## Decisions
 
@@ -213,11 +233,11 @@ Writing style:
   - Must be verifiable: could a reviewer check this in a PR? If not, rewrite.
 
 Good examples:
-  - "Use Next.js App Router for all page routing" (ADR-0002)
-  - "Adopt PostgreSQL as the primary data store" (ADR-0002)
-  - "Require all API handlers to validate input with Zod schemas" (CORE-COMPONENT-0003)
-  - "Enforce Conventional Commits on every commit message" (CORE-COMPONENT-0002)
-  - "Prohibit direct database access outside the repository layer" (ADR-0005)
+  - "Use Next.js App Router for all page routing" (ADR-260101-nextjs-routing)
+  - "Adopt PostgreSQL as the primary data store" (ADR-260101-postgresql-data-store)
+  - "Require all API handlers to validate input with Zod schemas" (CORE-COMPONENT-260101-api-input-validation)
+  - "Enforce Conventional Commits on every commit message" (CORE-COMPONENT-260505-commit-standards)
+  - "Prohibit direct database access outside the repository layer" (ADR-260101-repository-layer)
 
 Bad examples (do NOT write these):
   - "We decided on a tech stack" — too vague, not actionable.
@@ -258,15 +278,23 @@ WHERE:
 ## Core-Components Created
 <CORE_COMPONENT_LIST>
 
+## Acceptance Criteria
+<ACCEPTANCE_CATALOG>
+
+## Acceptance Coverage
+<COVERAGE_MATRIX>
+
 ## Implementation Tasks
 <TASK_OUTLINE>
 WHERE:
+- <ACCEPTANCE_CATALOG> is Markdown.
 - <ADR_LIST> is Markdown.
 - <CORE_COMPONENT_LIST> is Markdown.
+- <COVERAGE_MATRIX> is Markdown.
+- <ISSUE_NUMBER> is String.
 - <RESEARCH_PATH> is Path.
 - <TASK_OUTLINE> is Markdown.
 - <TITLE> is String.
-- <ISSUE_NUMBER> is String.
 </format>
 
 <format id="TASK_ITEM" name="Task Item" purpose="Structured task entry within the task breakdown document.">
@@ -275,6 +303,7 @@ WHERE:
 - **Status:** <STATUS>
 - **Complexity:** <COMPLEXITY>
 - **Dependencies:** <DEPENDENCIES>
+- **Acceptance Criteria:** <AC_IDS>
 - **Related ADRs:** <RELATED_ADRS>
 - **Related Core-Components:** <RELATED_CORE_COMPONENTS>
 
@@ -286,11 +315,16 @@ WHERE:
 
 ### Test Coverage
 <TEST_COVERAGE>
+
+### Expected Evidence
+<EXPECTED_EVIDENCE>
 WHERE:
 - <ACCEPTANCE_CRITERIA> is Markdown.
+- <AC_IDS> is String.
 - <COMPLEXITY> is String.
 - <DEPENDENCIES> is String.
 - <DESCRIPTION> is Markdown.
+- <EXPECTED_EVIDENCE> is Markdown.
 - <RELATED_ADRS> is String.
 - <RELATED_CORE_COMPONENTS> is String.
 - <STATUS> is String.
@@ -304,6 +338,7 @@ WHERE:
 
 - **Type:** <TEST_TYPE>
 - **Task:** <TASK_REF>
+- **Acceptance Criteria:** <AC_IDS>
 - **Priority:** <PRIORITY>
 
 ### Setup
@@ -314,7 +349,12 @@ WHERE:
 
 ### Expected Result
 <EXPECTED_RESULT>
+
+### Expected Evidence
+<EXPECTED_EVIDENCE>
 WHERE:
+- <AC_IDS> is String.
+- <EXPECTED_EVIDENCE> is Markdown.
 - <EXPECTED_RESULT> is Markdown.
 - <PRIORITY> is String.
 - <SETUP> is Markdown.
@@ -329,17 +369,21 @@ WHERE:
 <runtime>
 CURRENT_ISSUE_NUMBER: ""
 RESEARCH_BRIEF: ""
-NEXT_ADR_NUMBER: 0
-NEXT_CORE_COMPONENT_NUMBER: 0
+ARTIFACT_DATE: ""
 CREATED_ADRS: []
 CREATED_CORE_COMPONENTS: []
 CREATED_DECISIONS: []
 ACTION_PLAN: ""
 RELEVANT_ADRS: []
 RELEVANT_CORE_COMPONENTS: []
+ACCEPTANCE_CATALOG: []
+COVERAGE_MATRIX: []
 TASKS: []
 TESTS: []
+FRICTION_CONTEXT: []
+FRICTION_RESULT: ""
 ARCHITECTURE_COMPLETE: false
+COVERAGE_COMPLETE: false
 BREAKDOWN_COMPLETE: false
 TEST_PLAN_COMPLETE: false
 </runtime>
@@ -350,23 +394,33 @@ TEST_PLAN_COMPLETE: false
 
 <processes>
 <process id="planner-router" name="Route planner request through architecture then task planning">
+RUN `read-friction`
 IF CURRENT_ISSUE_NUMBER is empty:
   RUN `load-context`
 IF ARCHITECTURE_COMPLETE is false:
   RUN `create-architecture-artifacts`
   RUN `update-decision-log`
+IF COVERAGE_COMPLETE is false:
+  RUN `build-acceptance-coverage`
 RUN `create-action-plan`
 IF BREAKDOWN_COMPLETE is false:
   RUN `create-task-breakdown`
 IF TEST_PLAN_COMPLETE is false:
   RUN `create-test-plan`
+RUN `record-friction`
 RETURN: CREATED_ADRS, CREATED_CORE_COMPONENTS, TASKS, TESTS
+</process>
+
+<process id="read-friction" name="Read prior harness friction before Plan">
+USE `execute/runInTerminal` where: command="./harness friction list --json"
+CAPTURE FRICTION_CONTEXT from `execute/runInTerminal`
 </process>
 
 <process id="load-context" name="Load research brief and existing artifacts">
 SET CURRENT_ISSUE_NUMBER := <ID> (from "Agent Inference")
 USE `read/readFile` where: filePath="project/issues/<ISSUE_NUMBER>/research/00-research.md"
 CAPTURE RESEARCH_BRIEF from `read/readFile`
+SET ACCEPTANCE_CATALOG := <CATALOG> (from "Agent Inference" using RESEARCH_BRIEF; preserve issue order and assign AC-1, AC-2, and subsequent integers)
 TRY:
   USE `read/readFile` where: filePath=DECISION_LOG_PATH
   CAPTURE DECISION_LOG from `read/readFile`
@@ -374,22 +428,36 @@ RECOVER (err):
   SET DECISION_LOG := DECISION_LOG_SKELETON (from "Constant Lookup")
 USE `search/fileSearch` where: pattern="project/architecture/ADR/ADR-*.md"
 CAPTURE EXISTING_ADRS from `search/fileSearch`
-SET NEXT_ADR_NUMBER := <NUM> (from "Agent Inference" using EXISTING_ADRS)
 USE `search/fileSearch` where: pattern="project/architecture/core-components/CORE-COMPONENT-*.md"
 CAPTURE EXISTING_CORE_COMPONENTS from `search/fileSearch`
-SET NEXT_CORE_COMPONENT_NUMBER := <NUM> (from "Agent Inference" using EXISTING_CORE_COMPONENTS)
+USE `execute/runInTerminal` where: command=ARTIFACT_DATE_COMMAND
+CAPTURE ARTIFACT_DATE from `execute/runInTerminal`
 </process>
 
 <process id="create-architecture-artifacts" name="Create ADRs and core-components from research brief">
-SET ADR_CONTENT := <CONTENT> (from "Agent Inference" using RESEARCH_BRIEF, ADR_TEMPLATE, NEXT_ADR_NUMBER)
+SET ADR_SLUG := <SLUG> (from "Agent Inference" using RESEARCH_BRIEF; produce a lowercase hyphenated decision description)
+SET ADR_ID := <ID> (from "Agent Inference" using ARTIFACT_DATE, ADR_SLUG; format ADR-yymmdd-short-slug)
+SET ADR_CONTENT := <CONTENT> (from "Agent Inference" using RESEARCH_BRIEF, ADR_TEMPLATE, ADR_ID)
 IF ADR_CONTENT is not empty:
-  SET ADR_FILE_PATH := <PATH> (from "Agent Inference" using ADR_DIR, NEXT_ADR_NUMBER, ADR_PATTERN)
+  SET ADR_FILE_PATH := <PATH> (from "Agent Inference" using ADR_DIR, ADR_ID; append .md)
+  USE `search/fileSearch` where: pattern=ADR_FILE_PATH
+  CAPTURE ADR_COLLISION from `search/fileSearch`
+  IF ADR_COLLISION is not empty:
+    RUN `record-friction`
+    RETURN: error="The date-based ADR path already exists; choose a distinct descriptive slug."
   USE `edit/createDirectory` where: dirPath=ADR_DIR
   USE `edit/createFile` where: content=ADR_CONTENT, filePath=ADR_FILE_PATH
   SET CREATED_ADRS := CREATED_ADRS + [ADR_FILE_PATH] (from "Agent Inference")
-SET CORE_COMPONENT_CONTENT := <CONTENT> (from "Agent Inference" using RESEARCH_BRIEF, CORE_COMPONENT_TEMPLATE, NEXT_CORE_COMPONENT_NUMBER)
+SET CORE_COMPONENT_SLUG := <SLUG> (from "Agent Inference" using RESEARCH_BRIEF; produce a lowercase hyphenated cross-cutting description)
+SET CORE_COMPONENT_ID := <ID> (from "Agent Inference" using ARTIFACT_DATE, CORE_COMPONENT_SLUG; format CORE-COMPONENT-yymmdd-short-slug)
+SET CORE_COMPONENT_CONTENT := <CONTENT> (from "Agent Inference" using RESEARCH_BRIEF, CORE_COMPONENT_TEMPLATE, CORE_COMPONENT_ID)
 IF CORE_COMPONENT_CONTENT is not empty:
-  SET CORE_COMPONENT_FILE_PATH := <PATH> (from "Agent Inference" using CORE_COMPONENT_DIR, NEXT_CORE_COMPONENT_NUMBER, CORE_COMPONENT_PATTERN)
+  SET CORE_COMPONENT_FILE_PATH := <PATH> (from "Agent Inference" using CORE_COMPONENT_DIR, CORE_COMPONENT_ID; append .md)
+  USE `search/fileSearch` where: pattern=CORE_COMPONENT_FILE_PATH
+  CAPTURE CORE_COMPONENT_COLLISION from `search/fileSearch`
+  IF CORE_COMPONENT_COLLISION is not empty:
+    RUN `record-friction`
+    RETURN: error="The date-based core-component path already exists; choose a distinct descriptive slug."
   USE `edit/createDirectory` where: dirPath=CORE_COMPONENT_DIR
   USE `edit/createFile` where: content=CORE_COMPONENT_CONTENT, filePath=CORE_COMPONENT_FILE_PATH
   SET CREATED_CORE_COMPONENTS := CREATED_CORE_COMPONENTS + [CORE_COMPONENT_FILE_PATH] (from "Agent Inference")
@@ -412,27 +480,54 @@ ELSE:
   USE `edit/createFile` where: content=UPDATED_LOG, filePath=DECISION_LOG_PATH
 </process>
 
+<process id="build-acceptance-coverage" name="Map every acceptance criterion to delivery proof">
+SET COVERAGE_MATRIX := <MATRIX> (from "Agent Inference" using ACCEPTANCE_CATALOG, RESEARCH_BRIEF, CREATED_ADRS, CREATED_CORE_COMPONENTS; map each AC-* ID to implementation tasks, tests or validation, and expected evidence)
+SET COVERAGE_COMPLETE := <COMPLETE> (from "Agent Inference" using ACCEPTANCE_CATALOG, COVERAGE_MATRIX; require one complete mapping for every AC-* ID)
+IF COVERAGE_COMPLETE is false:
+  RUN `record-friction`
+  RETURN: error="Acceptance coverage is incomplete. Every AC-* ID requires tasks, validation, and expected evidence."
+</process>
+
 <process id="create-action-plan" name="Create the action plan for the issue">
-SET PLAN_CONTENT := <CONTENT> (from "Agent Inference" using RESEARCH_BRIEF, CREATED_ADRS, CREATED_CORE_COMPONENTS)
+SET PLAN_CONTENT := <CONTENT> (from "Agent Inference" using RESEARCH_BRIEF, CREATED_ADRS, CREATED_CORE_COMPONENTS, ACCEPTANCE_CATALOG, COVERAGE_MATRIX)
 USE `edit/createDirectory` where: dirPath="project/issues/<ISSUE_NUMBER>/plan"
-USE `edit/createFile` where: content=PLAN_CONTENT, filePath="project/issues/<ISSUE_NUMBER>/plan/01-action-plan.md"
+TRY:
+  USE `read/readFile` where: filePath="project/issues/<ISSUE_NUMBER>/plan/01-action-plan.md"
+  USE `edit/editFiles` where: content=PLAN_CONTENT, filePath="project/issues/<ISSUE_NUMBER>/plan/01-action-plan.md"
+RECOVER (err):
+  USE `edit/createFile` where: content=PLAN_CONTENT, filePath="project/issues/<ISSUE_NUMBER>/plan/01-action-plan.md"
 SET ACTION_PLAN := PLAN_CONTENT (from "Agent Inference")
 </process>
 
 <process id="create-task-breakdown" name="Create the task breakdown document">
 SET RELEVANT_ADRS := <ADRS> (from "Agent Inference" using ACTION_PLAN, CREATED_ADRS)
 SET RELEVANT_CORE_COMPONENTS := <COMPONENTS> (from "Agent Inference" using ACTION_PLAN, CREATED_CORE_COMPONENTS)
-SET TASKS := <TASK_LIST> (from "Agent Inference" using ACTION_PLAN, RELEVANT_ADRS, RELEVANT_CORE_COMPONENTS)
+SET TASKS := <TASK_LIST> (from "Agent Inference" using ACTION_PLAN, ACCEPTANCE_CATALOG, COVERAGE_MATRIX, RELEVANT_ADRS, RELEVANT_CORE_COMPONENTS; include AC-* IDs, test coverage, expected evidence, and dependency order)
 SET BREAKDOWN_CONTENT := <CONTENT> (from "Agent Inference" using TASKS)
-USE `edit/createFile` where: content=BREAKDOWN_CONTENT, filePath="project/issues/<ISSUE_NUMBER>/plan/02-task-breakdown.md"
+TRY:
+  USE `read/readFile` where: filePath="project/issues/<ISSUE_NUMBER>/plan/02-task-breakdown.md"
+  USE `edit/editFiles` where: content=BREAKDOWN_CONTENT, filePath="project/issues/<ISSUE_NUMBER>/plan/02-task-breakdown.md"
+RECOVER (err):
+  USE `edit/createFile` where: content=BREAKDOWN_CONTENT, filePath="project/issues/<ISSUE_NUMBER>/plan/02-task-breakdown.md"
 SET BREAKDOWN_COMPLETE := true (from "Agent Inference")
 </process>
 
 <process id="create-test-plan" name="Create the test plan document">
-SET TESTS := <TEST_LIST> (from "Agent Inference" using TASKS, RELEVANT_ADRS, RELEVANT_CORE_COMPONENTS)
+SET TESTS := <TEST_LIST> (from "Agent Inference" using TASKS, ACCEPTANCE_CATALOG, COVERAGE_MATRIX, RELEVANT_ADRS, RELEVANT_CORE_COMPONENTS; include AC-* IDs and expected evidence)
 SET TEST_PLAN_CONTENT := <CONTENT> (from "Agent Inference" using TESTS)
-USE `edit/createFile` where: content=TEST_PLAN_CONTENT, filePath="project/issues/<ISSUE_NUMBER>/plan/03-test-plan.md"
+TRY:
+  USE `read/readFile` where: filePath="project/issues/<ISSUE_NUMBER>/plan/03-test-plan.md"
+  USE `edit/editFiles` where: content=TEST_PLAN_CONTENT, filePath="project/issues/<ISSUE_NUMBER>/plan/03-test-plan.md"
+RECOVER (err):
+  USE `edit/createFile` where: content=TEST_PLAN_CONTENT, filePath="project/issues/<ISSUE_NUMBER>/plan/03-test-plan.md"
 SET TEST_PLAN_COMPLETE := true (from "Agent Inference")
+</process>
+
+<process id="record-friction" name="Record Plan friction before handoff">
+SET FRICTION_ENTRY := <ENTRY> (from "Agent Inference" using FRICTION_CONTEXT, RESEARCH_BRIEF, ACCEPTANCE_CATALOG, COVERAGE_MATRIX, TASKS, TESTS, ARCHITECTURE_COMPLETE, COVERAGE_COMPLETE, FRICTION_QUESTION; include phase=plan, status, inference, missing proof, and evidence; redact secrets and personal data)
+USE `edit/createFile` where: content=FRICTION_ENTRY, filePath="/tmp/rpiv-plan-friction.json"
+USE `execute/runInTerminal` where: command="./harness friction add --phase plan --file /tmp/rpiv-plan-friction.json --json"
+CAPTURE FRICTION_RESULT from `execute/runInTerminal`
 </process>
 </processes>
 

@@ -8,7 +8,7 @@ Closes #<!-- ISSUE_NUMBER -->
 
 <!-- 
   The verifier agent populates this section from the GitHub issue.
-  Each criterion is checked (✅) or unchecked (⬜) based on implementation evidence.
+  Each criterion includes its stable AC-* ID, passed status, and concrete evidence.
 -->
 
 <!-- ACCEPTANCE_CRITERIA_START -->
@@ -31,8 +31,9 @@ Closes #<!-- ISSUE_NUMBER -->
 
 ## Verification
 
-- [ ] All configured verification steps pass
-- [ ] Conventional Commits used for all commit messages
-- [ ] Co-authored-by trailer included on every commit
-- [ ] Branch is clean — no uncommitted changes
-- [ ] Acceptance criteria validated against implementation with evidence
+- [ ] Implement handoff branch and commit SHA verified exactly
+- [ ] Full branch diff reviewed for scope and architecture compliance
+- [ ] Affected application documentation is complete and matches the committed behavior
+- [ ] `./harness verify --json` passes
+- [ ] Every `AC-*` criterion independently passed with evidence
+- [ ] Branch is clean with no uncommitted changes

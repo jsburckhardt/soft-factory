@@ -38,12 +38,14 @@ Each stage has clear inputs, outputs, and artifact locations. No stage may be sk
 
 - The `rpiv-implementer` workflow executes tasks from the task breakdown
 - Writes tests as specified in the test plan
-- Documents implementation notes in `project/issues/<ISSUE_NUMBER>/implementation/README.md`
+- Updates affected README, API, configuration, usage, migration, architecture, operational, and deployment documentation
+- Documents implementation notes in `project/issues/<ISSUE_NUMBER>/implementation/00-implementation.md`
 - Deviations from ADRs or core-components require returning to the Plan stage
 
 ## Stage 4 — Verify
 
 - The `rpiv-verifier` workflow runs the full test suite and confirms all tests pass
+- Independently verifies affected application documentation matches the committed behavior
 - Creates logical, atomic commits following [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/)
 - Pushes to a feature branch (`<type>/<ISSUE_NUMBER>-<short-slug>`)
 - Opens a pull request with `Closes #<ISSUE_NUMBER>` in the body
@@ -57,16 +59,17 @@ Each stage has clear inputs, outputs, and artifact locations. No stage may be sk
 | Action plans | `project/issues/<ISSUE_NUMBER>/plan/01-action-plan.md` |
 | Task breakdowns | `project/issues/<ISSUE_NUMBER>/plan/02-task-breakdown.md` |
 | Test plans | `project/issues/<ISSUE_NUMBER>/plan/03-test-plan.md` |
-| Implementation notes | `project/issues/<ISSUE_NUMBER>/implementation/README.md` |
+| Implementation notes | `project/issues/<ISSUE_NUMBER>/implementation/00-implementation.md` |
 | ADRs | `project/architecture/ADR/` (global, not issue-scoped) |
 | Core-Components | `project/architecture/core-components/` (global, not issue-scoped) |
 | Decision log | `project/architecture/ADR/DECISION-LOG.md` |
 
 ## How to Propose ADRs and Core-Components
 
-- **ADRs** capture architectural decisions. Copy the template from `project/architecture/ADR/ADR-0001-template.md` and create the new ADR in the same `project/architecture/ADR/` directory.
-- **Core-Components** capture reusable cross-cutting behavior. Copy the template from `project/architecture/core-components/CORE-COMPONENT-0001-template.md` and create in the same `project/architecture/core-components/` directory.
+- **ADRs** capture architectural decisions. Copy `project/architecture/ADR/ADR-260101-template.md` and name the new file `ADR-yymmdd-short-slug.md` using its UTC creation date.
+- **Core-Components** capture reusable cross-cutting behavior. Copy `project/architecture/core-components/CORE-COMPONENT-260101-template.md` and name the new file `CORE-COMPONENT-yymmdd-short-slug.md` using its UTC creation date.
 - ADRs and core-components are **global** — never scoped to a single issue.
+- The full date-and-slug basename is the artifact ID; keep the creation date unchanged after later edits.
 - Always update `project/architecture/ADR/DECISION-LOG.md` when adding or modifying an ADR or core-component.
 
 ## PR Expectations
