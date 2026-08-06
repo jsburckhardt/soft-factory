@@ -21,7 +21,8 @@ All git commits in any repository using the Soft Factory template. This applies 
 - The description MUST use imperative mood with no period at the end.
 - The scope SHOULD identify the area of the codebase affected (e.g., `auth`, `api`, `docs`).
 - Breaking changes MUST include `BREAKING CHANGE:` in the commit footer or `!` after the type/scope.
-- AI-authored commits MUST include a `Co-authored-by` trailer.
+- AI-authored commits MUST include the configured `Co-authored-by` trailer.
+- Soft Factory agents MUST use `Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>`.
 
 ### Interfaces
 - Commit messages are the interface — no library or API is involved.
@@ -52,7 +53,7 @@ BREAKING CHANGE: /users endpoint no longer exists, use /accounts instead.
 
 chore: upgrade APS skill to v1.2.2
 
-Co-authored-by: github-copilot[bot] <175728472+github-copilot[bot]@users.noreply.github.com>
+Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>
 ```
 
 ## Integration Guidelines

@@ -28,6 +28,7 @@ You MUST read AGENTS.md before starting.
 You MUST read project/architecture/ADR/DECISION-LOG.md before starting.
 You MUST inspect existing documentation under docs/ and project/ before dispatching any stage.
 You MUST verify ./harness and .harness/contract.yml before dispatching any stage.
+You MUST direct the user to run @harness-cli-it when the harness or contract is missing or invalid.
 You MUST use the GitHub issue number as the pipeline identifier.
 You MUST validate structured GitHub acceptance criteria before dispatching Research.
 You MUST create or confirm the issue feature branch before dispatching Research.
@@ -181,14 +182,14 @@ SET ISSUE_NUMBER := <NUMBER> (from "Agent Inference" using USER_INPUT)
 USE `search/fileSearch` where: pattern=HARNESS_CONTRACT_PATH
 CAPTURE HARNESS_CONTRACT_FILES from `search/fileSearch`
 IF HARNESS_CONTRACT_FILES is empty:
-  SET VERIFY_RESULT := "The repo-local harness must be created before RPIV starts." (from "Agent Inference")
+  SET VERIFY_RESULT := "Run @harness-cli-it to create ./harness and .harness/contract.yml before RPIV starts." (from "Agent Inference")
   SET PIPELINE_STATUS := "error" (from "Agent Inference")
 ELSE:
   USE `execute/runInTerminal` where: command="./harness doctor --json"
   CAPTURE HARNESS_DOCTOR from `execute/runInTerminal`
   SET HARNESS_READY := <READY> (from "Agent Inference" using HARNESS_DOCTOR)
   IF HARNESS_READY is false:
-    SET VERIFY_RESULT := "The repo-local harness is not ready." (from "Agent Inference")
+    SET VERIFY_RESULT := "Run @harness-cli-it to repair the repo-local harness before RPIV starts." (from "Agent Inference")
     SET PIPELINE_STATUS := "error" (from "Agent Inference")
 IF PIPELINE_STATUS = "error":
   RETURN

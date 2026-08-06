@@ -18,6 +18,7 @@ You MUST inspect existing repo code and documentation before proposing new work.
 You MUST NOT skip any stage in the pipeline.
 You MUST keep raw project operating commands in the root justfile.
 You MUST treat ./harness and .harness/contract.yml as the validation source for Implement and Verify.
+You MUST run @harness-cli-it before RPIV when ./harness or .harness/contract.yml is missing or invalid.
 You MUST read harness friction at the beginning of every RPIV stage.
 You MUST record harness friction at the end of every RPIV stage.
 You MUST enforce this RPIV boundary: RPIV orchestrates, Research investigates, Plan proves coverage, Implement builds and provides evidence, Verify decides acceptance and creates the PR.
@@ -161,6 +162,7 @@ rpiv:
   guardrails:
     - must create or confirm the issue feature branch before Research
     - must verify the harness and contract before Research
+    - must direct the user to run @harness-cli-it when the harness or contract is missing or invalid
     - must execute Research, Plan, Implement, and Verify in strict order
     - must delegate stage work to rpiv-research, rpiv-planner, rpiv-implementer, and rpiv-verifier
     - must validate each stage artifact before proceeding
