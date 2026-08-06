@@ -20,9 +20,13 @@ docs/README.md                                              — Application docu
 project/README.md                                             — Project documentation index
 project/architecture/README.md                                 — Architecture documentation index
 project/architecture/soft-factory-pipeline.excalidraw          — Pipeline diagram source
-project/architecture/ADR/ADR-0001-template.md                  — ADR template (read-only, copy to create new)
+project/architecture/ADR/ADR-260101-template.md                — ADR template (read-only, copy to create date-based artifacts)
 project/architecture/ADR/DECISION-LOG.md                       — Registry of all ADR and core-component decisions
-project/architecture/core-components/CORE-COMPONENT-0001-template.md — Core-component template (read-only, copy to create new)
-project/architecture/core-components/CORE-COMPONENT-0002-commit-standards.md — Commit standards (Conventional Commits, Co-authored-by)
+project/architecture/core-components/CORE-COMPONENT-260101-template.md — Core-component template (read-only, copy to create date-based artifacts)
+project/architecture/core-components/CORE-COMPONENT-260505-commit-standards.md — Commit standards (Conventional Commits, Co-authored-by)
+project/architecture/core-components/CORE-COMPONENT-260806-rpiv-stage-contract.md — RPIV stage ownership and handoff contract
+project/architecture/core-components/CORE-COMPONENT-260806-project-command-interface.md — Harness and justfile command contract
+project/architecture/core-components/CORE-COMPONENT-260806-agent-executable-acceptance-criteria.md — Agent-executable issue criteria contract
+project/architecture/core-components/CORE-COMPONENT-260806-architecture-artifact-naming.md — Date-based architecture artifact naming contract
 project/architecture/core-components/README.md                 — Core-components index
 project/issues/README.md                                       — Issues index and canonical structure

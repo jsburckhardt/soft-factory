@@ -64,9 +64,10 @@ Each stage has clear inputs, outputs, and artifact locations. No stage may be sk
 
 ## How to Propose ADRs and Core-Components
 
-- **ADRs** capture architectural decisions. Copy the template from `project/architecture/ADR/ADR-0001-template.md` and create the new ADR in the same `project/architecture/ADR/` directory.
-- **Core-Components** capture reusable cross-cutting behavior. Copy the template from `project/architecture/core-components/CORE-COMPONENT-0001-template.md` and create in the same `project/architecture/core-components/` directory.
+- **ADRs** capture architectural decisions. Copy `project/architecture/ADR/ADR-260101-template.md` and name the new file `ADR-yymmdd-short-slug.md` using its UTC creation date.
+- **Core-Components** capture reusable cross-cutting behavior. Copy `project/architecture/core-components/CORE-COMPONENT-260101-template.md` and name the new file `CORE-COMPONENT-yymmdd-short-slug.md` using its UTC creation date.
 - ADRs and core-components are **global** — never scoped to a single issue.
+- The full date-and-slug basename is the artifact ID; keep the creation date unchanged after later edits.
 - Always update `project/architecture/ADR/DECISION-LOG.md` when adding or modifying an ADR or core-component.
 
 ## PR Expectations

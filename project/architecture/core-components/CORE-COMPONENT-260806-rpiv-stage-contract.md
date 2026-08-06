@@ -1,4 +1,4 @@
-# CORE-COMPONENT-0003: RPIV Stage Contract
+# CORE-COMPONENT-260806-rpiv-stage-contract: RPIV Stage Contract
 
 ## Status
 

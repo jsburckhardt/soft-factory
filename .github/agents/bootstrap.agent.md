@@ -48,8 +48,11 @@ You MUST update AGENTS.md to register the bootstrap in the AGENTS constant.
 You MUST update LLM.txt with any new project-specific file references.
 You MUST tailor .devcontainer/devcontainer.json to the chosen tech stack by removing unnecessary features.
 You MUST ensure the development environment provides the just command runner.
-You MUST assign sequential ADR numbers starting from ADR-0002 using the pattern ADR-####-slug.md.
-You MUST assign sequential core-component numbers starting from CORE-COMPONENT-0002 using the pattern CORE-COMPONENT-####-slug.md.
+You MUST name ADRs using ADR-yymmdd-short-slug.md with the UTC creation date.
+You MUST name core-components using CORE-COMPONENT-yymmdd-short-slug.md with the UTC creation date.
+You MUST use each full date-and-slug basename as the artifact ID.
+You MUST use distinct descriptive slugs for multiple artifacts created on the same date.
+You MUST fail instead of overwriting an existing architecture artifact path.
 You MUST create a root justfile containing all project operating command bodies.
 You MUST expose applicable setup, run, test, lint, format-check, type-check, build, and verify recipes.
 You MUST ask the user to confirm or customize proposed justfile recipes before writing files.
@@ -68,13 +71,16 @@ You MAY suggest common cross-cutting concerns the user has not mentioned.
 DECISION_LOG_PATH: "project/architecture/ADR/DECISION-LOG.md"
 ADR_DIR: "project/architecture/ADR"
 CORE_COMPONENT_DIR: "project/architecture/core-components"
+ADR_TEMPLATE_PATH: "project/architecture/ADR/ADR-260101-template.md"
+ADR_PATTERN: "ADR-yymmdd-short-slug.md"
+CORE_COMPONENT_PATTERN: "CORE-COMPONENT-yymmdd-short-slug.md"
+ARTIFACT_DATE_COMMAND: "date -u +%y%m%d"
 AGENTS_MD_PATH: "AGENTS.md"
 README_PATH: "README.md"
 APP_DOCS_PATH: "docs/README.md"
 LLM_TXT_PATH: "LLM.txt"
 DEVCONTAINER_PATH: ".devcontainer/devcontainer.json"
 JUSTFILE_PATH: "justfile"
-BOOTSTRAP_MARKER: "ADR-0002"
 JUSTFILE_CONTRACT: YAML<<
 required:
   - verify-focused
@@ -95,11 +101,11 @@ rules:
   - Omit inapplicable conditional recipes.
 >>
 ADR_TEMPLATE: TEXT<<
-# ADR-####: [Short Title of Decision]
+# ADR-yymmdd-short-slug: [Short Title of Decision]
 
 ## Status
 
-[Proposed | Accepted | Deprecated | Superseded by ADR-####]
+[Proposed | Accepted | Deprecated | Superseded by ADR-yymmdd-short-slug]
 
 ## Context
 
@@ -139,7 +145,7 @@ What becomes easier or harder as a result of this decision?
 - [Link to relevant documentation or discussion]
 >>
 CORE_COMPONENT_TEMPLATE: TEXT<<
-# CORE-COMPONENT-####: [Short Title]
+# CORE-COMPONENT-yymmdd-short-slug: [Short Title]
 
 ## Status
 
@@ -196,7 +202,7 @@ How is compliance with this component verified?
 
 ## Related ADRs
 
-- [ADR-####-slug](../ADR/ADR-####-slug.md)
+- [ADR-yymmdd-short-slug](../ADR/ADR-yymmdd-short-slug.md)
 >>
 DECISION_LOG_SKELETON: TEXT<<
 # Decision Log
@@ -207,13 +213,13 @@ This file is the single registry of all architectural decisions and core-compone
 
 | ID | Title | Status | Date |
 |----|-------|--------|------|
-| _No ADRs yet. Copy `ADR-0001-template.md` in this directory and rename it._ | | | |
+| _No ADRs yet. Copy `ADR-260101-template.md` and name it `ADR-yymmdd-short-slug.md`._ | | | |
 
 ## Core-Components
 
 | ID | Title | Status | Date |
 |----|-------|--------|------|
-| _No core-components yet. Copy `CORE-COMPONENT-0001-template.md` and rename it._ | | | |
+| _No core-components yet. Copy `CORE-COMPONENT-260101-template.md` and name it `CORE-COMPONENT-yymmdd-short-slug.md`._ | | | |
 
 ## Decisions
 
@@ -473,8 +479,7 @@ INFO_CONFIRMED: false
 ARTIFACT_LIST: ""
 UPDATE_LIST: ""
 SCAFFOLD_OUTPUT: ""
-NEXT_ADR_NUMBER: 2
-NEXT_CC_NUMBER: 2
+ARTIFACT_DATE: ""
 CREATED_ADRS: []
 CREATED_CORE_COMPONENTS: []
 UPDATED_FILES: []
@@ -491,9 +496,10 @@ JUSTFILE_CONTENT: ""
 RUN `check-bootstrapped`
 IF IS_BOOTSTRAPPED is true:
   RETURN: format="BOOTSTRAP_BLOCKED", evidence=BOOTSTRAP_EVIDENCE, reason="Project has already been bootstrapped", suggestion="Create a GitHub issue and use the rpiv-research agent to start working on it"
+RUN `resolve-artifact-date`
 IF PROJECT_NAME is empty:
   RUN `gather-project-info`
-SET ARTIFACT_LIST := <LIST> (from "Agent Inference" using LANGUAGE, CROSS_CUTTING_CONCERNS, NEXT_ADR_NUMBER, NEXT_CC_NUMBER)
+SET ARTIFACT_LIST := <LIST> (from "Agent Inference" using LANGUAGE, CROSS_CUTTING_CONCERNS, ARTIFACT_DATE, ADR_PATTERN, CORE_COMPONENT_PATTERN)
 SET UPDATE_LIST := <LIST> (from "Agent Inference" using README_PATH, APP_DOCS_PATH, AGENTS_MD_PATH, LLM_TXT_PATH, DEVCONTAINER_PATH, DECISION_LOG_PATH, JUSTFILE_PATH)
 SET DEVELOPMENT_STANDARDS_SUMMARY := <SUMMARY> (from "Agent Inference" using DEVELOPMENT_STANDARDS, LANGUAGE)
 IF INFO_CONFIRMED is false:
@@ -511,13 +517,19 @@ RETURN: format="BOOTSTRAP_REPORT", adr_list=CREATED_ADRS, core_component_list=CR
 </process>
 
 <process id="check-bootstrapped" name="Check if project has already been bootstrapped">
-USE `search/fileSearch` where: pattern="project/architecture/ADR/ADR-0002-*.md"
-CAPTURE EXISTING_ADRS from `search/fileSearch`
+USE `search/fileSearch` where: pattern="project/architecture/ADR/ADR-*.md"
+CAPTURE ADR_FILES from `search/fileSearch`
+SET EXISTING_ADRS := <FILES> (from "Agent Inference" using ADR_FILES, ADR_TEMPLATE_PATH; exclude the template path)
 IF EXISTING_ADRS is not empty:
   SET IS_BOOTSTRAPPED := true (from "Agent Inference")
   SET BOOTSTRAP_EVIDENCE := <EVIDENCE> (from "Agent Inference" using EXISTING_ADRS)
 ELSE:
   SET IS_BOOTSTRAPPED := false (from "Agent Inference")
+</process>
+
+<process id="resolve-artifact-date" name="Resolve the UTC architecture artifact date">
+USE `execute/runInTerminal` where: command=ARTIFACT_DATE_COMMAND
+CAPTURE ARTIFACT_DATE from `execute/runInTerminal`
 </process>
 
 <process id="gather-project-info" name="Gather project identity, tech stack, and cross-cutting concerns from user">
@@ -541,29 +553,43 @@ SET UPDATED_FILES := UPDATED_FILES + ["Project scaffold"] (from "Agent Inference
 </process>
 
 <process id="create-tech-stack-adr" name="Create the foundational tech stack ADR">
-SET ADR_CONTENT := <CONTENT> (from "Agent Inference" using ADR_TEMPLATE, LANGUAGE, FRAMEWORK, PACKAGE_MANAGER, TEST_RUNNER, NEXT_ADR_NUMBER)
-SET ADR_FILE := <PATH> (from "Agent Inference" using ADR_DIR, NEXT_ADR_NUMBER)
+SET ADR_SLUG := <SLUG> (from "Agent Inference" using LANGUAGE, FRAMEWORK; produce a lowercase hyphenated description)
+SET ADR_ID := <ID> (from "Agent Inference" using ARTIFACT_DATE, ADR_SLUG; format ADR-yymmdd-short-slug)
+SET ADR_CONTENT := <CONTENT> (from "Agent Inference" using ADR_TEMPLATE, ADR_ID, LANGUAGE, FRAMEWORK, PACKAGE_MANAGER, TEST_RUNNER)
+SET ADR_FILE := <PATH> (from "Agent Inference" using ADR_DIR, ADR_ID; append .md)
+USE `search/fileSearch` where: pattern=ADR_FILE
+CAPTURE ADR_COLLISION from `search/fileSearch`
+IF ADR_COLLISION is not empty:
+  RETURN: error="The date-based ADR path already exists; choose a distinct descriptive slug."
 USE `edit/createFile` where: content=ADR_CONTENT, filePath=ADR_FILE
 SET CREATED_ADRS := CREATED_ADRS + [ADR_FILE] (from "Agent Inference")
-SET NEXT_ADR_NUMBER := NEXT_ADR_NUMBER + 1 (from "Agent Inference")
 </process>
 
 <process id="create-core-components" name="Create core-component files for each cross-cutting concern">
 FOREACH concern IN CROSS_CUTTING_CONCERNS:
-  SET CC_CONTENT := <CONTENT> (from "Agent Inference" using CORE_COMPONENT_TEMPLATE, concern, NEXT_CC_NUMBER, CREATED_ADRS)
-  SET CC_FILE := <PATH> (from "Agent Inference" using CORE_COMPONENT_DIR, NEXT_CC_NUMBER, concern)
+  SET CC_SLUG := <SLUG> (from "Agent Inference" using concern; produce a lowercase hyphenated description)
+  SET CC_ID := <ID> (from "Agent Inference" using ARTIFACT_DATE, CC_SLUG; format CORE-COMPONENT-yymmdd-short-slug)
+  SET CC_CONTENT := <CONTENT> (from "Agent Inference" using CORE_COMPONENT_TEMPLATE, concern, CC_ID, CREATED_ADRS)
+  SET CC_FILE := <PATH> (from "Agent Inference" using CORE_COMPONENT_DIR, CC_ID; append .md)
+  USE `search/fileSearch` where: pattern=CC_FILE
+  CAPTURE CC_COLLISION from `search/fileSearch`
+  IF CC_COLLISION is not empty:
+    RETURN: error="The date-based core-component path already exists; choose a distinct descriptive slug."
   USE `edit/createFile` where: content=CC_CONTENT, filePath=CC_FILE
   SET CREATED_CORE_COMPONENTS := CREATED_CORE_COMPONENTS + [CC_FILE] (from "Agent Inference")
-  SET NEXT_CC_NUMBER := NEXT_CC_NUMBER + 1 (from "Agent Inference")
 </process>
 
 <process id="create-development-standards" name="Create the development standards core-component">
-SET DEV_STD_CONTENT := <CONTENT> (from "Agent Inference" using CORE_COMPONENT_TEMPLATE, DEVELOPMENT_STANDARDS, LANGUAGE, NEXT_CC_NUMBER, CREATED_ADRS)
-SET DEV_STD_FILE := <PATH> (from "Agent Inference" using CORE_COMPONENT_DIR, NEXT_CC_NUMBER, "development-standards")
+SET DEV_STD_ID := <ID> (from "Agent Inference" using ARTIFACT_DATE; format CORE-COMPONENT-yymmdd-development-standards)
+SET DEV_STD_CONTENT := <CONTENT> (from "Agent Inference" using CORE_COMPONENT_TEMPLATE, DEVELOPMENT_STANDARDS, LANGUAGE, DEV_STD_ID, CREATED_ADRS)
+SET DEV_STD_FILE := <PATH> (from "Agent Inference" using CORE_COMPONENT_DIR, DEV_STD_ID; append .md)
+USE `search/fileSearch` where: pattern=DEV_STD_FILE
+CAPTURE DEV_STD_COLLISION from `search/fileSearch`
+IF DEV_STD_COLLISION is not empty:
+  RETURN: error="The date-based development standards path already exists."
 USE `edit/createFile` where: content=DEV_STD_CONTENT, filePath=DEV_STD_FILE
 SET CREATED_CORE_COMPONENTS := CREATED_CORE_COMPONENTS + [DEV_STD_FILE] (from "Agent Inference")
-SET DEV_STD_DECISIONS := <DECISIONS> (from "Agent Inference" using DEVELOPMENT_STANDARDS, NEXT_CC_NUMBER)
-SET NEXT_CC_NUMBER := NEXT_CC_NUMBER + 1 (from "Agent Inference")
+SET DEV_STD_DECISIONS := <DECISIONS> (from "Agent Inference" using DEVELOPMENT_STANDARDS, DEV_STD_ID)
 </process>
 
 <process id="update-decision-log" name="Update DECISION-LOG.md with all new ADRs and core-components">

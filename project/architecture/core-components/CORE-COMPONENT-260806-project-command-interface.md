@@ -1,4 +1,4 @@
-# CORE-COMPONENT-0004: Project Command Interface
+# CORE-COMPONENT-260806-project-command-interface: Project Command Interface
 
 ## Status
 

@@ -1,6 +1,6 @@
-# CORE-COMPONENT-0001: [Short Title]
+# CORE-COMPONENT-yymmdd-short-slug: [Short Title]
 
-> **This is a template.** Copy this file to `CORE-COMPONENT-####-short-slug.md` in this same directory and fill in the sections below. Do not edit this template directly.
+> **This is a template.** Copy this file to `CORE-COMPONENT-yymmdd-short-slug.md` in this same directory, replace `yymmdd` with the UTC creation date, and fill in the sections below. Do not edit this template directly.
 
 ## Status
 
@@ -57,4 +57,4 @@ How is compliance with this component verified?
 
 ## Related ADRs
 
-- [ADR-####-slug](../ADR/ADR-####-slug.md)
+- [ADR-yymmdd-short-slug](../ADR/ADR-yymmdd-short-slug.md)

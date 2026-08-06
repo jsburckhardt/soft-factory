@@ -1,10 +1,10 @@
-# ADR-0001: [Short Title of Decision]
+# ADR-yymmdd-short-slug: [Short Title of Decision]
 
-> **This is a template.** Copy this file to `ADR-####-short-slug.md` in this same directory and fill in the sections below. Do not edit this template directly.
+> **This is a template.** Copy this file to `ADR-yymmdd-short-slug.md` in this same directory, replace `yymmdd` with the UTC creation date, and fill in the sections below. Do not edit this template directly.
 
 ## Status
 
-[Proposed | Accepted | Deprecated | Superseded by ADR-####]
+[Proposed | Accepted | Deprecated | Superseded by ADR-yymmdd-short-slug]
 
 ## Context
 

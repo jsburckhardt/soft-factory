@@ -1,4 +1,4 @@
-# CORE-COMPONENT-0002: Commit Standards
+# CORE-COMPONENT-260505-commit-standards: Commit Standards
 
 ## Status
 

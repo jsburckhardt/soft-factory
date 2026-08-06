@@ -1,4 +1,4 @@
-# CORE-COMPONENT-0005: Agent-Executable Acceptance Criteria
+# CORE-COMPONENT-260806-agent-executable-acceptance-criteria: Agent-Executable Acceptance Criteria
 
 ## Status
 

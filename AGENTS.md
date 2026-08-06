@@ -9,6 +9,10 @@ You MUST update project/architecture/ADR/DECISION-LOG.md for every ADR or core-c
 You MUST treat ADRs as global artifacts stored in project/architecture/ADR/ — never inside an issue documentation folder.
 You MUST treat core-components as global artifacts stored in project/architecture/core-components/ — never inside an issue documentation folder.
 You MUST NOT edit template files directly — copy them within the same directory and rename.
+You MUST name ADRs as ADR-yymmdd-short-slug.md using their UTC creation date.
+You MUST name core-components as CORE-COMPONENT-yymmdd-short-slug.md using their UTC creation date.
+You MUST use the full date-and-slug basename as the architecture artifact ID.
+You MUST preserve an architecture artifact's creation date after later edits.
 You MUST return to the Plan stage if implementation diverges from an ADR or core-component.
 You MUST inspect existing repo code and documentation before proposing new work.
 You MUST NOT skip any stage in the pipeline.
@@ -55,30 +59,31 @@ onboard-repo:
     - README.md
     - docs/
     - project/
-    - project/architecture/ADR/ADR-0001-template.md
-    - project/architecture/core-components/CORE-COMPONENT-0001-template.md
+    - project/architecture/ADR/ADR-260101-template.md
+    - project/architecture/core-components/CORE-COMPONENT-260101-template.md
     - project/architecture/ADR/DECISION-LOG.md
     - AGENTS.md
     - LLM.txt
     - application source code
   write_paths:
-    - project/architecture/ADR/ADR-####-slug.md
-    - project/architecture/core-components/CORE-COMPONENT-####-slug.md
+    - project/architecture/ADR/ADR-yymmdd-short-slug.md
+    - project/architecture/core-components/CORE-COMPONENT-yymmdd-short-slug.md
     - project/architecture/ADR/DECISION-LOG.md
     - project/issues/<ISSUE_NUMBER>/research/00-research.md
     - README.md
     - AGENTS.md
     - LLM.txt
   templates:
-    - project/architecture/ADR/ADR-0001-template.md
-    - project/architecture/core-components/CORE-COMPONENT-0001-template.md
+    - project/architecture/ADR/ADR-260101-template.md
+    - project/architecture/core-components/CORE-COMPONENT-260101-template.md
   guardrails:
     - must check whether the project is already onboarded before proceeding
     - must refuse to run if the project already has the Soft Factory engineering flow
     - must analyse the existing codebase to infer tech stack and architectural decisions
     - must infer cross-cutting concerns from the existing source code
-    - must create ADRs for existing architectural decisions starting from ADR-0002
-    - must create core-component files for existing cross-cutting concerns starting from CORE-COMPONENT-0002
+    - must create ADRs for existing architectural decisions using the UTC creation date and a descriptive slug
+    - must create core-component files for existing cross-cutting concerns using the UTC creation date and a descriptive slug
+    - must use full date-and-slug basenames as artifact IDs and avoid same-day slug collisions
     - must update DECISION-LOG.md with all new ADRs and core-components
     - must record decision records in the Decisions section of DECISION-LOG.md for every ADR and core-component created
     - must create a GitHub issue for repository understanding and its research brief
@@ -95,8 +100,8 @@ bootstrap:
   read_paths:
     - docs/
     - project/
-    - project/architecture/ADR/ADR-0001-template.md
-    - project/architecture/core-components/CORE-COMPONENT-0001-template.md
+    - project/architecture/ADR/ADR-260101-template.md
+    - project/architecture/core-components/CORE-COMPONENT-260101-template.md
     - project/architecture/ADR/DECISION-LOG.md
     - .devcontainer/devcontainer.json
     - justfile
@@ -104,8 +109,8 @@ bootstrap:
     - AGENTS.md
     - LLM.txt
   write_paths:
-    - project/architecture/ADR/ADR-####-slug.md
-    - project/architecture/core-components/CORE-COMPONENT-####-slug.md
+    - project/architecture/ADR/ADR-yymmdd-short-slug.md
+    - project/architecture/core-components/CORE-COMPONENT-yymmdd-short-slug.md
     - project/architecture/ADR/DECISION-LOG.md
     - README.md
     - docs/README.md
@@ -114,8 +119,8 @@ bootstrap:
     - .devcontainer/devcontainer.json
     - justfile
   templates:
-    - project/architecture/ADR/ADR-0001-template.md
-    - project/architecture/core-components/CORE-COMPONENT-0001-template.md
+    - project/architecture/ADR/ADR-260101-template.md
+    - project/architecture/core-components/CORE-COMPONENT-260101-template.md
   guardrails:
     - must check whether the project has already been bootstrapped before proceeding
     - must refuse to run if the project is already bootstrapped
@@ -125,6 +130,7 @@ bootstrap:
     - must create an ADR for the tech stack decision
     - must create a core-component file for each declared cross-cutting concern
     - must create a development standards core-component covering coding conventions, commit standards, and testing practices
+    - must use UTC creation dates and descriptive slugs for ADR and core-component filenames and IDs
     - must update DECISION-LOG.md with all new ADRs and core-components
     - must record decision records in the Decisions section of DECISION-LOG.md for every ADR and core-component created
     - must create a root justfile containing all project operating command bodies
@@ -198,22 +204,22 @@ rpiv-planner:
     - file creation and editing
   read_paths:
     - project/issues/<ISSUE_NUMBER>/research/00-research.md
-    - project/architecture/ADR/ADR-0001-template.md
-    - project/architecture/core-components/CORE-COMPONENT-0001-template.md
+    - project/architecture/ADR/ADR-260101-template.md
+    - project/architecture/core-components/CORE-COMPONENT-260101-template.md
     - project/architecture/ADR/DECISION-LOG.md
     - project/architecture/ADR/
     - project/architecture/core-components/
     - application source code
   write_paths:
-    - project/architecture/ADR/ADR-####-slug.md
-    - project/architecture/core-components/CORE-COMPONENT-####-slug.md
+    - project/architecture/ADR/ADR-yymmdd-short-slug.md
+    - project/architecture/core-components/CORE-COMPONENT-yymmdd-short-slug.md
     - project/architecture/ADR/DECISION-LOG.md
     - project/issues/<ISSUE_NUMBER>/plan/01-action-plan.md
     - project/issues/<ISSUE_NUMBER>/plan/02-task-breakdown.md
     - project/issues/<ISSUE_NUMBER>/plan/03-test-plan.md
   templates:
-    - project/architecture/ADR/ADR-0001-template.md
-    - project/architecture/core-components/CORE-COMPONENT-0001-template.md
+    - project/architecture/ADR/ADR-260101-template.md
+    - project/architecture/core-components/CORE-COMPONENT-260101-template.md
     - Task Breakdown (Section 5.5)
     - Test Plan (Section 5.6)
   guardrails:
@@ -222,6 +228,8 @@ rpiv-planner:
     - every ADR or core-component change must update DECISION-LOG.md
     - every ADR or core-component must produce at least one decision record
     - ADRs and core-components are global — not scoped to an issue
+    - assign UTC creation dates and descriptive slugs to ADR and core-component filenames and IDs
+    - preserve creation dates and use distinct slugs for same-day artifacts
     - assign stable AC-1, AC-2, and subsequent IDs in issue order
     - map every AC ID to implementation tasks, tests or validation, and expected evidence
     - include AC IDs in the action plan, task breakdown, and test plan
@@ -367,8 +375,8 @@ issue-generator:
     - must not create an issue without rubber-duck review
 >>
 TEMPLATE_PATHS: YAML<<
-adr: project/architecture/ADR/ADR-0001-template.md
-core_component: project/architecture/core-components/CORE-COMPONENT-0001-template.md
+adr: project/architecture/ADR/ADR-260101-template.md
+core_component: project/architecture/core-components/CORE-COMPONENT-260101-template.md
 action_plan: project/issues/<ISSUE_NUMBER>/plan/01-action-plan.md
 task_breakdown: project/issues/<ISSUE_NUMBER>/plan/02-task-breakdown.md
 test_plan: project/issues/<ISSUE_NUMBER>/plan/03-test-plan.md
@@ -382,8 +390,8 @@ SCOPE_TYPES: YAML<<
 >>
 NAMING: YAML<<
 issues: "GitHub Issue #<number>"
-adrs: "ADR-####-short-slug.md"
-core_components: "CORE-COMPONENT-####-short-slug.md"
+adrs: "ADR-yymmdd-short-slug.md"
+core_components: "CORE-COMPONENT-yymmdd-short-slug.md"
 >>
 </constants>
 

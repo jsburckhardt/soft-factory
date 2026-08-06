@@ -11,6 +11,7 @@ tools:
   - edit/createDirectory
   - edit/createFile
   - edit/editFiles
+  - execute/runInTerminal
   - todo
 user-invocable: true
 disable-model-invocation: false
@@ -48,8 +49,11 @@ You MUST reference the source as the ADR or core-component ID.
 You MUST treat ADRs and core-components as global artifacts not scoped to any issue.
 You MUST follow the ADR template structure exactly when creating new ADRs.
 You MUST follow the core-component template structure exactly when creating new core-components.
-You MUST assign sequential ADR numbers using the pattern ADR-####-slug.md.
-You MUST assign sequential core-component numbers using the pattern CORE-COMPONENT-####-slug.md.
+You MUST name ADRs using ADR-yymmdd-short-slug.md with the UTC creation date.
+You MUST name core-components using CORE-COMPONENT-yymmdd-short-slug.md with the UTC creation date.
+You MUST use each full date-and-slug basename as the artifact ID.
+You MUST use distinct descriptive slugs for multiple artifacts created on the same date.
+You MUST fail instead of overwriting an existing architecture artifact path.
 You MUST create a Plan of Attack at project/issues/<ISSUE_NUMBER>/plan/01-action-plan.md for each issue where <ISSUE_NUMBER> is the GitHub issue number.
 You MUST produce the task breakdown at project/issues/<ISSUE_NUMBER>/plan/02-task-breakdown.md.
 You MUST produce the test plan at project/issues/<ISSUE_NUMBER>/plan/03-test-plan.md.
@@ -68,18 +72,20 @@ You MAY split large tasks into smaller subtasks for clarity.
 DECISION_LOG_PATH: "project/architecture/ADR/DECISION-LOG.md"
 ADR_DIR: "project/architecture/ADR"
 CORE_COMPONENT_DIR: "project/architecture/core-components"
-ADR_PATTERN: "ADR-####-slug.md"
-CORE_COMPONENT_PATTERN: "CORE-COMPONENT-####-slug.md"
+ADR_TEMPLATE_PATH: "project/architecture/ADR/ADR-260101-template.md"
+ADR_PATTERN: "ADR-yymmdd-short-slug.md"
+CORE_COMPONENT_PATTERN: "CORE-COMPONENT-yymmdd-short-slug.md"
+ARTIFACT_DATE_COMMAND: "date -u +%y%m%d"
 TASK_BREAKDOWN_PATH: "project/issues/<ISSUE_NUMBER>/plan/02-task-breakdown.md"
 TEST_PLAN_PATH: "project/issues/<ISSUE_NUMBER>/plan/03-test-plan.md"
 HARNESS_PATH: "./harness"
 FRICTION_QUESTION: "What did the agent have to infer that the harness should have proved?"
 ADR_TEMPLATE: TEXT<<
-# ADR-####: [Short Title of Decision]
+# ADR-yymmdd-short-slug: [Short Title of Decision]
 
 ## Status
 
-[Proposed | Accepted | Deprecated | Superseded by ADR-####]
+[Proposed | Accepted | Deprecated | Superseded by ADR-yymmdd-short-slug]
 
 ## Context
 
@@ -119,7 +125,7 @@ What becomes easier or harder as a result of this decision?
 - [Link to relevant documentation or discussion]
 >>
 CORE_COMPONENT_TEMPLATE: TEXT<<
-# CORE-COMPONENT-####: [Short Title]
+# CORE-COMPONENT-yymmdd-short-slug: [Short Title]
 
 ## Status
 
@@ -176,7 +182,7 @@ How is compliance with this component verified?
 
 ## Related ADRs
 
-- [ADR-####-slug](../ADR/ADR-####-slug.md)
+- [ADR-yymmdd-short-slug](../ADR/ADR-yymmdd-short-slug.md)
 >>
 DECISION_LOG_SKELETON: TEXT<<
 # Decision Log
@@ -187,13 +193,13 @@ This file is the single registry of all architectural decisions and core-compone
 
 | ID | Title | Status | Date |
 |----|-------|--------|------|
-| _No ADRs yet. Copy `ADR-0001-template.md` in this directory and rename it._ | | | |
+| _No ADRs yet. Copy `ADR-260101-template.md` and name it `ADR-yymmdd-short-slug.md`._ | | | |
 
 ## Core-Components
 
 | ID | Title | Status | Date |
 |----|-------|--------|------|
-| _No core-components yet. Copy `CORE-COMPONENT-0001-template.md` and rename it._ | | | |
+| _No core-components yet. Copy `CORE-COMPONENT-260101-template.md` and name it `CORE-COMPONENT-yymmdd-short-slug.md`._ | | | |
 
 ## Decisions
 
@@ -227,11 +233,11 @@ Writing style:
   - Must be verifiable: could a reviewer check this in a PR? If not, rewrite.
 
 Good examples:
-  - "Use Next.js App Router for all page routing" (ADR-0002)
-  - "Adopt PostgreSQL as the primary data store" (ADR-0002)
-  - "Require all API handlers to validate input with Zod schemas" (CORE-COMPONENT-0003)
-  - "Enforce Conventional Commits on every commit message" (CORE-COMPONENT-0002)
-  - "Prohibit direct database access outside the repository layer" (ADR-0005)
+  - "Use Next.js App Router for all page routing" (ADR-260101-nextjs-routing)
+  - "Adopt PostgreSQL as the primary data store" (ADR-260101-postgresql-data-store)
+  - "Require all API handlers to validate input with Zod schemas" (CORE-COMPONENT-260101-api-input-validation)
+  - "Enforce Conventional Commits on every commit message" (CORE-COMPONENT-260505-commit-standards)
+  - "Prohibit direct database access outside the repository layer" (ADR-260101-repository-layer)
 
 Bad examples (do NOT write these):
   - "We decided on a tech stack" — too vague, not actionable.
@@ -363,8 +369,7 @@ WHERE:
 <runtime>
 CURRENT_ISSUE_NUMBER: ""
 RESEARCH_BRIEF: ""
-NEXT_ADR_NUMBER: 0
-NEXT_CORE_COMPONENT_NUMBER: 0
+ARTIFACT_DATE: ""
 CREATED_ADRS: []
 CREATED_CORE_COMPONENTS: []
 CREATED_DECISIONS: []
@@ -423,22 +428,36 @@ RECOVER (err):
   SET DECISION_LOG := DECISION_LOG_SKELETON (from "Constant Lookup")
 USE `search/fileSearch` where: pattern="project/architecture/ADR/ADR-*.md"
 CAPTURE EXISTING_ADRS from `search/fileSearch`
-SET NEXT_ADR_NUMBER := <NUM> (from "Agent Inference" using EXISTING_ADRS)
 USE `search/fileSearch` where: pattern="project/architecture/core-components/CORE-COMPONENT-*.md"
 CAPTURE EXISTING_CORE_COMPONENTS from `search/fileSearch`
-SET NEXT_CORE_COMPONENT_NUMBER := <NUM> (from "Agent Inference" using EXISTING_CORE_COMPONENTS)
+USE `execute/runInTerminal` where: command=ARTIFACT_DATE_COMMAND
+CAPTURE ARTIFACT_DATE from `execute/runInTerminal`
 </process>
 
 <process id="create-architecture-artifacts" name="Create ADRs and core-components from research brief">
-SET ADR_CONTENT := <CONTENT> (from "Agent Inference" using RESEARCH_BRIEF, ADR_TEMPLATE, NEXT_ADR_NUMBER)
+SET ADR_SLUG := <SLUG> (from "Agent Inference" using RESEARCH_BRIEF; produce a lowercase hyphenated decision description)
+SET ADR_ID := <ID> (from "Agent Inference" using ARTIFACT_DATE, ADR_SLUG; format ADR-yymmdd-short-slug)
+SET ADR_CONTENT := <CONTENT> (from "Agent Inference" using RESEARCH_BRIEF, ADR_TEMPLATE, ADR_ID)
 IF ADR_CONTENT is not empty:
-  SET ADR_FILE_PATH := <PATH> (from "Agent Inference" using ADR_DIR, NEXT_ADR_NUMBER, ADR_PATTERN)
+  SET ADR_FILE_PATH := <PATH> (from "Agent Inference" using ADR_DIR, ADR_ID; append .md)
+  USE `search/fileSearch` where: pattern=ADR_FILE_PATH
+  CAPTURE ADR_COLLISION from `search/fileSearch`
+  IF ADR_COLLISION is not empty:
+    RUN `record-friction`
+    RETURN: error="The date-based ADR path already exists; choose a distinct descriptive slug."
   USE `edit/createDirectory` where: dirPath=ADR_DIR
   USE `edit/createFile` where: content=ADR_CONTENT, filePath=ADR_FILE_PATH
   SET CREATED_ADRS := CREATED_ADRS + [ADR_FILE_PATH] (from "Agent Inference")
-SET CORE_COMPONENT_CONTENT := <CONTENT> (from "Agent Inference" using RESEARCH_BRIEF, CORE_COMPONENT_TEMPLATE, NEXT_CORE_COMPONENT_NUMBER)
+SET CORE_COMPONENT_SLUG := <SLUG> (from "Agent Inference" using RESEARCH_BRIEF; produce a lowercase hyphenated cross-cutting description)
+SET CORE_COMPONENT_ID := <ID> (from "Agent Inference" using ARTIFACT_DATE, CORE_COMPONENT_SLUG; format CORE-COMPONENT-yymmdd-short-slug)
+SET CORE_COMPONENT_CONTENT := <CONTENT> (from "Agent Inference" using RESEARCH_BRIEF, CORE_COMPONENT_TEMPLATE, CORE_COMPONENT_ID)
 IF CORE_COMPONENT_CONTENT is not empty:
-  SET CORE_COMPONENT_FILE_PATH := <PATH> (from "Agent Inference" using CORE_COMPONENT_DIR, NEXT_CORE_COMPONENT_NUMBER, CORE_COMPONENT_PATTERN)
+  SET CORE_COMPONENT_FILE_PATH := <PATH> (from "Agent Inference" using CORE_COMPONENT_DIR, CORE_COMPONENT_ID; append .md)
+  USE `search/fileSearch` where: pattern=CORE_COMPONENT_FILE_PATH
+  CAPTURE CORE_COMPONENT_COLLISION from `search/fileSearch`
+  IF CORE_COMPONENT_COLLISION is not empty:
+    RUN `record-friction`
+    RETURN: error="The date-based core-component path already exists; choose a distinct descriptive slug."
   USE `edit/createDirectory` where: dirPath=CORE_COMPONENT_DIR
   USE `edit/createFile` where: content=CORE_COMPONENT_CONTENT, filePath=CORE_COMPONENT_FILE_PATH
   SET CREATED_CORE_COMPONENTS := CREATED_CORE_COMPONENTS + [CORE_COMPONENT_FILE_PATH] (from "Agent Inference")

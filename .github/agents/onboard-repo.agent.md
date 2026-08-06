@@ -33,8 +33,11 @@ You MUST scan the source tree to identify cross-cutting concerns already present
 You MUST infer architectural decisions already embedded in the code and document them as ADRs.
 You MUST use the embedded ADR template in the ADR_TEMPLATE constant when creating any ADR.
 You MUST use the embedded core-component template in the CORE_COMPONENT_TEMPLATE constant when creating any core-component.
-You MUST create ADRs starting from ADR-0002 using the pattern ADR-####-slug.md.
-You MUST create core-component files starting from CORE-COMPONENT-0002 using the pattern CORE-COMPONENT-####-slug.md.
+You MUST name ADRs using ADR-yymmdd-short-slug.md with the UTC creation date.
+You MUST name core-components using CORE-COMPONENT-yymmdd-short-slug.md with the UTC creation date.
+You MUST use each full date-and-slug basename as the artifact ID.
+You MUST use distinct descriptive slugs for multiple artifacts created on the same date.
+You MUST fail instead of overwriting an existing architecture artifact path.
 You MUST update project/architecture/ADR/DECISION-LOG.md with every ADR and core-component created.
 You MUST record at least one decision record per ADR or core-component in the Decisions section of DECISION-LOG.md.
 You MUST create a GitHub issue titled "Repository Understanding" as the first issue using `gh issue create`.
@@ -54,18 +57,21 @@ You MAY consult external documentation to clarify inferred tech stack choices.
 DECISION_LOG_PATH: "project/architecture/ADR/DECISION-LOG.md"
 ADR_DIR: "project/architecture/ADR"
 CORE_COMPONENT_DIR: "project/architecture/core-components"
+ADR_TEMPLATE_PATH: "project/architecture/ADR/ADR-260101-template.md"
+ADR_PATTERN: "ADR-yymmdd-short-slug.md"
+CORE_COMPONENT_PATTERN: "CORE-COMPONENT-yymmdd-short-slug.md"
+ARTIFACT_DATE_COMMAND: "date -u +%y%m%d"
 AGENTS_MD_PATH: "AGENTS.md"
 README_PATH: "README.md"
 LLM_TXT_PATH: "LLM.txt"
 FIRST_ISSUE_TITLE: "Repository Understanding"
 FIRST_ISSUE_RESEARCH_DIR: "project/issues"
-ONBOARD_MARKER: "ADR-0002"
 ADR_TEMPLATE: TEXT<<
-# ADR-####: [Short Title of Decision]
+# ADR-yymmdd-short-slug: [Short Title of Decision]
 
 ## Status
 
-[Proposed | Accepted | Deprecated | Superseded by ADR-####]
+[Proposed | Accepted | Deprecated | Superseded by ADR-yymmdd-short-slug]
 
 ## Context
 
@@ -105,7 +111,7 @@ What becomes easier or harder as a result of this decision?
 - [Link to relevant documentation or discussion]
 >>
 CORE_COMPONENT_TEMPLATE: TEXT<<
-# CORE-COMPONENT-####: [Short Title]
+# CORE-COMPONENT-yymmdd-short-slug: [Short Title]
 
 ## Status
 
@@ -162,7 +168,7 @@ How is compliance with this component verified?
 
 ## Related ADRs
 
-- [ADR-####-slug](../ADR/ADR-####-slug.md)
+- [ADR-yymmdd-short-slug](../ADR/ADR-yymmdd-short-slug.md)
 >>
 DECISION_LOG_SKELETON: TEXT<<
 # Decision Log
@@ -173,13 +179,13 @@ This file is the single registry of all architectural decisions and core-compone
 
 | ID | Title | Status | Date |
 |----|-------|--------|------|
-| _No ADRs yet. Copy `ADR-0001-template.md` in this directory and rename it._ | | | |
+| _No ADRs yet. Copy `ADR-260101-template.md` and name it `ADR-yymmdd-short-slug.md`._ | | | |
 
 ## Core-Components
 
 | ID | Title | Status | Date |
 |----|-------|--------|------|
-| _No core-components yet. Copy `CORE-COMPONENT-0001-template.md` and rename it._ | | | |
+| _No core-components yet. Copy `CORE-COMPONENT-260101-template.md` and name it `CORE-COMPONENT-yymmdd-short-slug.md`._ | | | |
 
 ## Decisions
 
@@ -352,8 +358,7 @@ ONBOARD_EVIDENCE: ""
 INFO_CONFIRMED: false
 DISCOVERED_ADRS: []
 DISCOVERED_CONCERNS: []
-NEXT_ADR_NUMBER: 2
-NEXT_CC_NUMBER: 2
+ARTIFACT_DATE: ""
 CREATED_ADRS: []
 CREATED_CORE_COMPONENTS: []
 FIRST_ISSUE_NUMBER: ""
@@ -372,8 +377,9 @@ RISKS: ""
 RUN `check-onboarded`
 IF IS_ONBOARDED is true:
   RETURN: format="ONBOARD_BLOCKED", reason="Repository already has the Soft Factory engineering flow", evidence=ONBOARD_EVIDENCE, suggestion="Use the rpiv-research agent to start working on a GitHub issue"
+RUN `resolve-artifact-date`
 RUN `analyse-repository`
-SET ARTIFACT_LIST := <LIST> (from "Agent Inference" using DISCOVERED_ADRS, DISCOVERED_CONCERNS, NEXT_ADR_NUMBER, NEXT_CC_NUMBER)
+SET ARTIFACT_LIST := <LIST> (from "Agent Inference" using DISCOVERED_ADRS, DISCOVERED_CONCERNS, ARTIFACT_DATE, ADR_PATTERN, CORE_COMPONENT_PATTERN)
 SET UPDATE_LIST := <LIST> (from "Agent Inference" using README_PATH, AGENTS_MD_PATH, LLM_TXT_PATH, DECISION_LOG_PATH)
 IF INFO_CONFIRMED is false:
   RETURN: format="ONBOARD_SUMMARY", project_name=PROJECT_NAME, project_description=PROJECT_DESCRIPTION, tech_stack=TECH_STACK, discovered_adrs=DISCOVERED_ADRS, discovered_concerns=DISCOVERED_CONCERNS, artifact_list=ARTIFACT_LIST, update_list=UPDATE_LIST, risks=RISKS
@@ -387,13 +393,19 @@ RETURN: format="ONBOARD_REPORT", project_name=PROJECT_NAME, project_description=
 </process>
 
 <process id="check-onboarded" name="Check if the repository already has the Soft Factory engineering flow">
-USE `search/fileSearch` where: pattern="project/architecture/ADR/ADR-0002-*.md"
-CAPTURE EXISTING_ADRS from `search/fileSearch`
+USE `search/fileSearch` where: pattern="project/architecture/ADR/ADR-*.md"
+CAPTURE ADR_FILES from `search/fileSearch`
+SET EXISTING_ADRS := <FILES> (from "Agent Inference" using ADR_FILES, ADR_TEMPLATE_PATH; exclude the template path)
 IF EXISTING_ADRS is not empty:
   SET IS_ONBOARDED := true (from "Agent Inference")
   SET ONBOARD_EVIDENCE := <EVIDENCE> (from "Agent Inference" using EXISTING_ADRS)
 ELSE:
   SET IS_ONBOARDED := false (from "Agent Inference")
+</process>
+
+<process id="resolve-artifact-date" name="Resolve the UTC architecture artifact date">
+USE `execute/runInTerminal` where: command=ARTIFACT_DATE_COMMAND
+CAPTURE ARTIFACT_DATE from `execute/runInTerminal`
 </process>
 
 <process id="analyse-repository" name="Analyse the existing repository to discover its identity, tech stack, and architecture">
@@ -416,20 +428,30 @@ SET INFO_CONFIRMED := false (from "Agent Inference")
 
 <process id="create-adrs" name="Create ADR files for each discovered architectural decision">
 FOREACH decision IN DISCOVERED_ADRS:
-  SET ADR_CONTENT := <CONTENT> (from "Agent Inference" using ADR_TEMPLATE, decision, PROJECT_NAME, TECH_STACK, NEXT_ADR_NUMBER)
-  SET ADR_FILE := <PATH> (from "Agent Inference" using ADR_DIR, NEXT_ADR_NUMBER, decision)
+  SET ADR_SLUG := <SLUG> (from "Agent Inference" using decision; produce a lowercase hyphenated description)
+  SET ADR_ID := <ID> (from "Agent Inference" using ARTIFACT_DATE, ADR_SLUG; format ADR-yymmdd-short-slug)
+  SET ADR_CONTENT := <CONTENT> (from "Agent Inference" using ADR_TEMPLATE, decision, PROJECT_NAME, TECH_STACK, ADR_ID)
+  SET ADR_FILE := <PATH> (from "Agent Inference" using ADR_DIR, ADR_ID; append .md)
+  USE `search/fileSearch` where: pattern=ADR_FILE
+  CAPTURE ADR_COLLISION from `search/fileSearch`
+  IF ADR_COLLISION is not empty:
+    RETURN: error="The date-based ADR path already exists; choose a distinct descriptive slug."
   USE `edit/createFile` where: content=ADR_CONTENT, filePath=ADR_FILE
   SET CREATED_ADRS := CREATED_ADRS + [ADR_FILE] (from "Agent Inference")
-  SET NEXT_ADR_NUMBER := NEXT_ADR_NUMBER + 1 (from "Agent Inference")
 </process>
 
 <process id="create-core-components" name="Create core-component files for each discovered cross-cutting concern">
 FOREACH concern IN DISCOVERED_CONCERNS:
-  SET CC_CONTENT := <CONTENT> (from "Agent Inference" using CORE_COMPONENT_TEMPLATE, concern, NEXT_CC_NUMBER, CREATED_ADRS)
-  SET CC_FILE := <PATH> (from "Agent Inference" using CORE_COMPONENT_DIR, NEXT_CC_NUMBER, concern)
+  SET CC_SLUG := <SLUG> (from "Agent Inference" using concern; produce a lowercase hyphenated description)
+  SET CC_ID := <ID> (from "Agent Inference" using ARTIFACT_DATE, CC_SLUG; format CORE-COMPONENT-yymmdd-short-slug)
+  SET CC_CONTENT := <CONTENT> (from "Agent Inference" using CORE_COMPONENT_TEMPLATE, concern, CC_ID, CREATED_ADRS)
+  SET CC_FILE := <PATH> (from "Agent Inference" using CORE_COMPONENT_DIR, CC_ID; append .md)
+  USE `search/fileSearch` where: pattern=CC_FILE
+  CAPTURE CC_COLLISION from `search/fileSearch`
+  IF CC_COLLISION is not empty:
+    RETURN: error="The date-based core-component path already exists; choose a distinct descriptive slug."
   USE `edit/createFile` where: content=CC_CONTENT, filePath=CC_FILE
   SET CREATED_CORE_COMPONENTS := CREATED_CORE_COMPONENTS + [CC_FILE] (from "Agent Inference")
-  SET NEXT_CC_NUMBER := NEXT_CC_NUMBER + 1 (from "Agent Inference")
 </process>
 
 <process id="update-decision-log" name="Update DECISION-LOG.md with all new ADRs and core-components">
