@@ -31,6 +31,8 @@ project/issues/42/
 
 Every GitHub issue **must** include structured acceptance criteria for the RPIV pipeline to process it. Use the `@issue-generator` agent to create properly formatted issues.
 
+The Plan stage assigns stable IDs (`AC-1`, `AC-2`, and so on) in issue order. Those IDs remain consistent across the action plan, task breakdown, test plan, implementation notes, verification summary, and pull request.
+
 ### Required format
 
 Acceptance criteria must be formatted as markdown checkboxes wrapped with HTML comment markers:

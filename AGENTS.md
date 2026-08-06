@@ -12,6 +12,11 @@ You MUST NOT edit template files directly — copy them within the same director
 You MUST return to the Plan stage if implementation diverges from an ADR or core-component.
 You MUST inspect existing repo code and documentation before proposing new work.
 You MUST NOT skip any stage in the pipeline.
+You MUST keep raw project operating commands in the root justfile.
+You MUST treat ./harness and .harness/contract.yml as the validation source for Implement and Verify.
+You MUST read harness friction at the beginning of every RPIV stage.
+You MUST record harness friction at the end of every RPIV stage.
+You MUST enforce this RPIV boundary: RPIV orchestrates, Research investigates, Plan proves coverage, Implement builds and provides evidence, Verify decides acceptance and creates the PR.
 You MUST update the APS version badge in README.md and the APS_BADGE constant when the APS skill is upgraded.
 You MUST mark a PR review comment as resolved via the GitHub API after fixing the issue it raised.
 </instructions>
@@ -22,19 +27,19 @@ PIPELINE_STAGES: YAML<<
 - id: research
   name: Research
   agent: rpiv-research
-  purpose: Explore the problem space, classify scope, produce a research brief
+  purpose: Record constraints, risks, relevant architecture, acceptance criteria, and repository findings
 - id: plan
   name: Plan
   agent: rpiv-planner
-  purpose: Commit architectural decisions via ADRs and core-components, then produce the action plan, task breakdown, and test plan
+  purpose: Commit architectural decisions, assign stable AC IDs, and prove task, validation, and evidence coverage
 - id: implement
   name: Implement
   agent: rpiv-implementer
-  purpose: Execute tasks, write code and tests, verify against the plan
+  purpose: Execute dependency-ordered tasks, maintain tests, validate, record AC evidence, and commit
 - id: verify
   name: Verify
   agent: rpiv-verifier
-  purpose: Run tests, commit, push, and open a pull request for review
+  purpose: Verify the exact implementation commit, decide acceptance, update GitHub, push, and open the PR
 >>
 AGENTS: YAML<<
 onboard-repo:
@@ -80,7 +85,7 @@ onboard-repo:
     - must not scaffold or modify application source code
 bootstrap:
   file: .github/agents/bootstrap.agent.md
-  purpose: Bootstrap a new project from the Soft Factory template by gathering project identity, tech stack, and cross-cutting concerns, then scaffolding the codebase and seeding architectural artifacts.
+  purpose: Bootstrap a new project, create its justfile command interface, and hand off harness creation before RPIV work.
   tools:
     - codebase exploration and editing
     - file creation and editing
@@ -93,6 +98,7 @@ bootstrap:
     - project/architecture/core-components/CORE-COMPONENT-0001-template.md
     - project/architecture/ADR/DECISION-LOG.md
     - .devcontainer/devcontainer.json
+    - justfile
     - README.md
     - AGENTS.md
     - LLM.txt
@@ -105,7 +111,7 @@ bootstrap:
     - AGENTS.md
     - LLM.txt
     - .devcontainer/devcontainer.json
-    - .github/soft-factory/verification.yml
+    - justfile
   templates:
     - project/architecture/ADR/ADR-0001-template.md
     - project/architecture/core-components/CORE-COMPONENT-0001-template.md
@@ -120,13 +126,16 @@ bootstrap:
     - must create a development standards core-component covering coding conventions, commit standards, and testing practices
     - must update DECISION-LOG.md with all new ADRs and core-components
     - must record decision records in the Decisions section of DECISION-LOG.md for every ADR and core-component created
-    - must configure project verification commands and write .github/soft-factory/verification.yml
-    - must ask user to confirm or customize proposed verification commands
+    - must create a root justfile containing all project operating command bodies
+    - must ensure the development environment provides the just command runner
+    - must ask user to confirm or customize proposed justfile recipes
+    - must not create a standalone verification command config
+    - must hand off harness creation before RPIV work
     - must not set up CI/CD pipelines or infrastructure
     - must not make feature-level decisions
 rpiv:
   file: .github/agents/rpiv.agent.md
-  purpose: Coordinate the full RPIV pipeline for a GitHub issue by dispatching Research, Plan, Implement, and Verify stages in order.
+  purpose: Create the issue feature branch and coordinate Research, Plan, Implement, and Verify with validated handoffs.
   tools:
     - subagent dispatch
     - codebase exploration and reading
@@ -142,13 +151,20 @@ rpiv:
     - project/issues/<ISSUE_NUMBER>/
   templates: []
   guardrails:
+    - must create or confirm the issue feature branch before Research
+    - must verify the harness and contract before Research
     - must execute Research, Plan, Implement, and Verify in strict order
     - must delegate stage work to rpiv-research, rpiv-planner, rpiv-implementer, and rpiv-verifier
     - must validate each stage artifact before proceeding
+    - must require every stage to read friction before work and record friction before handoff
+    - Plan to Implement handoff must include acceptance criteria, tasks, test plan, and relevant ADRs
+    - Implement to Verify handoff must include branch, commit SHA, clean-tree proof, implementation evidence, and test results
+    - verification code or test failures return to Implement
+    - verification plan, architecture, scope, or acceptance coverage failures return to Plan
     - must stop with a pipeline error when a stage fails
 rpiv-research:
   file: .github/agents/rpiv-research.agent.md
-  purpose: Explore the problem space, classify scope, and produce a research brief that hands off cleanly to the Plan stage.
+  purpose: Investigate the issue and record constraints, risks, relevant architecture, acceptance criteria, and repository findings.
   tools:
     - web search and documentation lookup
     - codebase exploration (grep, glob, file reading)
@@ -169,10 +185,10 @@ rpiv-research:
     - classify scope_type as exactly one of issue, architecture_decision, core_component
     - validate that the issue has structured acceptance criteria; stop if absent
     - extract acceptance criteria from the issue and include them in the research brief
-    - inspect existing repo code and docs before proposing new work
-    - explicitly state if ADRs or core-components are required
-    - propose ADR titles and core-component titles when applicable
-    - never make architectural decisions — only propose them
+    - inspect existing repo code and docs before recording findings
+    - record only constraints, risks, relevant ADRs and core-components, and repository findings
+    - read harness friction before Research and record Research friction before handoff
+    - must not design solutions, create tasks, define tests, or propose architectural artifacts
 rpiv-planner:
   file: .github/agents/rpiv-planner.agent.md
   purpose: Own the Plan stage — read the research brief, commit architectural decisions via ADRs and core-components, then produce the action plan, task breakdown, and test plan.
@@ -205,12 +221,17 @@ rpiv-planner:
     - every ADR or core-component change must update DECISION-LOG.md
     - every ADR or core-component must produce at least one decision record
     - ADRs and core-components are global — not scoped to an issue
+    - assign stable AC-1, AC-2, and subsequent IDs in issue order
+    - map every AC ID to implementation tasks, tests or validation, and expected evidence
+    - include AC IDs in the action plan, task breakdown, and test plan
+    - read harness friction before Plan and record Plan friction before handoff
     - every task must have acceptance criteria
     - every task must have explicit test coverage requirements
+    - every task must identify expected evidence
     - tasks must reference relevant ADRs and core-components
 rpiv-implementer:
   file: .github/agents/rpiv-implementer.agent.md
-  purpose: Execute tasks from the plan, produce code and tests, and verify implementation against the test plan.
+  purpose: Execute dependency-ordered tasks, maintain tests, run configured validation, record AC evidence, and commit.
   tools:
     - code generation and editing
     - build and test execution
@@ -219,20 +240,30 @@ rpiv-implementer:
     - project/issues/<ISSUE_NUMBER>/plan/
     - project/architecture/ADR/
     - project/architecture/core-components/
+    - .harness/contract.yml
+    - harness
     - application source code
   write_paths:
     - application source code
     - test files
+    - project/issues/<ISSUE_NUMBER>/plan/02-task-breakdown.md
     - project/issues/<ISSUE_NUMBER>/implementation/README.md
   templates: []
   guardrails:
     - must implement within architectural boundaries defined by ADRs and core-components
     - deviations from ADRs or core-components require returning to the Plan stage
-    - implementation must satisfy the test plan
-    - must not skip tests defined in the test plan
+    - implement tasks in dependency order and mark them complete
+    - write or update tests required by the plan
+    - treat ./harness and .harness/contract.yml as the validation source
+    - run ./harness verify-focused --json while building and fix failures
+    - run ./harness verify --json before handoff and fix failures
+    - read harness friction before Implement and record Implement friction before handoff
+    - record concrete implementation evidence for every AC ID
+    - commit the implementation and hand off a clean working tree
+    - must not check GitHub acceptance criteria or claim final verification
 rpiv-verifier:
   file: .github/agents/rpiv-verifier.agent.md
-  purpose: Verify completed work — run tests, validate acceptance criteria, create commits following Conventional Commits, push, and open a PR for review.
+  purpose: Verify the exact committed implementation, decide acceptance, update GitHub criteria, push, and open a PR for review.
   tools:
     - terminal execution (git, gh, test runners)
     - file reading and editing
@@ -243,34 +274,63 @@ rpiv-verifier:
     - project/architecture/core-components/
     - AGENTS.md
     - project/issues/<ISSUE_NUMBER>/
-    - .github/soft-factory/verification.yml
+    - .harness/contract.yml
+    - harness
     - .github/PULL_REQUEST_TEMPLATE.md
     - application source code and test files
   write_paths:
-    - project/architecture/ADR/DECISION-LOG.md
-    - AGENTS.md
-    - docs/
-    - project/
     - project/issues/<ISSUE_NUMBER>/verify/summary.md
-    - README.md
   templates:
     - .github/PULL_REQUEST_TEMPLATE.md
   guardrails:
-    - must not proceed if any configured or auto-detected verification step fails
-    - must load verification commands from .github/soft-factory/verification.yml when present
-    - must fall back to auto-detecting applicable verification steps from project files when verification config is absent
-    - must fetch and validate acceptance criteria from the GitHub issue before creating the PR
+    - must verify the exact branch and commit SHA received from Implement
+    - must inspect the full branch diff for issue scope and architecture compliance
+    - must treat ./harness and .harness/contract.yml as the validation source
+    - must rerun ./harness verify --json independently
+    - must read harness friction before Verify and record Verify friction before handoff
+    - must not auto-detect or invent validation commands
+    - must independently mark every AC ID passed or failed with concrete evidence
     - must not proceed to push or PR creation if any acceptance criterion fails validation
-    - must update the GitHub issue body to mark satisfied acceptance criteria as checked after PR creation
+    - must update the GitHub issue body to mark satisfied acceptance criteria as checked
     - must populate the PR description from the PR template with acceptance criteria status
     - must not push directly to main or master
-    - must create feature branches following pattern <type>/<ISSUE_NUMBER>-<short-slug>
-    - must follow Conventional Commits for all commit messages and the PR title
-    - must include Co-authored-by trailer on every commit
+    - must not create the feature branch or implementation commits
+    - must follow Conventional Commits for the PR title
     - must not force-push or use --no-verify
-    - must not modify application source code
+    - must not modify application source code or tests
     - must verify the branch is clean after all commits
     - must write summary.md to project/issues/<ISSUE_NUMBER>/verify/ after PR creation
+harness-cli-it:
+  file: .github/agents/harness-cli-it.agent.md
+  purpose: Create the repo-local engineering harness, migrate legacy validation into its contract, update agents, and remove the legacy config.
+  tools:
+    - codebase exploration and reading
+    - file creation and editing
+    - terminal execution
+  read_paths:
+    - justfile
+    - legacy verification command config when present
+    - AGENTS.md
+    - .github/agents/
+    - project files defining operating commands
+  write_paths:
+    - harness
+    - .harness/contract.yml
+    - .harness/evidence/
+    - .harness/friction.jsonl
+    - .harness/README.md
+    - AGENTS.md
+    - .github/agents/*.agent.md
+  templates: []
+  guardrails:
+    - must wrap existing commands instead of inventing a build system
+    - must import legacy verification commands into focused and full harness validation
+    - must expose ./harness verify-focused and ./harness verify
+    - must make RPIV agents read friction before work and record friction before handoff
+    - must update AGENTS.md and all repo agent definitions to use the harness
+    - must remove legacy verification config references from updated agents
+    - must delete the legacy config only after the harness passes validation
+    - must verify no active legacy config references remain
 issue-generator:
   file: .github/agents/issue-generator.agent.md
   purpose: Analyze codebase history for issue-quality gaps, draft a problem-focused GitHub issue with structured acceptance criteria, dispatch a rubber-duck subagent to critique it, then create the issue via gh. Runs before the RPIV pipeline to produce properly formatted issues without preempting RPIV Research or Plan.
