@@ -21,6 +21,7 @@ You MUST treat ./harness and .harness/contract.yml as the validation source for 
 You MUST read harness friction at the beginning of every RPIV stage.
 You MUST record harness friction at the end of every RPIV stage.
 You MUST enforce this RPIV boundary: RPIV orchestrates, Research investigates, Plan proves coverage, Implement builds and provides evidence, Verify decides acceptance and creates the PR.
+You MUST require Implement to maintain affected application documentation and Verify to inspect it independently.
 You MUST keep issue acceptance criteria bounded, observable, and executable by configured agents with repository and harness capabilities.
 You MUST update the APS version badge in README.md and the APS_BADGE constant when the APS skill is upgraded.
 You MUST mark a PR review comment as resolved via the GitHub API after fixing the issue it raised.
@@ -40,11 +41,11 @@ PIPELINE_STAGES: YAML<<
 - id: implement
   name: Implement
   agent: rpiv-implementer
-  purpose: Execute dependency-ordered tasks, maintain tests, validate, record AC evidence, and commit
+  purpose: Execute dependency-ordered tasks, maintain tests and application documentation, validate, record evidence, and commit
 - id: verify
   name: Verify
   agent: rpiv-verifier
-  purpose: Verify the exact implementation commit, decide acceptance, update GitHub, push, and open the PR
+  purpose: Verify the exact implementation and application documentation, decide acceptance, update GitHub, push, and open the PR
 >>
 AGENTS: YAML<<
 onboard-repo:
@@ -165,8 +166,8 @@ rpiv:
     - must validate each stage artifact before proceeding
     - must require every stage to read friction before work and record friction before handoff
     - Plan to Implement handoff must include acceptance criteria, tasks, test plan, and relevant ADRs
-    - Implement to Verify handoff must include branch, commit SHA, clean-tree proof, implementation evidence, and test results
-    - verification code or test failures return to Implement
+    - Implement to Verify handoff must include branch, commit SHA, clean-tree proof, implementation evidence, documentation evidence, and test results
+    - verification code, test, or application documentation failures return to Implement
     - verification plan, architecture, scope, or acceptance coverage failures return to Plan
     - must stop with a pipeline error when a stage fails
 rpiv-research:
@@ -240,7 +241,7 @@ rpiv-planner:
     - tasks must reference relevant ADRs and core-components
 rpiv-implementer:
   file: .github/agents/rpiv-implementer.agent.md
-  purpose: Execute dependency-ordered tasks, maintain tests, run configured validation, record AC evidence, and commit.
+  purpose: Execute dependency-ordered tasks, maintain tests and application documentation, run configured validation, record evidence, and commit.
   tools:
     - code generation and editing
     - build and test execution
@@ -252,9 +253,13 @@ rpiv-implementer:
     - .harness/contract.yml
     - harness
     - application source code
+    - README.md
+    - docs/
+    - API, configuration, usage, migration, architecture, operational, and deployment documentation
   write_paths:
     - application source code
     - test files
+    - affected application documentation
     - project/issues/<ISSUE_NUMBER>/plan/02-task-breakdown.md
     - project/issues/<ISSUE_NUMBER>/implementation/00-implementation.md
   templates: []
@@ -263,6 +268,10 @@ rpiv-implementer:
     - deviations from ADRs or core-components require returning to the Plan stage
     - implement tasks in dependency order and mark them complete
     - write or update tests required by the plan
+    - write or update all application documentation affected by the implementation
+    - cover README, API, configuration, usage, migration, architecture, operational, and deployment documentation when applicable
+    - record documentation evidence or an explicit no-impact rationale in implementation notes
+    - return to Plan when documentation requires an ADR or core-component contract change
     - treat ./harness and .harness/contract.yml as the validation source
     - run ./harness verify-focused --json while building and fix failures
     - run ./harness verify --json before handoff and fix failures
@@ -272,7 +281,7 @@ rpiv-implementer:
     - must not check GitHub acceptance criteria or claim final verification
 rpiv-verifier:
   file: .github/agents/rpiv-verifier.agent.md
-  purpose: Verify the exact committed implementation, decide acceptance, update GitHub criteria, push, and open a PR for review.
+  purpose: Verify the exact committed implementation and documentation, decide acceptance, update GitHub criteria, push, and open a PR for review.
   tools:
     - terminal execution (git, gh, test runners)
     - file reading and editing
@@ -287,6 +296,9 @@ rpiv-verifier:
     - harness
     - .github/PULL_REQUEST_TEMPLATE.md
     - application source code and test files
+    - README.md
+    - docs/
+    - API, configuration, usage, migration, architecture, operational, and deployment documentation
   write_paths:
     - project/issues/<ISSUE_NUMBER>/verify/summary.md
   templates:
@@ -294,6 +306,8 @@ rpiv-verifier:
   guardrails:
     - must verify the exact branch and commit SHA received from Implement
     - must inspect the full branch diff for issue scope and architecture compliance
+    - must independently inspect every application documentation category affected by the implementation
+    - must fail missing, stale, inaccurate, or inconclusive documentation and return it to Implement
     - must treat ./harness and .harness/contract.yml as the validation source
     - must rerun ./harness verify --json independently
     - must read harness friction before Verify and record Verify friction before handoff
@@ -306,7 +320,7 @@ rpiv-verifier:
     - must not create the feature branch or implementation commits
     - must follow Conventional Commits for the PR title
     - must not force-push or use --no-verify
-    - must not modify application source code or tests
+    - must not modify application source code, tests, or application documentation
     - must verify the branch is clean after all commits
     - must write summary.md to project/issues/<ISSUE_NUMBER>/verify/ after PR creation
 harness-cli-it:

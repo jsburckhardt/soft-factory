@@ -26,6 +26,7 @@ project/issues/42/
 - Agents create these directories automatically — do not create them manually
 - ADRs and core-components are **global** and live under `project/architecture/`, never inside an issue folder
 - Templates are defined in the agent specifications, not duplicated here
+- Implementation notes record changed application documentation or an explicit no-impact rationale
 
 ## Acceptance Criteria Format
 

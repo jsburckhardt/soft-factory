@@ -44,7 +44,7 @@ You MUST require each RPIV stage to read harness friction before phase work.
 You MUST require each RPIV stage to record harness friction before success or failure handoff.
 You MUST provide Plan with the issue criteria and Research findings.
 You MUST provide Implement with acceptance criteria, tasks, test plan, and relevant ADRs.
-You MUST provide Verify with branch, commit SHA, clean-tree proof, implementation evidence, and test results.
+You MUST provide Verify with branch, commit SHA, clean-tree proof, implementation evidence, documentation evidence, and test results.
 You MUST return code or test verification failures to rpiv-implementer.
 You MUST return plan, architecture, scope, or acceptance coverage failures to rpiv-planner.
 You MUST rerun downstream stages after a returned failure is corrected.
@@ -269,8 +269,8 @@ USE `execute/runInTerminal` where: command="git rev-parse HEAD"
 CAPTURE HANDOFF_COMMIT from `execute/runInTerminal`
 USE `execute/runInTerminal` where: command="git status --porcelain"
 CAPTURE HANDOFF_STATUS from `execute/runInTerminal`
-SET IMPLEMENT_HANDOFF := <HANDOFF> (from "Agent Inference" using HANDOFF_BRANCH, HANDOFF_COMMIT, HANDOFF_STATUS, IMPLEMENTATION_EVIDENCE, IMPLEMENT_RESULT; include branch, commit SHA, clean-tree proof, AC-* evidence, focused results, and full results)
-SET PIPELINE_STATUS := <STATUS> (from "Agent Inference" using IMPLEMENT_HANDOFF; require expected branch, non-empty commit SHA, clean tree, evidence, and passing configured validation)
+SET IMPLEMENT_HANDOFF := <HANDOFF> (from "Agent Inference" using HANDOFF_BRANCH, HANDOFF_COMMIT, HANDOFF_STATUS, IMPLEMENTATION_EVIDENCE, IMPLEMENT_RESULT; include branch, commit SHA, clean-tree proof, AC-* evidence, documentation evidence or no-impact rationale, focused results, and full results)
+SET PIPELINE_STATUS := <STATUS> (from "Agent Inference" using IMPLEMENT_HANDOFF; require expected branch, non-empty commit SHA, clean tree, AC and documentation evidence, and passing configured validation)
 IF PIPELINE_STATUS != "error":
   SET STAGE_RESULTS := STAGE_RESULTS + ["Implement: complete"] (from "Agent Inference")
 </process>

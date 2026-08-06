@@ -18,8 +18,12 @@ This contract applies to the RPIV coordinator, all four RPIV stage agents, their
 - RPIV MUST create or confirm the issue feature branch before Research starts.
 - Research MUST record constraints, risks, relevant architecture, acceptance criteria, and repository findings only.
 - Plan MUST assign stable `AC-*` IDs and map each criterion to tasks, validation, and expected evidence.
-- Implement MUST execute dependency-ordered tasks, maintain tests, run configured validation, record evidence, and commit.
-- Verify MUST inspect the exact implementation commit, decide acceptance, update GitHub, push, and create the pull request.
+- Implement MUST execute dependency-ordered tasks, maintain tests and affected application documentation, run configured validation, record evidence, and commit.
+- Implement MUST cover applicable README, API, configuration, usage, migration, architecture, operational, and deployment documentation.
+- Implement MUST record documentation evidence or a concrete no-impact rationale.
+- Verify MUST inspect the exact implementation commit and independently verify affected application documentation.
+- Verify MUST return missing, stale, inaccurate, or inconclusive application documentation to Implement.
+- Verify MUST decide acceptance, update GitHub, push, and create the pull request.
 - Implement and Verify MUST use `./harness` and `.harness/contract.yml` for validation.
 - Implement MUST run focused harness validation while building and full harness validation before handoff.
 - Verify MUST rerun full harness validation independently.
@@ -31,11 +35,12 @@ This contract applies to the RPIV coordinator, all four RPIV stage agents, their
 ### Interfaces
 - Plan hands Implement the acceptance catalog, tasks, test plan, ADRs, and core-components.
 - Implement writes task completion, validation results, and `AC-*` evidence to `project/issues/<ISSUE_NUMBER>/implementation/00-implementation.md`.
-- Implement hands Verify the branch, commit SHA, clean-tree proof, `AC-*` evidence, and validation results.
+- Implement hands Verify the branch, commit SHA, clean-tree proof, `AC-*` evidence, documentation evidence, and validation results.
 - Every action plan, task breakdown, test plan, implementation note, verification summary, and pull request carries stable `AC-*` IDs.
 
 ### Expectations
 - Stage agents do not perform responsibilities owned by another stage.
+- Verify does not author application documentation or repair documentation defects.
 - Stage agents use prior friction to avoid repeating unsupported inference.
 - Stage agents record missing harness proof for the next phase and future runs.
 - Failed verification causes correction and downstream re-execution before acceptance.
@@ -43,12 +48,13 @@ This contract applies to the RPIV coordinator, all four RPIV stage agents, their
 
 ## Rationale
 
-Explicit ownership prevents premature acceptance claims, duplicated validation logic, uncommitted handoffs, and gaps between issue criteria and delivery evidence.
+Explicit ownership prevents premature acceptance claims, duplicated validation logic, stale documentation, uncommitted handoffs, and gaps between issue criteria and delivery evidence.
 
 ## Usage Examples
 
 ```text
 AC-1 -> Task T-1 -> Test V-1 -> Expected evidence -> Implementation evidence -> Verify decision
+Behavior change -> Documentation requirement -> Committed documentation -> Verify documentation decision
 ```
 
 ## Integration Guidelines
@@ -58,6 +64,7 @@ AC-1 -> Task T-1 -> Test V-1 -> Expected evidence -> Implementation evidence -> 
 - Keep executable project command bodies in the root `justfile` behind the harness.
 - Preserve acceptance criterion order when assigning stable IDs.
 - Include the Implement handoff commit SHA in verification records.
+- Include documentation changes or a no-impact rationale in implementation and verification records.
 
 ## Exceptions
 

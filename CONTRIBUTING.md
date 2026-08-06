@@ -38,12 +38,14 @@ Each stage has clear inputs, outputs, and artifact locations. No stage may be sk
 
 - The `rpiv-implementer` workflow executes tasks from the task breakdown
 - Writes tests as specified in the test plan
+- Updates affected README, API, configuration, usage, migration, architecture, operational, and deployment documentation
 - Documents implementation notes in `project/issues/<ISSUE_NUMBER>/implementation/00-implementation.md`
 - Deviations from ADRs or core-components require returning to the Plan stage
 
 ## Stage 4 — Verify
 
 - The `rpiv-verifier` workflow runs the full test suite and confirms all tests pass
+- Independently verifies affected application documentation matches the committed behavior
 - Creates logical, atomic commits following [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/)
 - Pushes to a feature branch (`<type>/<ISSUE_NUMBER>-<short-slug>`)
 - Opens a pull request with `Closes #<ISSUE_NUMBER>` in the body

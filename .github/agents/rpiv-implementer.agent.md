@@ -1,6 +1,6 @@
 ---
 name: rpiv-implementer
-description: "Implement planned tasks in dependency order, maintain tests, run configured focused and full validation, record AC evidence, and commit the implementation."
+description: "Implement planned tasks in dependency order, maintain tests and application documentation, run validation, record evidence, and commit."
 tools:
   - search/codebase
   - search/fileSearch
@@ -36,6 +36,16 @@ You MUST run ./harness verify-focused --json while building each task.
 You MUST fix focused validation failures before marking a task complete.
 You MUST mark completed tasks in the task breakdown.
 You MUST record concrete evidence for every AC-* ID in implementation notes.
+You MUST identify application documentation affected by every completed task.
+You MUST update README content when setup, behavior, or user-facing capabilities change.
+You MUST update API documentation when API contracts or behavior change.
+You MUST update configuration instructions when configuration options or defaults change.
+You MUST update usage examples when supported workflows or interfaces change.
+You MUST add migration notes for breaking, data, API, or configuration changes.
+You MUST update explanatory architecture documentation affected by the implementation.
+You MUST update operational or deployment instructions when runtime procedures change.
+You MUST return to Plan when documentation requires changing an ADR or core-component contract.
+You MUST record changed documentation or an explicit no-impact rationale in implementation notes.
 You MUST run ./harness verify --json before handoff.
 You MUST fix full validation failures before handoff.
 You MUST implement within all ADR and core-component boundaries.
@@ -63,6 +73,16 @@ FRICTION_PATH: ".harness/friction.jsonl"
 ADR_DIR: "project/architecture/ADR"
 CORE_COMPONENT_DIR: "project/architecture/core-components"
 CO_AUTHOR_TRAILER: "Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>"
+DOCUMENTATION_SEARCH_PATTERN: "README.md,docs/**/*.{md,yaml,yml,json},project/architecture/**/*.md,**/*openapi*.{yaml,yml,json},**/*swagger*.{yaml,yml,json},**/*migration*.md,**/*runbook*.md"
+DOCUMENTATION_SCOPE: YAML<<
+- README files
+- API references and API specifications
+- configuration instructions and examples
+- usage guides and examples
+- migration notes and upgrade guides
+- explanatory architecture documentation
+- operational runbooks and deployment instructions
+>>
 </constants>
 
 <formats>
@@ -79,6 +99,9 @@ CO_AUTHOR_TRAILER: "Co-authored-by: Copilot <223556219+Copilot@users.noreply.git
 ## Acceptance Evidence
 <AC_EVIDENCE>
 
+## Documentation Evidence
+<DOCUMENTATION_EVIDENCE>
+
 ## Focused Validation
 <FOCUSED_RESULTS>
 
@@ -94,6 +117,7 @@ WHERE:
 - <CLEAN_TREE> is Boolean.
 - <COMMIT_SHA> is String.
 - <COMPLETED_TASKS> is Markdown.
+- <DOCUMENTATION_EVIDENCE> is Markdown.
 - <FOCUSED_RESULTS> is Markdown.
 - <FULL_RESULTS> is Markdown.
 - <ISSUE_NUMBER> is String.
@@ -126,6 +150,11 @@ RELEVANT_ADRS: []
 RELEVANT_CORE_COMPONENTS: []
 COMPLETED_TASKS: []
 AC_EVIDENCE: []
+DOCUMENTATION_REQUIREMENTS: []
+DOCUMENTATION_FILES: []
+DOCUMENTATION_CONTENT: []
+DOCUMENTATION_CHANGES: []
+DOCUMENTATION_EVIDENCE: []
 FOCUSED_RESULTS: []
 FULL_RESULTS: []
 BRANCH_NAME: ""
@@ -144,12 +173,13 @@ FRICTION_RESULT: ""
 RUN `read-friction`
 RUN `load-context`
 RUN `implement-tasks`
+RUN `update-application-documentation`
 RUN `run-full-validation`
 RUN `write-implementation-notes`
 RUN `record-friction`
 RUN `commit-implementation`
 RUN `prepare-handoff`
-RETURN: format="IMPLEMENT_HANDOFF", ac_evidence=AC_EVIDENCE, branch_name=BRANCH_NAME, clean_tree=CLEAN_TREE, commit_sha=COMMIT_SHA, completed_tasks=COMPLETED_TASKS, focused_results=FOCUSED_RESULTS, full_results=FULL_RESULTS, issue_number=ISSUE_NUMBER
+RETURN: format="IMPLEMENT_HANDOFF", ac_evidence=AC_EVIDENCE, branch_name=BRANCH_NAME, clean_tree=CLEAN_TREE, commit_sha=COMMIT_SHA, completed_tasks=COMPLETED_TASKS, documentation_evidence=DOCUMENTATION_EVIDENCE, focused_results=FOCUSED_RESULTS, full_results=FULL_RESULTS, issue_number=ISSUE_NUMBER
 </process>
 
 <process id="read-friction" name="Read prior harness friction before Implement">
@@ -210,6 +240,31 @@ FOREACH task IN TASKS:
   SET COMPLETED_TASKS := COMPLETED_TASKS + [task.id] (from "Agent Inference")
 </process>
 
+<process id="update-application-documentation" name="Update documentation affected by the implementation">
+SET DOCUMENTATION_REQUIREMENTS := <REQUIREMENTS> (from "Agent Inference" using ACTION_PLAN, TASKS, TEST_PLAN, RELEVANT_ADRS, RELEVANT_CORE_COMPONENTS, DOCUMENTATION_SCOPE; identify only documentation affected by the implemented behavior)
+IF DOCUMENTATION_REQUIREMENTS is empty:
+  SET DOCUMENTATION_EVIDENCE := [{status: "not-required", rationale: <RATIONALE>}] (from "Agent Inference" using TASKS, ACTION_PLAN; provide a concrete no-impact rationale)
+ELSE:
+  USE `search/fileSearch` where: pattern=DOCUMENTATION_SEARCH_PATTERN
+  CAPTURE DOCUMENTATION_FILES from `search/fileSearch`
+  SET RELEVANT_DOCUMENTATION_FILES := <FILES> (from "Agent Inference" using DOCUMENTATION_REQUIREMENTS, DOCUMENTATION_FILES)
+  FOREACH existingDocument IN RELEVANT_DOCUMENTATION_FILES:
+    USE `read/readFile` where: filePath=existingDocument
+    CAPTURE EXISTING_DOCUMENT_CONTENT from `read/readFile`
+    SET DOCUMENTATION_CONTENT := DOCUMENTATION_CONTENT + [{path: existingDocument, content: EXISTING_DOCUMENT_CONTENT}] (from "Agent Inference")
+  SET DOCUMENTATION_UPDATES := <UPDATES> (from "Agent Inference" using DOCUMENTATION_REQUIREMENTS, DOCUMENTATION_CONTENT, TASKS, COMPLETED_TASKS; provide path and content for every required document)
+  FOREACH document IN DOCUMENTATION_UPDATES:
+    SET DOCUMENT_DIRECTORY := <DIR> (from "Agent Inference" using document.path)
+    USE `edit/createDirectory` where: dirPath=DOCUMENT_DIRECTORY
+    TRY:
+      USE `read/readFile` where: filePath=document.path
+      USE `edit/editFiles` where: content=document.content, filePath=document.path
+    RECOVER (err):
+      USE `edit/createFile` where: content=document.content, filePath=document.path
+  SET DOCUMENTATION_CHANGES := <FILES> (from "Agent Inference" using DOCUMENTATION_UPDATES)
+  SET DOCUMENTATION_EVIDENCE := <EVIDENCE> (from "Agent Inference" using DOCUMENTATION_REQUIREMENTS, DOCUMENTATION_CHANGES; map each requirement to its updated file and observable content)
+</process>
+
 <process id="run-full-validation" name="Run the complete harness validation suite">
 USE `execute/runInTerminal` where: command="./harness verify --json"
 CAPTURE FULL_OUTPUT from `execute/runInTerminal`
@@ -232,7 +287,7 @@ SET EVIDENCE_COMPLETE := <COMPLETE> (from "Agent Inference" using ACCEPTANCE_CAT
 IF EVIDENCE_COMPLETE is false:
   RUN `record-friction`
   RETURN: format="IMPLEMENT_ERROR", details=AC_EVIDENCE, error_message="Implementation evidence is incomplete", issue_number=ISSUE_NUMBER, return_stage="implement"
-SET NOTES_CONTENT := <CONTENT> (from "Agent Inference" using ISSUE_NUMBER, COMPLETED_TASKS, ACCEPTANCE_CATALOG, AC_EVIDENCE, FOCUSED_RESULTS, FULL_RESULTS; include every AC-* ID and avoid final acceptance claims)
+SET NOTES_CONTENT := <CONTENT> (from "Agent Inference" using ISSUE_NUMBER, COMPLETED_TASKS, ACCEPTANCE_CATALOG, AC_EVIDENCE, DOCUMENTATION_EVIDENCE, FOCUSED_RESULTS, FULL_RESULTS; include every AC-* ID, documentation evidence or no-impact rationale, and avoid final acceptance claims)
 USE `edit/createDirectory` where: dirPath="project/issues/<ISSUE_NUMBER>/implementation"
 TRY:
   USE `read/readFile` where: filePath=IMPLEMENTATION_NOTES_PATH
@@ -254,7 +309,7 @@ CAPTURE IMPLEMENTATION_STATUS from `execute/runInTerminal`
 IF IMPLEMENTATION_STATUS is empty:
   RUN `record-friction`
   RETURN: format="IMPLEMENT_ERROR", details="No implementation changes are available to commit.", error_message="Implementation commit is missing", issue_number=ISSUE_NUMBER, return_stage="implement"
-SET COMMIT_GROUPS := <GROUPS> (from "Agent Inference" using IMPLEMENTATION_STATUS, TASKS, FRICTION_PATH; include issue-related files, the phase friction entry, and logical atomic groups)
+SET COMMIT_GROUPS := <GROUPS> (from "Agent Inference" using IMPLEMENTATION_STATUS, TASKS, DOCUMENTATION_CHANGES, FRICTION_PATH; include application documentation, issue-related files, the phase friction entry, and logical atomic groups)
 FOREACH group IN COMMIT_GROUPS:
   USE `execute/runInTerminal` where: command="git add <group.files>"
   USE `execute/runInTerminal` where: command="git commit -m '<group.message>' -m '' -m '<CO_AUTHOR_TRAILER>'"

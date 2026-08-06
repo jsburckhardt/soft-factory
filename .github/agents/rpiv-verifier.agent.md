@@ -1,6 +1,6 @@
 ---
 name: rpiv-verifier
-description: "Verify the exact implementation handoff, inspect scope and architecture compliance, rerun configured validation, decide every AC, update GitHub, push, and create the pull request."
+description: "Verify the exact implementation, documentation, scope, architecture, validation, and acceptance evidence before shipping."
 tools:
   - search/codebase
   - search/fileSearch
@@ -22,6 +22,11 @@ You MUST read existing harness friction before Verify work.
 You MUST require a clean working tree before verification.
 You MUST inspect the complete branch diff for issue scope compliance.
 You MUST inspect the complete branch diff for ADR and core-component compliance.
+You MUST inspect application documentation affected by the committed implementation.
+You MUST verify required README, API, configuration, usage, migration, architecture, operational, and deployment documentation.
+You MUST verify documentation matches the exact committed behavior and configuration.
+You MUST treat missing, stale, inaccurate, or inconclusive documentation as failed verification.
+You MUST return application documentation defects to Implement.
 You MUST validate implementation commit messages and required Co-authored-by trailers.
 You MUST read .harness/contract.yml before validation.
 You MUST treat ./harness and .harness/contract.yml as the validation source.
@@ -34,6 +39,7 @@ You MUST treat missing or inconclusive evidence as failed.
 You MUST return code or test defects to Implement.
 You MUST return plan, architecture, scope, or acceptance coverage defects to Plan.
 You MUST NOT modify application code or tests.
+You MUST NOT modify application documentation.
 You MUST NOT repair verification failures.
 You MUST NOT create or alter implementation commits.
 You MUST NOT create the feature branch.
@@ -64,6 +70,16 @@ PR_TEMPLATE_PATH: ".github/PULL_REQUEST_TEMPLATE.md"
 AC_START_MARKER: "<!-- ACCEPTANCE_CRITERIA_START -->"
 AC_END_MARKER: "<!-- ACCEPTANCE_CRITERIA_END -->"
 CO_AUTHOR_TRAILER: "Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>"
+DOCUMENTATION_SEARCH_PATTERN: "README.md,docs/**/*.{md,yaml,yml,json},project/architecture/**/*.md,**/*openapi*.{yaml,yml,json},**/*swagger*.{yaml,yml,json},**/*migration*.md,**/*runbook*.md"
+DOCUMENTATION_SCOPE: YAML<<
+- README files
+- API references and API specifications
+- configuration instructions and examples
+- usage guides and examples
+- migration notes and upgrade guides
+- explanatory architecture documentation
+- operational runbooks and deployment instructions
+>>
 </constants>
 
 <formats>
@@ -128,6 +144,11 @@ ACTION_PLAN: ""
 TASK_BREAKDOWN: ""
 TEST_PLAN: ""
 IMPLEMENTATION_NOTES: ""
+DOCUMENTATION_REQUIREMENTS: []
+DOCUMENTATION_FILES: []
+DOCUMENTATION_CONTENT: []
+DOCUMENTATION_RESULTS: []
+DOCUMENTATION_PASSED: false
 ACCEPTANCE_CATALOG: []
 CHANGED_FILES: []
 FULL_DIFF: ""
@@ -160,6 +181,10 @@ RUN `inspect-full-diff`
 IF FAILURE_OWNER is not empty:
   RUN `record-friction`
   RETURN: format="VERIFY_ERROR", ac_results=AC_RESULTS, details=FULL_DIFF, error_message="Diff or commit contract verification failed", issue_number=ISSUE_NUMBER, return_stage=FAILURE_OWNER, validation_results=VALIDATION_RESULTS
+RUN `verify-application-documentation`
+IF DOCUMENTATION_PASSED is false:
+  RUN `record-friction`
+  RETURN: format="VERIFY_ERROR", ac_results=AC_RESULTS, details=DOCUMENTATION_RESULTS, error_message="Application documentation verification failed", issue_number=ISSUE_NUMBER, return_stage="implement", validation_results=VALIDATION_RESULTS
 RUN `run-configured-validation`
 IF VALIDATION_PASSED is false:
   RUN `record-friction`
@@ -240,6 +265,22 @@ IF COMMIT_STANDARDS_PASSED is false:
   SET FAILURE_OWNER := "implement" (from "Agent Inference")
 </process>
 
+<process id="verify-application-documentation" name="Verify committed application documentation">
+SET DOCUMENTATION_REQUIREMENTS := <REQUIREMENTS> (from "Agent Inference" using ACTION_PLAN, TASK_BREAKDOWN, TEST_PLAN, CHANGED_FILES, FULL_DIFF, DOCUMENTATION_SCOPE; identify documentation required by the committed behavior)
+USE `search/fileSearch` where: pattern=DOCUMENTATION_SEARCH_PATTERN
+CAPTURE DOCUMENTATION_FILES from `search/fileSearch`
+SET RELEVANT_DOCUMENTATION_FILES := <FILES> (from "Agent Inference" using DOCUMENTATION_REQUIREMENTS, DOCUMENTATION_FILES, CHANGED_FILES)
+FOREACH document IN RELEVANT_DOCUMENTATION_FILES:
+  USE `read/readFile` where: filePath=document
+  CAPTURE DOCUMENT_CONTENT from `read/readFile`
+  SET DOCUMENTATION_CONTENT := DOCUMENTATION_CONTENT + [{path: document, content: DOCUMENT_CONTENT}] (from "Agent Inference")
+SET DOCUMENTATION_RESULTS := <RESULTS> (from "Agent Inference" using DOCUMENTATION_REQUIREMENTS, DOCUMENTATION_CONTENT, IMPLEMENTATION_NOTES, FULL_DIFF; require accurate coverage for every applicable documentation category or a concrete no-impact rationale)
+SET DOCUMENTATION_PASSED := <PASSED> (from "Agent Inference" using DOCUMENTATION_REQUIREMENTS, DOCUMENTATION_RESULTS; fail for missing, stale, inaccurate, or inconclusive documentation)
+SET VALIDATION_RESULTS := VALIDATION_RESULTS + [{id: "documentation-review", passed: DOCUMENTATION_PASSED, evidence: DOCUMENTATION_RESULTS}] (from "Agent Inference")
+IF DOCUMENTATION_PASSED is false:
+  SET FAILURE_OWNER := "implement" (from "Agent Inference")
+</process>
+
 <process id="run-configured-validation" name="Rerun full harness validation">
 USE `execute/runInTerminal` where: command="./harness verify --json"
 CAPTURE COMMAND_OUTPUT from `execute/runInTerminal`
@@ -250,7 +291,7 @@ SET VALIDATION_RESULTS := VALIDATION_RESULTS + [{id: "harness-verify", command: 
 <process id="decide-acceptance" name="Independently decide every stable acceptance criterion">
 SET AC_ALL_PASSED := true (from "Agent Inference")
 FOREACH criterion IN ACCEPTANCE_CATALOG:
-  SET DECISION := <DECISION> (from "Agent Inference" using criterion, FULL_DIFF, CHANGED_FILES, TEST_PLAN, IMPLEMENTATION_NOTES, VALIDATION_RESULTS; status must be passed or failed and evidence must be concrete)
+  SET DECISION := <DECISION> (from "Agent Inference" using criterion, FULL_DIFF, CHANGED_FILES, TEST_PLAN, IMPLEMENTATION_NOTES, DOCUMENTATION_RESULTS, VALIDATION_RESULTS; status must be passed or failed and evidence must be concrete)
   SET AC_RESULTS := AC_RESULTS + [{id: criterion.id, text: criterion.text, status: DECISION.status, evidence: DECISION.evidence}] (from "Agent Inference")
   IF DECISION.status = "failed":
     SET AC_ALL_PASSED := false (from "Agent Inference")
@@ -275,7 +316,7 @@ CAPTURE PUSH_RESULT from `execute/runInTerminal`
 USE `read/readFile` where: filePath=PR_TEMPLATE_PATH
 CAPTURE PR_TEMPLATE from `read/readFile`
 SET PR_TITLE := <TITLE> (from "Agent Inference" using ISSUE_NUMBER, ISSUE_TITLE; follow Conventional Commits)
-SET PR_BODY := <BODY> (from "Agent Inference" using PR_TEMPLATE, ISSUE_NUMBER, HANDOFF_COMMIT, AC_RESULTS, VALIDATION_RESULTS, ACTION_PLAN; include every AC-* ID, passed status, evidence, and Closes #<ISSUE_NUMBER>)
+SET PR_BODY := <BODY> (from "Agent Inference" using PR_TEMPLATE, ISSUE_NUMBER, HANDOFF_COMMIT, AC_RESULTS, DOCUMENTATION_RESULTS, VALIDATION_RESULTS, ACTION_PLAN; include every AC-* ID, documentation review, passed status, evidence, and Closes #<ISSUE_NUMBER>)
 USE `edit/createFile` where: content=PR_BODY, filePath="/tmp/rpiv-pr-body.md"
 USE `execute/runInTerminal` where: command="gh pr create --title '<PR_TITLE>' --body-file /tmp/rpiv-pr-body.md"
 CAPTURE PR_RESULT from `execute/runInTerminal`
@@ -296,7 +337,7 @@ CAPTURE FRICTION_RESULT from `execute/runInTerminal`
 </process>
 
 <process id="write-verification-summary" name="Write and publish verification metadata only">
-SET SUMMARY_CONTENT := <CONTENT> (from "Agent Inference" using ISSUE_NUMBER, ISSUE_TITLE, BRANCH_NAME, HANDOFF_COMMIT, PR_URL, AC_RESULTS, VALIDATION_RESULTS, FULL_DIFF; include every AC-* ID and omit secrets, raw output, and absolute paths)
+SET SUMMARY_CONTENT := <CONTENT> (from "Agent Inference" using ISSUE_NUMBER, ISSUE_TITLE, BRANCH_NAME, HANDOFF_COMMIT, PR_URL, AC_RESULTS, DOCUMENTATION_RESULTS, VALIDATION_RESULTS, FULL_DIFF; include every AC-* ID, documentation results, and omit secrets, raw output, and absolute paths)
 USE `edit/createDirectory` where: dirPath="project/issues/<ISSUE_NUMBER>/verify"
 USE `edit/createFile` where: content=SUMMARY_CONTENT, filePath=VERIFY_SUMMARY_PATH
 USE `execute/runInTerminal` where: command="git add <VERIFY_SUMMARY_PATH> <FRICTION_PATH>"
