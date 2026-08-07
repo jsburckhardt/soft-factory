@@ -6,8 +6,12 @@ You MUST classify scope_type as exactly one of: issue, architecture_decision, co
 You MUST NOT create an architectural decision outside of an ADR document.
 You MUST NOT create reusable cross-cutting behavior outside of a core-component document.
 You MUST update project/architecture/ADR/DECISION-LOG.md for every ADR or core-component change.
-You MUST treat ADRs as global artifacts stored in project/architecture/ADR/ — never inside an issue documentation folder.
-You MUST treat core-components as global artifacts stored in project/architecture/core-components/ — never inside an issue documentation folder.
+You MUST store RPIV artifacts under project/work-items/<ISSUE_NUMBER>-<SHORT_DESCRIPTION>/.
+You MUST derive SHORT_DESCRIPTION as lowercase ASCII kebab-case from the GitHub Issue title when Research first creates a work item.
+You MUST preserve an existing work-item directory name after creation, including when the GitHub Issue title changes.
+You MUST require exactly one work-item directory for each issue-number prefix.
+You MUST treat ADRs as global artifacts stored in project/architecture/ADR/ — never inside a work-item documentation folder.
+You MUST treat core-components as global artifacts stored in project/architecture/core-components/ — never inside a work-item documentation folder.
 You MUST NOT edit template files directly — copy them within the same directory and rename.
 You MUST name ADRs as ADR-yymmdd-short-slug.md using their UTC creation date.
 You MUST name core-components as CORE-COMPONENT-yymmdd-short-slug.md using their UTC creation date.
@@ -71,7 +75,7 @@ onboard-repo:
     - project/architecture/ADR/ADR-yymmdd-short-slug.md
     - project/architecture/core-components/CORE-COMPONENT-yymmdd-short-slug.md
     - project/architecture/ADR/DECISION-LOG.md
-    - project/issues/<ISSUE_NUMBER>/research/00-research.md
+    - project/work-items/<ISSUE_NUMBER>-<SHORT_DESCRIPTION>/research/00-research.md
     - README.md
     - AGENTS.md
     - LLM.txt
@@ -155,9 +159,9 @@ rpiv:
     - project/architecture/ADR/DECISION-LOG.md
     - docs/
     - project/
-    - project/issues/<ISSUE_NUMBER>/
+    - project/work-items/<ISSUE_NUMBER>-<SHORT_DESCRIPTION>/
   write_paths:
-    - project/issues/<ISSUE_NUMBER>/
+    - project/work-items/<ISSUE_NUMBER>-<SHORT_DESCRIPTION>/
   templates: []
   guardrails:
     - must create or confirm the issue feature branch before Research
@@ -167,8 +171,8 @@ rpiv:
     - must delegate stage work to rpiv-research, rpiv-planner, rpiv-implementer, and rpiv-verifier
     - must validate each stage artifact before proceeding
     - must require every stage to read friction before work and record friction before handoff
-    - Plan to Implement handoff must include acceptance criteria, tasks, test plan, and relevant ADRs
-    - Implement to Verify handoff must include branch, commit SHA, clean-tree proof, implementation evidence, documentation evidence, and test results
+    - Plan to Implement handoff must include the exact work-item path, acceptance criteria, tasks, test plan, and relevant ADRs
+    - Implement to Verify handoff must include the exact work-item path, branch, commit SHA, clean-tree proof, implementation evidence, documentation evidence, and test results
     - verification code, test, or application documentation failures return to Implement
     - verification plan, architecture, scope, or acceptance coverage failures return to Plan
     - must stop with a pipeline error when a stage fails
@@ -188,7 +192,7 @@ rpiv-research:
     - project/architecture/ADR/DECISION-LOG.md
     - application source code
   write_paths:
-    - project/issues/<ISSUE_NUMBER>/research/00-research.md
+    - project/work-items/<ISSUE_NUMBER>-<SHORT_DESCRIPTION>/research/00-research.md
   templates:
     - Research Brief (Section 5.1)
   guardrails:
@@ -206,7 +210,7 @@ rpiv-planner:
     - codebase exploration (grep, glob, file reading)
     - file creation and editing
   read_paths:
-    - project/issues/<ISSUE_NUMBER>/research/00-research.md
+    - project/work-items/<ISSUE_NUMBER>-<SHORT_DESCRIPTION>/research/00-research.md
     - project/architecture/ADR/ADR-260101-template.md
     - project/architecture/core-components/CORE-COMPONENT-260101-template.md
     - project/architecture/ADR/DECISION-LOG.md
@@ -217,9 +221,9 @@ rpiv-planner:
     - project/architecture/ADR/ADR-yymmdd-short-slug.md
     - project/architecture/core-components/CORE-COMPONENT-yymmdd-short-slug.md
     - project/architecture/ADR/DECISION-LOG.md
-    - project/issues/<ISSUE_NUMBER>/plan/01-action-plan.md
-    - project/issues/<ISSUE_NUMBER>/plan/02-task-breakdown.md
-    - project/issues/<ISSUE_NUMBER>/plan/03-test-plan.md
+    - project/work-items/<ISSUE_NUMBER>-<SHORT_DESCRIPTION>/plan/01-action-plan.md
+    - project/work-items/<ISSUE_NUMBER>-<SHORT_DESCRIPTION>/plan/02-task-breakdown.md
+    - project/work-items/<ISSUE_NUMBER>-<SHORT_DESCRIPTION>/plan/03-test-plan.md
   templates:
     - project/architecture/ADR/ADR-260101-template.md
     - project/architecture/core-components/CORE-COMPONENT-260101-template.md
@@ -249,7 +253,7 @@ rpiv-implementer:
     - build and test execution
     - file creation
   read_paths:
-    - project/issues/<ISSUE_NUMBER>/plan/
+    - project/work-items/<ISSUE_NUMBER>-<SHORT_DESCRIPTION>/plan/
     - project/architecture/ADR/
     - project/architecture/core-components/
     - .harness/contract.yml
@@ -262,8 +266,8 @@ rpiv-implementer:
     - application source code
     - test files
     - affected application documentation
-    - project/issues/<ISSUE_NUMBER>/plan/02-task-breakdown.md
-    - project/issues/<ISSUE_NUMBER>/implementation/00-implementation.md
+    - project/work-items/<ISSUE_NUMBER>-<SHORT_DESCRIPTION>/plan/02-task-breakdown.md
+    - project/work-items/<ISSUE_NUMBER>-<SHORT_DESCRIPTION>/implementation/00-implementation.md
   templates: []
   guardrails:
     - must implement within architectural boundaries defined by ADRs and core-components
@@ -293,7 +297,7 @@ rpiv-verifier:
     - project/architecture/ADR/
     - project/architecture/core-components/
     - AGENTS.md
-    - project/issues/<ISSUE_NUMBER>/
+    - project/work-items/<ISSUE_NUMBER>-<SHORT_DESCRIPTION>/
     - .harness/contract.yml
     - harness
     - .github/PULL_REQUEST_TEMPLATE.md
@@ -302,7 +306,7 @@ rpiv-verifier:
     - docs/
     - API, configuration, usage, migration, architecture, operational, and deployment documentation
   write_paths:
-    - project/issues/<ISSUE_NUMBER>/verify/summary.md
+    - project/work-items/<ISSUE_NUMBER>-<SHORT_DESCRIPTION>/verify/summary.md
   templates:
     - .github/PULL_REQUEST_TEMPLATE.md
   guardrails:
@@ -324,7 +328,7 @@ rpiv-verifier:
     - must not force-push or use --no-verify
     - must not modify application source code, tests, or application documentation
     - must verify the branch is clean after all commits
-    - must write summary.md to project/issues/<ISSUE_NUMBER>/verify/ after PR creation
+    - must write summary.md to project/work-items/<ISSUE_NUMBER>-<SHORT_DESCRIPTION>/verify/ after PR creation
 harness-cli-it:
   file: .github/agents/harness-cli-it.agent.md
   purpose: Create the repo-local engineering harness, migrate legacy validation into its contract, update agents, and remove the legacy config.
@@ -371,7 +375,7 @@ issue-generator:
     - LLM.txt
     - justfile
     - .harness/contract.yml
-    - project/issues/
+    - project/work-items/
     - application source code
   write_paths:
     - GitHub issues (via gh issue create)
@@ -393,10 +397,10 @@ issue-generator:
 TEMPLATE_PATHS: YAML<<
 adr: project/architecture/ADR/ADR-260101-template.md
 core_component: project/architecture/core-components/CORE-COMPONENT-260101-template.md
-action_plan: project/issues/<ISSUE_NUMBER>/plan/01-action-plan.md
-task_breakdown: project/issues/<ISSUE_NUMBER>/plan/02-task-breakdown.md
-test_plan: project/issues/<ISSUE_NUMBER>/plan/03-test-plan.md
-research_brief: project/issues/<ISSUE_NUMBER>/research/00-research.md
+action_plan: project/work-items/<ISSUE_NUMBER>-<SHORT_DESCRIPTION>/plan/01-action-plan.md
+task_breakdown: project/work-items/<ISSUE_NUMBER>-<SHORT_DESCRIPTION>/plan/02-task-breakdown.md
+test_plan: project/work-items/<ISSUE_NUMBER>-<SHORT_DESCRIPTION>/plan/03-test-plan.md
+research_brief: project/work-items/<ISSUE_NUMBER>-<SHORT_DESCRIPTION>/research/00-research.md
 pull_request: .github/PULL_REQUEST_TEMPLATE.md
 >>
 SCOPE_TYPES: YAML<<
@@ -406,6 +410,7 @@ SCOPE_TYPES: YAML<<
 >>
 NAMING: YAML<<
 issues: "GitHub Issue #<number>"
+work_items: "project/work-items/<issue-number>-<short-description>/"
 adrs: "ADR-yymmdd-short-slug.md"
 core_components: "CORE-COMPONENT-yymmdd-short-slug.md"
 >>
@@ -417,6 +422,8 @@ core_components: "CORE-COMPONENT-yymmdd-short-slug.md"
 <runtime>
 SCOPE_TYPE: ""
 ISSUE_NUMBER: ""
+SHORT_DESCRIPTION: ""
+WORK_ITEM_PATH: ""
 ADRS: []
 CORE_COMPONENTS: []
 DECISIONS: []
@@ -443,23 +450,24 @@ RETURN: SCOPE_TYPE, ISSUE_NUMBER
 <process id="research" name="Research stage">
 SET SCOPE_TYPE := <CLASSIFICATION> (from "Agent Inference" using USER_INPUT)
 SET ISSUE_NUMBER := <ID> (from "Agent Inference")
+SET WORK_ITEM_PATH := <PATH> (from "Agent Inference" using ISSUE_NUMBER, USER_INPUT; resolve one existing project/work-items/<ISSUE_NUMBER>-*/ path or derive SHORT_DESCRIPTION from the GitHub Issue title)
 </process>
 
 <process id="plan" name="Plan stage">
-SET ADRS := <ADR_LIST> (from "Agent Inference" using ISSUE_NUMBER, SCOPE_TYPE)
-SET CORE_COMPONENTS := <CC_LIST> (from "Agent Inference" using ISSUE_NUMBER, SCOPE_TYPE)
+SET ADRS := <ADR_LIST> (from "Agent Inference" using ISSUE_NUMBER, SCOPE_TYPE, WORK_ITEM_PATH)
+SET CORE_COMPONENTS := <CC_LIST> (from "Agent Inference" using ISSUE_NUMBER, SCOPE_TYPE, WORK_ITEM_PATH)
 SET DECISIONS := <DECISION_LIST> (from "Agent Inference" using ADRS, CORE_COMPONENTS)
-SET ACTION_PLAN := <PLAN> (from "Agent Inference" using ISSUE_NUMBER)
-SET TASK_BREAKDOWN := <TASKS> (from "Agent Inference" using ISSUE_NUMBER, ACTION_PLAN)
-SET TEST_PLAN := <TESTS> (from "Agent Inference" using ISSUE_NUMBER, TASK_BREAKDOWN)
+SET ACTION_PLAN := <PLAN> (from "Agent Inference" using ISSUE_NUMBER, WORK_ITEM_PATH)
+SET TASK_BREAKDOWN := <TASKS> (from "Agent Inference" using ISSUE_NUMBER, WORK_ITEM_PATH, ACTION_PLAN)
+SET TEST_PLAN := <TESTS> (from "Agent Inference" using ISSUE_NUMBER, WORK_ITEM_PATH, TASK_BREAKDOWN)
 </process>
 
 <process id="implement" name="Implement stage">
-SET RESULT := <OUTCOME> (from "Agent Inference" using ISSUE_NUMBER, TASK_BREAKDOWN, TEST_PLAN)
+SET RESULT := <OUTCOME> (from "Agent Inference" using ISSUE_NUMBER, WORK_ITEM_PATH, TASK_BREAKDOWN, TEST_PLAN)
 </process>
 
 <process id="verify" name="Verify stage">
-SET VERIFY_RESULT := <OUTCOME> (from "Agent Inference" using ISSUE_NUMBER)
+SET VERIFY_RESULT := <OUTCOME> (from "Agent Inference" using ISSUE_NUMBER, WORK_ITEM_PATH)
 </process>
 </processes>
 

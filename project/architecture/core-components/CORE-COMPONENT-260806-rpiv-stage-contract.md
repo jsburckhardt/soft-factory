@@ -10,12 +10,16 @@ Define durable ownership, evidence, validation, and handoff boundaries across th
 
 ## Scope
 
-This contract applies to the RPIV coordinator, all four RPIV stage agents, their issue artifacts, and pull requests.
+This contract applies to the RPIV coordinator, all four RPIV stage agents, their work-item artifacts, and pull requests.
 
 ## Definition
 
 ### Rules
 - RPIV MUST create or confirm the issue feature branch before Research starts.
+- Research MUST create work-item artifacts under `project/work-items/<ISSUE_NUMBER>-<SHORT_DESCRIPTION>/`.
+- Research MUST derive `<SHORT_DESCRIPTION>` as lowercase ASCII kebab-case from the GitHub Issue title.
+- Later stages MUST resolve the existing work-item directory by issue-number prefix and preserve its original name.
+- Each issue-number prefix MUST identify exactly one work-item directory.
 - Research MUST record constraints, risks, relevant architecture, acceptance criteria, and repository findings only.
 - Plan MUST assign stable `AC-*` IDs and map each criterion to tasks, validation, and expected evidence.
 - Implement MUST execute dependency-ordered tasks, maintain tests and affected application documentation, run configured validation, record evidence, and commit.
@@ -34,7 +38,7 @@ This contract applies to the RPIV coordinator, all four RPIV stage agents, their
 
 ### Interfaces
 - Plan hands Implement the acceptance catalog, tasks, test plan, ADRs, and core-components.
-- Implement writes task completion, validation results, and `AC-*` evidence to `project/issues/<ISSUE_NUMBER>/implementation/00-implementation.md`.
+- Implement writes task completion, validation results, and `AC-*` evidence to `project/work-items/<ISSUE_NUMBER>-<SHORT_DESCRIPTION>/implementation/00-implementation.md`.
 - Implement hands Verify the branch, commit SHA, clean-tree proof, `AC-*` evidence, documentation evidence, and validation results.
 - Every action plan, task breakdown, test plan, implementation note, verification summary, and pull request carries stable `AC-*` IDs.
 
@@ -48,7 +52,7 @@ This contract applies to the RPIV coordinator, all four RPIV stage agents, their
 
 ## Rationale
 
-Explicit ownership prevents premature acceptance claims, duplicated validation logic, stale documentation, uncommitted handoffs, and gaps between issue criteria and delivery evidence.
+Explicit ownership prevents premature acceptance claims, duplicated validation logic, stale documentation, uncommitted handoffs, and gaps between issue criteria and delivery evidence. Human-readable, stable work-item paths make repository artifacts understandable without coupling their location to later issue-title edits.
 
 ## Usage Examples
 
@@ -60,6 +64,7 @@ Behavior change -> Documentation requirement -> Committed documentation -> Verif
 ## Integration Guidelines
 
 - Keep stage prompts and AGENTS.md aligned with this contract.
+- Resolve an existing work-item path before reading or writing stage artifacts.
 - Keep validation behavior in the harness contract.
 - Keep executable project command bodies in the root `justfile` behind the harness.
 - Preserve acceptance criterion order when assigning stable IDs.

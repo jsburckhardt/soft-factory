@@ -41,7 +41,7 @@ You MUST fail instead of overwriting an existing architecture artifact path.
 You MUST update project/architecture/ADR/DECISION-LOG.md with every ADR and core-component created.
 You MUST record at least one decision record per ADR or core-component in the Decisions section of DECISION-LOG.md.
 You MUST create a GitHub issue titled "Repository Understanding" as the first issue using `gh issue create`.
-You MUST capture the issue number from `gh issue create` output and create the research brief at project/issues/<ISSUE_NUMBER>/research/00-research.md.
+You MUST capture the issue number from `gh issue create` output and create the research brief at project/work-items/<ISSUE_NUMBER>-repository-understanding/research/00-research.md.
 You MUST update AGENTS.md to register the onboard-repo agent in the AGENTS constant.
 You MUST update LLM.txt with new file references created during onboarding.
 You MUST update README.md to reflect the project name and description discovered during analysis.
@@ -65,7 +65,8 @@ AGENTS_MD_PATH: "AGENTS.md"
 README_PATH: "README.md"
 LLM_TXT_PATH: "LLM.txt"
 FIRST_ISSUE_TITLE: "Repository Understanding"
-FIRST_ISSUE_RESEARCH_DIR: "project/issues"
+WORK_ITEMS_DIR: "project/work-items"
+FIRST_WORK_ITEM_SLUG: "repository-understanding"
 ADR_TEMPLATE: TEXT<<
 # ADR-yymmdd-short-slug: [Short Title of Decision]
 
@@ -310,7 +311,7 @@ WHERE:
 ## First GitHub Issue
 - **Issue:** #<FIRST_ISSUE_NUMBER>
 - **Title:** Repository Understanding
-- **Research Brief:** project/issues/<FIRST_ISSUE_NUMBER>/research/00-research.md
+- **Research Brief:** project/work-items/<FIRST_ISSUE_NUMBER>-repository-understanding/research/00-research.md
 
 ## Files Updated
 <FILES_UPDATED>
@@ -362,6 +363,7 @@ ARTIFACT_DATE: ""
 CREATED_ADRS: []
 CREATED_CORE_COMPONENTS: []
 FIRST_ISSUE_NUMBER: ""
+FIRST_WORK_ITEM_PATH: ""
 UPDATED_FILES: []
 ARTIFACT_LIST: ""
 UPDATE_LIST: ""
@@ -476,10 +478,13 @@ USE `edit/createFile` where: content=ISSUE_BODY, filePath="/tmp/issue-body.md"
 USE `execute/runInTerminal` where: command="gh issue create --title 'Repository Understanding' --body-file /tmp/issue-body.md"
 CAPTURE ISSUE_OUTPUT from `execute/runInTerminal`
 SET FIRST_ISSUE_NUMBER := <NUMBER> (from "Agent Inference" using ISSUE_OUTPUT)
+SET FIRST_WORK_ITEM_PATH := <PATH> (from "Agent Inference" using WORK_ITEMS_DIR, FIRST_ISSUE_NUMBER, FIRST_WORK_ITEM_SLUG; format project/work-items/<FIRST_ISSUE_NUMBER>-repository-understanding)
 SET BRIEF_CONTENT := <CONTENT> (from "Agent Inference" using FIRST_ISSUE_NUMBER, PROJECT_NAME, PROJECT_DESCRIPTION, TECH_STACK, DISCOVERED_ADRS, DISCOVERED_CONCERNS, CREATED_ADRS, CREATED_CORE_COMPONENTS, RISKS)
-USE `edit/createDirectory` where: dirPath="project/issues/<FIRST_ISSUE_NUMBER>/research"
-USE `edit/createFile` where: content=BRIEF_CONTENT, filePath="project/issues/<FIRST_ISSUE_NUMBER>/research/00-research.md"
-SET UPDATED_FILES := UPDATED_FILES + ["project/issues/<FIRST_ISSUE_NUMBER>/research/00-research.md"] (from "Agent Inference")
+SET FIRST_ISSUE_RESEARCH_DIR := <PATH> (from "Agent Inference" using FIRST_WORK_ITEM_PATH; append /research)
+SET FIRST_ISSUE_RESEARCH_PATH := <PATH> (from "Agent Inference" using FIRST_ISSUE_RESEARCH_DIR; append /00-research.md)
+USE `edit/createDirectory` where: dirPath=FIRST_ISSUE_RESEARCH_DIR
+USE `edit/createFile` where: content=BRIEF_CONTENT, filePath=FIRST_ISSUE_RESEARCH_PATH
+SET UPDATED_FILES := UPDATED_FILES + [FIRST_ISSUE_RESEARCH_PATH] (from "Agent Inference")
 </process>
 
 <process id="update-project-docs" name="Update README.md, AGENTS.md, and LLM.txt with onboarding context">

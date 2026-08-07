@@ -22,6 +22,8 @@ target: vscode
 
 <instructions>
 You MUST read the action plan before implementing.
+You MUST resolve exactly one project/work-items/<ISSUE_NUMBER>-*/plan/01-action-plan.md before loading Plan artifacts.
+You MUST preserve the resolved work-item directory name for implementation artifacts.
 You MUST read existing harness friction before Implement work.
 You MUST read the task breakdown before implementing.
 You MUST read the test plan before implementing.
@@ -62,10 +64,7 @@ You SHOULD make the smallest changes that satisfy the plan.
 </instructions>
 
 <constants>
-ACTION_PLAN_PATH: "project/issues/<ISSUE_NUMBER>/plan/01-action-plan.md"
-TASK_BREAKDOWN_PATH: "project/issues/<ISSUE_NUMBER>/plan/02-task-breakdown.md"
-TEST_PLAN_PATH: "project/issues/<ISSUE_NUMBER>/plan/03-test-plan.md"
-IMPLEMENTATION_NOTES_PATH: "project/issues/<ISSUE_NUMBER>/implementation/00-implementation.md"
+WORK_ITEMS_DIR: "project/work-items"
 HARNESS_PATH: "./harness"
 HARNESS_CONTRACT_PATH: ".harness/contract.yml"
 FRICTION_QUESTION: "What did the agent have to infer that the harness should have proved?"
@@ -141,6 +140,13 @@ WHERE:
 
 <runtime>
 ISSUE_NUMBER: ""
+WORK_ITEM_PATH: ""
+ACTION_PLAN_FILE_COUNT: 0
+ACTION_PLAN_PATH: ""
+TASK_BREAKDOWN_PATH: ""
+TEST_PLAN_PATH: ""
+IMPLEMENTATION_DIR: ""
+IMPLEMENTATION_NOTES_PATH: ""
 ACTION_PLAN: ""
 TASK_BREAKDOWN: ""
 TEST_PLAN: ""
@@ -189,6 +195,17 @@ CAPTURE FRICTION_CONTEXT from `execute/runInTerminal`
 
 <process id="load-context" name="Load plan, architecture, and harness validation contract">
 SET ISSUE_NUMBER := <NUMBER> (from "Agent Inference" using USER_INPUT)
+USE `search/fileSearch` where: pattern="project/work-items/<ISSUE_NUMBER>-*/plan/01-action-plan.md"
+CAPTURE ACTION_PLAN_FILES from `search/fileSearch`
+SET ACTION_PLAN_FILE_COUNT := <COUNT> (from "Agent Inference" using ACTION_PLAN_FILES)
+IF ACTION_PLAN_FILE_COUNT != 1:
+  RETURN: format="IMPLEMENT_ERROR", details=ACTION_PLAN_FILES, error_message="Exactly one work-item action plan must exist", issue_number=ISSUE_NUMBER, return_stage="plan"
+SET WORK_ITEM_PATH := <PATH> (from "Agent Inference" using ACTION_PLAN_FILES; remove /plan/01-action-plan.md)
+SET ACTION_PLAN_PATH := <PATH> (from "Agent Inference" using WORK_ITEM_PATH; append /plan/01-action-plan.md)
+SET TASK_BREAKDOWN_PATH := <PATH> (from "Agent Inference" using WORK_ITEM_PATH; append /plan/02-task-breakdown.md)
+SET TEST_PLAN_PATH := <PATH> (from "Agent Inference" using WORK_ITEM_PATH; append /plan/03-test-plan.md)
+SET IMPLEMENTATION_DIR := <PATH> (from "Agent Inference" using WORK_ITEM_PATH; append /implementation)
+SET IMPLEMENTATION_NOTES_PATH := <PATH> (from "Agent Inference" using IMPLEMENTATION_DIR; append /00-implementation.md)
 USE `read/readFile` where: filePath=ACTION_PLAN_PATH
 CAPTURE ACTION_PLAN from `read/readFile`
 USE `read/readFile` where: filePath=TASK_BREAKDOWN_PATH
@@ -288,7 +305,7 @@ IF EVIDENCE_COMPLETE is false:
   RUN `record-friction`
   RETURN: format="IMPLEMENT_ERROR", details=AC_EVIDENCE, error_message="Implementation evidence is incomplete", issue_number=ISSUE_NUMBER, return_stage="implement"
 SET NOTES_CONTENT := <CONTENT> (from "Agent Inference" using ISSUE_NUMBER, COMPLETED_TASKS, ACCEPTANCE_CATALOG, AC_EVIDENCE, DOCUMENTATION_EVIDENCE, FOCUSED_RESULTS, FULL_RESULTS; include every AC-* ID, documentation evidence or no-impact rationale, and avoid final acceptance claims)
-USE `edit/createDirectory` where: dirPath="project/issues/<ISSUE_NUMBER>/implementation"
+USE `edit/createDirectory` where: dirPath=IMPLEMENTATION_DIR
 TRY:
   USE `read/readFile` where: filePath=IMPLEMENTATION_NOTES_PATH
   USE `edit/editFiles` where: content=NOTES_CONTENT, filePath=IMPLEMENTATION_NOTES_PATH

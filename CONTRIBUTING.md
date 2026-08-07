@@ -13,12 +13,12 @@ Each stage has clear inputs, outputs, and artifact locations. No stage may be sk
 ## How to Start Work on an Issue
 
 1. **Create a GitHub Issue** describing the work to be done.
-2. **Run the `rpiv` pipeline** — the full-pipeline coordinator handles each stage in order, starting from the issue number. Agents create the documentation structure automatically under `project/issues/<ISSUE_NUMBER>/`. Use individual stage workflows as needed: `rpiv-research`, `rpiv-planner`, `rpiv-implementer`, and `rpiv-verifier`.
+2. **Run the `rpiv` pipeline** — the full-pipeline coordinator handles each stage in order, starting from the issue number. Research creates `project/work-items/<ISSUE_NUMBER>-<SHORT_DESCRIPTION>/`, and later stages preserve that path. Use individual stage workflows as needed: `rpiv-research`, `rpiv-planner`, `rpiv-implementer`, and `rpiv-verifier`.
 
 ## Stage 1 — Research
 
 - The `rpiv-research` workflow fetches the GitHub Issue via `gh issue view`
-- Produces `project/issues/<ISSUE_NUMBER>/research/00-research.md`
+- Produces `project/work-items/<ISSUE_NUMBER>-<SHORT_DESCRIPTION>/research/00-research.md`
 - Classifies `scope_type` as one of: `issue`, `architecture_decision`, `core_component`
 - Identifies whether ADRs or core-components are needed
 - References existing ADRs and core-components
@@ -29,9 +29,9 @@ Each stage has clear inputs, outputs, and artifact locations. No stage may be sk
 - Creates ADRs in `project/architecture/ADR/` using the ADR template **when the research brief identifies them as needed**
 - Creates core-components in `project/architecture/core-components/` using the core-component template **when the research brief identifies them as needed**
 - Updates `project/architecture/ADR/DECISION-LOG.md` with every new ADR or core-component
-- Produces `project/issues/<ISSUE_NUMBER>/plan/01-action-plan.md` with the chosen approach
-- Produces `project/issues/<ISSUE_NUMBER>/plan/02-task-breakdown.md` with acceptance criteria for every task
-- Produces `project/issues/<ISSUE_NUMBER>/plan/03-test-plan.md` with full test coverage requirements
+- Produces `project/work-items/<ISSUE_NUMBER>-<SHORT_DESCRIPTION>/plan/01-action-plan.md` with the chosen approach
+- Produces `project/work-items/<ISSUE_NUMBER>-<SHORT_DESCRIPTION>/plan/02-task-breakdown.md` with acceptance criteria for every task
+- Produces `project/work-items/<ISSUE_NUMBER>-<SHORT_DESCRIPTION>/plan/03-test-plan.md` with full test coverage requirements
 - References relevant ADRs and core-components in every task
 
 ## Stage 3 — Implement
@@ -39,7 +39,7 @@ Each stage has clear inputs, outputs, and artifact locations. No stage may be sk
 - The `rpiv-implementer` workflow executes tasks from the task breakdown
 - Writes tests as specified in the test plan
 - Updates affected README, API, configuration, usage, migration, architecture, operational, and deployment documentation
-- Documents implementation notes in `project/issues/<ISSUE_NUMBER>/implementation/00-implementation.md`
+- Documents implementation notes in `project/work-items/<ISSUE_NUMBER>-<SHORT_DESCRIPTION>/implementation/00-implementation.md`
 - Deviations from ADRs or core-components require returning to the Plan stage
 
 ## Stage 4 — Verify
@@ -55,11 +55,11 @@ Each stage has clear inputs, outputs, and artifact locations. No stage may be sk
 
 | Artifact | Location |
 |----------|----------|
-| Research briefs | `project/issues/<ISSUE_NUMBER>/research/00-research.md` |
-| Action plans | `project/issues/<ISSUE_NUMBER>/plan/01-action-plan.md` |
-| Task breakdowns | `project/issues/<ISSUE_NUMBER>/plan/02-task-breakdown.md` |
-| Test plans | `project/issues/<ISSUE_NUMBER>/plan/03-test-plan.md` |
-| Implementation notes | `project/issues/<ISSUE_NUMBER>/implementation/00-implementation.md` |
+| Research briefs | `project/work-items/<ISSUE_NUMBER>-<SHORT_DESCRIPTION>/research/00-research.md` |
+| Action plans | `project/work-items/<ISSUE_NUMBER>-<SHORT_DESCRIPTION>/plan/01-action-plan.md` |
+| Task breakdowns | `project/work-items/<ISSUE_NUMBER>-<SHORT_DESCRIPTION>/plan/02-task-breakdown.md` |
+| Test plans | `project/work-items/<ISSUE_NUMBER>-<SHORT_DESCRIPTION>/plan/03-test-plan.md` |
+| Implementation notes | `project/work-items/<ISSUE_NUMBER>-<SHORT_DESCRIPTION>/implementation/00-implementation.md` |
 | ADRs | `project/architecture/ADR/` (global, not issue-scoped) |
 | Core-Components | `project/architecture/core-components/` (global, not issue-scoped) |
 | Decision log | `project/architecture/ADR/DECISION-LOG.md` |
@@ -68,7 +68,7 @@ Each stage has clear inputs, outputs, and artifact locations. No stage may be sk
 
 - **ADRs** capture architectural decisions. Copy `project/architecture/ADR/ADR-260101-template.md` and name the new file `ADR-yymmdd-short-slug.md` using its UTC creation date.
 - **Core-Components** capture reusable cross-cutting behavior. Copy `project/architecture/core-components/CORE-COMPONENT-260101-template.md` and name the new file `CORE-COMPONENT-yymmdd-short-slug.md` using its UTC creation date.
-- ADRs and core-components are **global** — never scoped to a single issue.
+- ADRs and core-components are **global** — never scoped to a single work item.
 - The full date-and-slug basename is the artifact ID; keep the creation date unchanged after later edits.
 - Always update `project/architecture/ADR/DECISION-LOG.md` when adding or modifying an ADR or core-component.
 

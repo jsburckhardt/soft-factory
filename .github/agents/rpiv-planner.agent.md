@@ -19,7 +19,8 @@ target: vscode
 ---
 
 <instructions>
-You MUST read the research brief at project/issues/<ISSUE_NUMBER>/research/00-research.md before any planning work.
+You MUST resolve exactly one project/work-items/<ISSUE_NUMBER>-*/research/00-research.md before any planning work.
+You MUST preserve the resolved work-item directory name for every Plan artifact.
 You MUST read existing harness friction before Plan work.
 You MUST use the embedded ADR template in the ADR_TEMPLATE constant when creating any ADR.
 You MUST use the embedded core-component template in the CORE_COMPONENT_TEMPLATE constant when creating any core-component.
@@ -54,9 +55,9 @@ You MUST name core-components using CORE-COMPONENT-yymmdd-short-slug.md with the
 You MUST use each full date-and-slug basename as the artifact ID.
 You MUST use distinct descriptive slugs for multiple artifacts created on the same date.
 You MUST fail instead of overwriting an existing architecture artifact path.
-You MUST create a Plan of Attack at project/issues/<ISSUE_NUMBER>/plan/01-action-plan.md for each issue where <ISSUE_NUMBER> is the GitHub issue number.
-You MUST produce the task breakdown at project/issues/<ISSUE_NUMBER>/plan/02-task-breakdown.md.
-You MUST produce the test plan at project/issues/<ISSUE_NUMBER>/plan/03-test-plan.md.
+You MUST create a Plan of Attack at <WORK_ITEM_PATH>/plan/01-action-plan.md for each issue.
+You MUST produce the task breakdown at <WORK_ITEM_PATH>/plan/02-task-breakdown.md.
+You MUST produce the test plan at <WORK_ITEM_PATH>/plan/03-test-plan.md.
 You MUST ensure every task has acceptance criteria.
 You MUST ensure every task has explicit test coverage requirements.
 You MUST ensure every task identifies its expected evidence.
@@ -76,8 +77,7 @@ ADR_TEMPLATE_PATH: "project/architecture/ADR/ADR-260101-template.md"
 ADR_PATTERN: "ADR-yymmdd-short-slug.md"
 CORE_COMPONENT_PATTERN: "CORE-COMPONENT-yymmdd-short-slug.md"
 ARTIFACT_DATE_COMMAND: "date -u +%y%m%d"
-TASK_BREAKDOWN_PATH: "project/issues/<ISSUE_NUMBER>/plan/02-task-breakdown.md"
-TEST_PLAN_PATH: "project/issues/<ISSUE_NUMBER>/plan/03-test-plan.md"
+WORK_ITEMS_DIR: "project/work-items"
 HARNESS_PATH: "./harness"
 FRICTION_QUESTION: "What did the agent have to infer that the harness should have proved?"
 ADR_TEMPLATE: TEXT<<
@@ -368,6 +368,13 @@ WHERE:
 
 <runtime>
 CURRENT_ISSUE_NUMBER: ""
+WORK_ITEM_PATH: ""
+RESEARCH_PATH: ""
+RESEARCH_FILE_COUNT: 0
+PLAN_DIR: ""
+ACTION_PLAN_PATH: ""
+TASK_BREAKDOWN_PATH: ""
+TEST_PLAN_PATH: ""
 RESEARCH_BRIEF: ""
 ARTIFACT_DATE: ""
 CREATED_ADRS: []
@@ -408,7 +415,7 @@ IF BREAKDOWN_COMPLETE is false:
 IF TEST_PLAN_COMPLETE is false:
   RUN `create-test-plan`
 RUN `record-friction`
-RETURN: CREATED_ADRS, CREATED_CORE_COMPONENTS, TASKS, TESTS
+RETURN: WORK_ITEM_PATH, CREATED_ADRS, CREATED_CORE_COMPONENTS, TASKS, TESTS
 </process>
 
 <process id="read-friction" name="Read prior harness friction before Plan">
@@ -418,7 +425,18 @@ CAPTURE FRICTION_CONTEXT from `execute/runInTerminal`
 
 <process id="load-context" name="Load research brief and existing artifacts">
 SET CURRENT_ISSUE_NUMBER := <ID> (from "Agent Inference")
-USE `read/readFile` where: filePath="project/issues/<ISSUE_NUMBER>/research/00-research.md"
+USE `search/fileSearch` where: pattern="project/work-items/<ISSUE_NUMBER>-*/research/00-research.md"
+CAPTURE RESEARCH_FILES from `search/fileSearch`
+SET RESEARCH_FILE_COUNT := <COUNT> (from "Agent Inference" using RESEARCH_FILES)
+IF RESEARCH_FILE_COUNT != 1:
+  RETURN: error="Exactly one work-item research brief must exist for issue #<ISSUE_NUMBER>."
+SET WORK_ITEM_PATH := <PATH> (from "Agent Inference" using RESEARCH_FILES; remove /research/00-research.md)
+SET RESEARCH_PATH := <PATH> (from "Agent Inference" using WORK_ITEM_PATH; append /research/00-research.md)
+SET PLAN_DIR := <PATH> (from "Agent Inference" using WORK_ITEM_PATH; append /plan)
+SET ACTION_PLAN_PATH := <PATH> (from "Agent Inference" using PLAN_DIR; append /01-action-plan.md)
+SET TASK_BREAKDOWN_PATH := <PATH> (from "Agent Inference" using PLAN_DIR; append /02-task-breakdown.md)
+SET TEST_PLAN_PATH := <PATH> (from "Agent Inference" using PLAN_DIR; append /03-test-plan.md)
+USE `read/readFile` where: filePath=RESEARCH_PATH
 CAPTURE RESEARCH_BRIEF from `read/readFile`
 SET ACCEPTANCE_CATALOG := <CATALOG> (from "Agent Inference" using RESEARCH_BRIEF; preserve issue order and assign AC-1, AC-2, and subsequent integers)
 TRY:
@@ -490,12 +508,12 @@ IF COVERAGE_COMPLETE is false:
 
 <process id="create-action-plan" name="Create the action plan for the issue">
 SET PLAN_CONTENT := <CONTENT> (from "Agent Inference" using RESEARCH_BRIEF, CREATED_ADRS, CREATED_CORE_COMPONENTS, ACCEPTANCE_CATALOG, COVERAGE_MATRIX)
-USE `edit/createDirectory` where: dirPath="project/issues/<ISSUE_NUMBER>/plan"
+USE `edit/createDirectory` where: dirPath=PLAN_DIR
 TRY:
-  USE `read/readFile` where: filePath="project/issues/<ISSUE_NUMBER>/plan/01-action-plan.md"
-  USE `edit/editFiles` where: content=PLAN_CONTENT, filePath="project/issues/<ISSUE_NUMBER>/plan/01-action-plan.md"
+  USE `read/readFile` where: filePath=ACTION_PLAN_PATH
+  USE `edit/editFiles` where: content=PLAN_CONTENT, filePath=ACTION_PLAN_PATH
 RECOVER (err):
-  USE `edit/createFile` where: content=PLAN_CONTENT, filePath="project/issues/<ISSUE_NUMBER>/plan/01-action-plan.md"
+  USE `edit/createFile` where: content=PLAN_CONTENT, filePath=ACTION_PLAN_PATH
 SET ACTION_PLAN := PLAN_CONTENT (from "Agent Inference")
 </process>
 
@@ -505,10 +523,10 @@ SET RELEVANT_CORE_COMPONENTS := <COMPONENTS> (from "Agent Inference" using ACTIO
 SET TASKS := <TASK_LIST> (from "Agent Inference" using ACTION_PLAN, ACCEPTANCE_CATALOG, COVERAGE_MATRIX, RELEVANT_ADRS, RELEVANT_CORE_COMPONENTS; include AC-* IDs, test coverage, expected evidence, and dependency order)
 SET BREAKDOWN_CONTENT := <CONTENT> (from "Agent Inference" using TASKS)
 TRY:
-  USE `read/readFile` where: filePath="project/issues/<ISSUE_NUMBER>/plan/02-task-breakdown.md"
-  USE `edit/editFiles` where: content=BREAKDOWN_CONTENT, filePath="project/issues/<ISSUE_NUMBER>/plan/02-task-breakdown.md"
+  USE `read/readFile` where: filePath=TASK_BREAKDOWN_PATH
+  USE `edit/editFiles` where: content=BREAKDOWN_CONTENT, filePath=TASK_BREAKDOWN_PATH
 RECOVER (err):
-  USE `edit/createFile` where: content=BREAKDOWN_CONTENT, filePath="project/issues/<ISSUE_NUMBER>/plan/02-task-breakdown.md"
+  USE `edit/createFile` where: content=BREAKDOWN_CONTENT, filePath=TASK_BREAKDOWN_PATH
 SET BREAKDOWN_COMPLETE := true (from "Agent Inference")
 </process>
 
@@ -516,10 +534,10 @@ SET BREAKDOWN_COMPLETE := true (from "Agent Inference")
 SET TESTS := <TEST_LIST> (from "Agent Inference" using TASKS, ACCEPTANCE_CATALOG, COVERAGE_MATRIX, RELEVANT_ADRS, RELEVANT_CORE_COMPONENTS; include AC-* IDs and expected evidence)
 SET TEST_PLAN_CONTENT := <CONTENT> (from "Agent Inference" using TESTS)
 TRY:
-  USE `read/readFile` where: filePath="project/issues/<ISSUE_NUMBER>/plan/03-test-plan.md"
-  USE `edit/editFiles` where: content=TEST_PLAN_CONTENT, filePath="project/issues/<ISSUE_NUMBER>/plan/03-test-plan.md"
+  USE `read/readFile` where: filePath=TEST_PLAN_PATH
+  USE `edit/editFiles` where: content=TEST_PLAN_CONTENT, filePath=TEST_PLAN_PATH
 RECOVER (err):
-  USE `edit/createFile` where: content=TEST_PLAN_CONTENT, filePath="project/issues/<ISSUE_NUMBER>/plan/03-test-plan.md"
+  USE `edit/createFile` where: content=TEST_PLAN_CONTENT, filePath=TEST_PLAN_PATH
 SET TEST_PLAN_COMPLETE := true (from "Agent Inference")
 </process>
 

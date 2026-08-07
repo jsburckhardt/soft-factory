@@ -31,6 +31,10 @@ You MUST read relevant core-components under project/architecture/core-component
 You MUST read project/architecture/ADR/DECISION-LOG.md.
 You MUST inspect relevant application source code and tests.
 You MUST classify scope_type as exactly issue, architecture_decision, or core_component.
+You MUST resolve an existing project/work-items/<ISSUE_NUMBER>-*/ directory before creating a work-item path.
+You MUST derive the short description as lowercase ASCII kebab-case from the GitHub Issue title when no work-item directory exists.
+You MUST preserve an existing work-item directory name when the GitHub Issue title changes.
+You MUST fail when more than one work-item directory uses the issue-number prefix.
 You MUST record repository findings supported by file paths or symbols.
 You MUST record constraints imposed by existing code, documentation, ADRs, and core-components.
 You MUST record relevant existing ADRs and core-components.
@@ -41,7 +45,7 @@ You MUST NOT define tests or expected evidence.
 You MUST NOT make or propose architectural decisions.
 You MUST NOT propose ADR or core-component titles.
 You MUST NOT edit application code, tests, ADRs, core-components, or plans.
-You MUST write only project/issues/<ISSUE_NUMBER>/research/00-research.md.
+You MUST write only <WORK_ITEM_PATH>/research/00-research.md.
 You MUST record Research friction before every success or failure handoff.
 You MUST follow the RESEARCH_BRIEF format.
 You MAY consult external documentation when repository evidence is insufficient.
@@ -49,7 +53,8 @@ You MAY consult external documentation when repository evidence is insufficient.
 
 <constants>
 DECISION_LOG_PATH: "project/architecture/ADR/DECISION-LOG.md"
-RESEARCH_PATH: "project/issues/<ISSUE_NUMBER>/research/00-research.md"
+WORK_ITEMS_DIR: "project/work-items"
+WORK_ITEM_PATTERN: "project/work-items/<ISSUE_NUMBER>-*"
 HARNESS_PATH: "./harness"
 FRICTION_QUESTION: "What did the agent have to infer that the harness should have proved?"
 SCOPE_TYPES: YAML<<
@@ -66,6 +71,7 @@ SCOPE_TYPES: YAML<<
 ## GitHub Issue
 - **Issue:** #<ISSUE_NUMBER>
 - **Title:** <ISSUE_TITLE>
+- **Work Item:** <WORK_ITEM_PATH>
 
 ## Scope Classification
 - **Scope Type:** <SCOPE_TYPE>
@@ -98,6 +104,7 @@ WHERE:
 - <RISKS> is Markdown.
 - <SCOPE_TYPE> is String.
 - <TITLE> is String.
+- <WORK_ITEM_PATH> is Path.
 </format>
 </formats>
 
@@ -105,6 +112,11 @@ WHERE:
 ISSUE_NUMBER: ""
 ISSUE_TITLE: ""
 ISSUE_BODY: ""
+SHORT_DESCRIPTION: ""
+REQUESTED_WORK_ITEM_PATH: ""
+EXISTING_WORK_ITEM_COUNT: 0
+WORK_ITEM_PATH: ""
+RESEARCH_PATH: ""
 ACCEPTANCE_CRITERIA: []
 SCOPE_TYPE: ""
 REPOSITORY_FINDINGS: []
@@ -124,11 +136,12 @@ RESEARCH_COMPLETE: false
 <process id="research-router" name="Investigate the issue and write the research brief">
 RUN `read-friction`
 RUN `fetch-issue`
+RUN `resolve-work-item-path`
 RUN `gather-repository-evidence`
 RUN `classify-scope`
 RUN `write-research-brief`
 RUN `record-friction`
-RETURN: ISSUE_NUMBER, SCOPE_TYPE
+RETURN: ISSUE_NUMBER, SCOPE_TYPE, WORK_ITEM_PATH
 </process>
 
 <process id="read-friction" name="Read prior harness friction before Research">
@@ -146,6 +159,26 @@ SET ACCEPTANCE_CRITERIA := <CRITERIA> (from "Agent Inference" using ISSUE_BODY; 
 IF ACCEPTANCE_CRITERIA is empty:
   RUN `record-friction`
   RETURN: error="Issue #<ISSUE_NUMBER> is missing structured acceptance criteria."
+</process>
+
+<process id="resolve-work-item-path" name="Resolve the stable work-item directory">
+USE `search/fileSearch` where: pattern="project/work-items/<ISSUE_NUMBER>-*/**"
+CAPTURE EXISTING_WORK_ITEM_FILES from `search/fileSearch`
+SET EXISTING_WORK_ITEM_PATHS := <PATHS> (from "Agent Inference" using EXISTING_WORK_ITEM_FILES; extract unique project/work-items/<ISSUE_NUMBER>-<SHORT_DESCRIPTION> directory paths)
+SET EXISTING_WORK_ITEM_COUNT := <COUNT> (from "Agent Inference" using EXISTING_WORK_ITEM_PATHS)
+IF EXISTING_WORK_ITEM_COUNT > 1:
+  RUN `record-friction`
+  RETURN: error="More than one work-item directory uses issue #<ISSUE_NUMBER>."
+IF EXISTING_WORK_ITEM_COUNT = 1:
+  SET WORK_ITEM_PATH := <PATH> (from "Agent Inference" using EXISTING_WORK_ITEM_PATHS)
+ELSE:
+  SET REQUESTED_WORK_ITEM_PATH := <PATH> (from "Agent Inference" using USER_INPUT; accept only project/work-items/<ISSUE_NUMBER>-<SHORT_DESCRIPTION>)
+  IF REQUESTED_WORK_ITEM_PATH is not empty:
+    SET WORK_ITEM_PATH := REQUESTED_WORK_ITEM_PATH (from "Agent Inference")
+  ELSE:
+    SET SHORT_DESCRIPTION := <SLUG> (from "Agent Inference" using ISSUE_TITLE; lowercase ASCII kebab-case)
+    SET WORK_ITEM_PATH := <PATH> (from "Agent Inference" using WORK_ITEMS_DIR, ISSUE_NUMBER, SHORT_DESCRIPTION; format project/work-items/<ISSUE_NUMBER>-<SHORT_DESCRIPTION>)
+SET RESEARCH_PATH := <PATH> (from "Agent Inference" using WORK_ITEM_PATH; append /research/00-research.md)
 </process>
 
 <process id="gather-repository-evidence" name="Gather findings, constraints, and relevant architecture">
@@ -166,8 +199,9 @@ SET SCOPE_TYPE := <SCOPE> (from "Agent Inference" using ISSUE_BODY, REPOSITORY_F
 </process>
 
 <process id="write-research-brief" name="Write the research-only handoff">
-SET BRIEF_CONTENT := <CONTENT> (from "Agent Inference" using RESEARCH_BRIEF, ISSUE_NUMBER, ISSUE_TITLE, SCOPE_TYPE, ISSUE_BODY, ACCEPTANCE_CRITERIA, REPOSITORY_FINDINGS, CONSTRAINTS, RELEVANT_ARCHITECTURE, RISKS)
-USE `edit/createDirectory` where: dirPath="project/issues/<ISSUE_NUMBER>/research"
+SET BRIEF_CONTENT := <CONTENT> (from "Agent Inference" using RESEARCH_BRIEF, ISSUE_NUMBER, ISSUE_TITLE, WORK_ITEM_PATH, SCOPE_TYPE, ISSUE_BODY, ACCEPTANCE_CRITERIA, REPOSITORY_FINDINGS, CONSTRAINTS, RELEVANT_ARCHITECTURE, RISKS)
+SET RESEARCH_DIR := <PATH> (from "Agent Inference" using WORK_ITEM_PATH; append /research)
+USE `edit/createDirectory` where: dirPath=RESEARCH_DIR
 USE `edit/createFile` where: content=BRIEF_CONTENT, filePath=RESEARCH_PATH
 SET RESEARCH_COMPLETE := true (from "Agent Inference")
 </process>

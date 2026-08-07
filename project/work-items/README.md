@@ -1,13 +1,13 @@
-# Issues
+# Work Items
 
-This directory contains per-issue documentation produced by the RPIV pipeline. Each subdirectory maps to a **GitHub Issue** by number.
+This directory contains the documentation produced for each RPIV work item. Every work item maps to a **GitHub Issue** by number and adds a short description so readers can understand the subject without opening the issue.
 
 ## Canonical Structure
 
-When an agent runs the pipeline for GitHub Issue `#42`, it creates:
+When an agent runs the pipeline for GitHub Issue `#42` titled "Improve cache invalidation", it creates:
 
 ```
-project/issues/42/
+project/work-items/42-improve-cache-invalidation/
   research/
     00-research.md          ← Research brief (scope classification, findings)
   plan/
@@ -22,9 +22,13 @@ project/issues/42/
 
 ## Conventions
 
-- Subdirectory names are plain issue numbers (e.g., `42/`, not `WI-0042-slug/`)
+- Subdirectory names use `<issue-number>-<short-description>` (for example, `42-improve-cache-invalidation/`)
+- The issue number is the unchanged GitHub Issue number
+- The short description is lowercase ASCII kebab-case derived from the issue title when Research first creates the work item
+- An existing work-item directory keeps its original name even if the GitHub Issue title changes later
+- Exactly one work-item directory may use a given issue-number prefix
 - Agents create these directories automatically — do not create them manually
-- ADRs and core-components are **global** and live under `project/architecture/`, never inside an issue folder
+- ADRs and core-components are **global** and live under `project/architecture/`, never inside a work-item folder
 - Templates are defined in the agent specifications, not duplicated here
 - Implementation notes record changed application documentation or an explicit no-impact rationale
 
