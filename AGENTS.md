@@ -7,9 +7,12 @@ You MUST NOT create an architectural decision outside of an ADR document.
 You MUST NOT create reusable cross-cutting behavior outside of a core-component document.
 You MUST update project/architecture/ADR/DECISION-LOG.md for every ADR or core-component change.
 You MUST store RPIV artifacts under project/work-items/<ISSUE_NUMBER>-<SHORT_DESCRIPTION>/.
+You MUST require Research to resolve and reuse an existing work-item directory before creating one.
+You MUST allow Research to create a work-item directory only when no directory matches the issue-number prefix.
 You MUST derive SHORT_DESCRIPTION as lowercase ASCII kebab-case from the GitHub Issue title when Research first creates a work item.
 You MUST preserve an existing work-item directory name after creation, including when the GitHub Issue title changes.
-You MUST require exactly one work-item directory for each issue-number prefix.
+You MUST prevent more than one work-item directory from using the same issue-number prefix.
+You MUST require Plan, Implement, and Verify to resolve exactly one existing work-item directory.
 You MUST treat ADRs as global artifacts stored in project/architecture/ADR/ — never inside a work-item documentation folder.
 You MUST treat core-components as global artifacts stored in project/architecture/core-components/ — never inside a work-item documentation folder.
 You MUST NOT edit template files directly — copy them within the same directory and rename.

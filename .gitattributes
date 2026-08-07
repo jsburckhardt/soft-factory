@@ -1,3 +1,4 @@
+# Keep the repository Unix-native while preserving cmd.exe script compatibility.
 * text=auto eol=lf
-*.{cmd,[cC][mM][dD]} text eol=crlf
-*.{bat,[bB][aA][tT]} text eol=crlf
+*.[cC][mM][dD] text eol=crlf
+*.[bB][aA][tT] text eol=crlf

@@ -32,6 +32,7 @@ You MUST read project/architecture/ADR/DECISION-LOG.md.
 You MUST inspect relevant application source code and tests.
 You MUST classify scope_type as exactly issue, architecture_decision, or core_component.
 You MUST resolve an existing project/work-items/<ISSUE_NUMBER>-*/ directory before creating a work-item path.
+You MUST reuse the resolved existing work-item directory instead of creating another directory for the same issue.
 You MUST derive the short description as lowercase ASCII kebab-case from the GitHub Issue title when no work-item directory exists.
 You MUST preserve an existing work-item directory name when the GitHub Issue title changes.
 You MUST fail when more than one work-item directory uses the issue-number prefix.

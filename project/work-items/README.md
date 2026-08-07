@@ -25,6 +25,7 @@ project/work-items/42-improve-cache-invalidation/
 - Subdirectory names use `<issue-number>-<short-description>` (for example, `42-improve-cache-invalidation/`)
 - The issue number is the unchanged GitHub Issue number
 - The short description is lowercase ASCII kebab-case derived from the issue title when Research first creates the work item
+- Research reuses an existing directory with the same issue-number prefix instead of creating another
 - An existing work-item directory keeps its original name even if the GitHub Issue title changes later
 - Exactly one work-item directory may use a given issue-number prefix
 - Agents create these directories automatically — do not create them manually

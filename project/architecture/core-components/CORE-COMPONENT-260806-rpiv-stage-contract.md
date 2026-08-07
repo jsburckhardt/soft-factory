@@ -16,10 +16,13 @@ This contract applies to the RPIV coordinator, all four RPIV stage agents, their
 
 ### Rules
 - RPIV MUST create or confirm the issue feature branch before Research starts.
-- Research MUST create work-item artifacts under `project/work-items/<ISSUE_NUMBER>-<SHORT_DESCRIPTION>/`.
-- Research MUST derive `<SHORT_DESCRIPTION>` as lowercase ASCII kebab-case from the GitHub Issue title.
-- Later stages MUST resolve the existing work-item directory by issue-number prefix and preserve its original name.
-- Each issue-number prefix MUST identify exactly one work-item directory.
+- Every RPIV stage MUST resolve an existing work-item directory by issue-number prefix before choosing an artifact path.
+- Every RPIV stage MUST preserve an existing work-item directory name.
+- Research MUST reuse the existing work-item directory when one matches the issue-number prefix.
+- Research MUST create `project/work-items/<ISSUE_NUMBER>-<SHORT_DESCRIPTION>/` only when no matching directory exists.
+- Research MUST derive `<SHORT_DESCRIPTION>` as lowercase ASCII kebab-case from the GitHub Issue title when creating the directory.
+- Research MUST fail when more than one work-item directory matches the issue-number prefix.
+- Plan, Implement, and Verify MUST require exactly one existing work-item directory.
 - Research MUST record constraints, risks, relevant architecture, acceptance criteria, and repository findings only.
 - Plan MUST assign stable `AC-*` IDs and map each criterion to tasks, validation, and expected evidence.
 - Implement MUST execute dependency-ordered tasks, maintain tests and affected application documentation, run configured validation, record evidence, and commit.
