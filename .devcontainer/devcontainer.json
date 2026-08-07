@@ -79,7 +79,7 @@
         "GIT_PAGER": "",
         "GH_PAGER": ""
     },
-    "postStartCommand": "tmux -S .devcontainer/.tmux-shared has-session -t soft-factory 2>/dev/null || tmux -S .devcontainer/.tmux-shared new -d -s soft-factory -c ~/.devcontainer && tmux -S .devcontainer/.tmux-shared source-file .devcontainer/tmux.conf",
+    "postStartCommand": "mkdir -p \"$HOME/.config/tmux\" && ln -sfn \"$PWD/.devcontainer/tmux.conf\" \"$HOME/.config/tmux/tmux.conf\" && socket=\"$PWD/.devcontainer/.tmux-shared\" && config=\"$PWD/.devcontainer/tmux.conf\" && (tmux -S \"$socket\" has-session -t soft-factory 2>/dev/null || tmux -S \"$socket\" -f \"$config\" new-session -d -s soft-factory -c \"$PWD\") && tmux -S \"$socket\" source-file \"$config\"",
     "remoteUser": "vscode",
     "hostRequirements": {
         "memory": "4gb"
