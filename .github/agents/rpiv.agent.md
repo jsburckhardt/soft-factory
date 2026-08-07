@@ -30,6 +30,10 @@ You MUST inspect existing documentation under docs/ and project/ before dispatch
 You MUST verify ./harness and .harness/contract.yml before dispatching any stage.
 You MUST direct the user to run @harness-cli-it when the harness or contract is missing or invalid.
 You MUST use the GitHub issue number as the pipeline identifier.
+You MUST use project/work-items/<ISSUE_NUMBER>-<SHORT_DESCRIPTION>/ for pipeline artifacts.
+You MUST resolve an existing work-item directory by issue-number prefix before deriving a new path.
+You MUST preserve an existing work-item directory name when the GitHub Issue title changes.
+You MUST fail when more than one work-item directory uses the issue-number prefix.
 You MUST validate structured GitHub acceptance criteria before dispatching Research.
 You MUST create or confirm the issue feature branch before dispatching Research.
 You MUST require a clean working tree before creating the feature branch.
@@ -59,7 +63,8 @@ You SHOULD summarize each stage before dispatching the next stage.
 <constants>
 AGENTS_MD_PATH: "AGENTS.md"
 DECISION_LOG_PATH: "project/architecture/ADR/DECISION-LOG.md"
-ISSUES_DIR: "project/issues"
+WORK_ITEMS_DIR: "project/work-items"
+WORK_ITEM_PATTERN: "project/work-items/<ISSUE_NUMBER>-*"
 HARNESS_CONTRACT_PATH: ".harness/contract.yml"
 BRANCH_PATTERN: "<TYPE>/<ISSUE_NUMBER>-<SHORT_SLUG>"
 PROTECTED_BRANCHES: YAML<<
@@ -68,19 +73,19 @@ PROTECTED_BRANCHES: YAML<<
 >>
 STAGE_AGENTS: YAML<<
 - agent: rpiv-research
-  output: project/issues/<ISSUE_NUMBER>/research/00-research.md
+  output: project/work-items/<ISSUE_NUMBER>-<SHORT_DESCRIPTION>/research/00-research.md
   purpose: Record constraints, risks, relevant architecture, and repository findings
   stage: research
 - agent: rpiv-planner
-  output: project/issues/<ISSUE_NUMBER>/plan/
+  output: project/work-items/<ISSUE_NUMBER>-<SHORT_DESCRIPTION>/plan/
   purpose: Assign stable acceptance IDs and prove task, validation, and evidence coverage
   stage: plan
 - agent: rpiv-implementer
-  output: project/issues/<ISSUE_NUMBER>/implementation/00-implementation.md
+  output: project/work-items/<ISSUE_NUMBER>-<SHORT_DESCRIPTION>/implementation/00-implementation.md
   purpose: Implement tasks, run configured validation, record evidence, and commit
   stage: implement
 - agent: rpiv-verifier
-  output: project/issues/<ISSUE_NUMBER>/verify/summary.md
+  output: project/work-items/<ISSUE_NUMBER>-<SHORT_DESCRIPTION>/verify/summary.md
   purpose: Verify the handoff commit, decide acceptance, push, and create the pull request
   stage: verify
 >>
@@ -127,6 +132,9 @@ ISSUE_NUMBER: ""
 ISSUE_JSON: ""
 TASK_DESCRIPTION: ""
 SHORT_SLUG: ""
+EXISTING_WORK_ITEM_PATHS: []
+EXISTING_WORK_ITEM_COUNT: 0
+WORK_ITEM_PATH: ""
 BRANCH_NAME: ""
 CURRENT_STAGE: ""
 RESEARCH_RESULT: ""
@@ -197,6 +205,20 @@ USE `execute/runInTerminal` where: command="gh issue view <ISSUE_NUMBER> --json 
 CAPTURE ISSUE_JSON from `execute/runInTerminal`
 SET TASK_DESCRIPTION := <DESCRIPTION> (from "Agent Inference" using ISSUE_JSON)
 SET SHORT_SLUG := <SLUG> (from "Agent Inference" using ISSUE_JSON)
+USE `search/fileSearch` where: pattern="project/work-items/<ISSUE_NUMBER>-*/**"
+CAPTURE EXISTING_WORK_ITEM_FILES from `search/fileSearch`
+SET EXISTING_WORK_ITEM_PATHS := <PATHS> (from "Agent Inference" using EXISTING_WORK_ITEM_FILES; extract unique project/work-items/<ISSUE_NUMBER>-<SHORT_DESCRIPTION> directory paths)
+SET EXISTING_WORK_ITEM_COUNT := <COUNT> (from "Agent Inference" using EXISTING_WORK_ITEM_PATHS)
+IF EXISTING_WORK_ITEM_COUNT > 1:
+  SET VERIFY_RESULT := "More than one work-item directory uses the issue-number prefix." (from "Agent Inference")
+  SET PIPELINE_STATUS := "error" (from "Agent Inference")
+ELSE:
+  IF EXISTING_WORK_ITEM_COUNT = 1:
+    SET WORK_ITEM_PATH := <PATH> (from "Agent Inference" using EXISTING_WORK_ITEM_PATHS)
+  ELSE:
+    SET WORK_ITEM_PATH := <PATH> (from "Agent Inference" using WORK_ITEMS_DIR, ISSUE_NUMBER, SHORT_SLUG; format project/work-items/<ISSUE_NUMBER>-<SHORT_SLUG>)
+IF PIPELINE_STATUS = "error":
+  RETURN
 SET HAS_ACCEPTANCE_CRITERIA := <HAS_CRITERIA> (from "Agent Inference" using ISSUE_JSON)
 IF HAS_ACCEPTANCE_CRITERIA is false:
   SET VERIFY_RESULT := "The issue must contain structured markdown acceptance criteria." (from "Agent Inference")
@@ -230,10 +252,11 @@ ELSE:
 
 <process id="dispatch-research" name="Dispatch Research">
 SET CURRENT_STAGE := "research" (from "Agent Inference")
-SET RESEARCH_PROMPT := <PROMPT> (from "Agent Inference" using ISSUE_NUMBER, ISSUE_JSON, BRANCH_NAME; require research-only findings)
+SET RESEARCH_PROMPT := <PROMPT> (from "Agent Inference" using ISSUE_NUMBER, ISSUE_JSON, BRANCH_NAME, WORK_ITEM_PATH; require research-only findings and the exact work-item path)
 USE `agent/runSubagent` where: agent="rpiv-research", prompt=RESEARCH_PROMPT
 CAPTURE RESEARCH_RESULT from `agent/runSubagent`
-USE `read/readFile` where: filePath="project/issues/<ISSUE_NUMBER>/research/00-research.md"
+SET RESEARCH_PATH := <PATH> (from "Agent Inference" using WORK_ITEM_PATH; append /research/00-research.md)
+USE `read/readFile` where: filePath=RESEARCH_PATH
 CAPTURE RESEARCH_BRIEF from `read/readFile`
 SET PIPELINE_STATUS := <STATUS> (from "Agent Inference" using RESEARCH_RESULT, RESEARCH_BRIEF)
 IF PIPELINE_STATUS != "error":
@@ -242,14 +265,17 @@ IF PIPELINE_STATUS != "error":
 
 <process id="dispatch-plan" name="Dispatch Plan and validate acceptance coverage">
 SET CURRENT_STAGE := "plan" (from "Agent Inference")
-SET PLAN_PROMPT := <PROMPT> (from "Agent Inference" using ISSUE_NUMBER, ISSUE_JSON, RESEARCH_BRIEF, VERIFY_RESULT)
+SET PLAN_PROMPT := <PROMPT> (from "Agent Inference" using ISSUE_NUMBER, ISSUE_JSON, WORK_ITEM_PATH, RESEARCH_BRIEF, VERIFY_RESULT)
 USE `agent/runSubagent` where: agent="rpiv-planner", prompt=PLAN_PROMPT
 CAPTURE PLAN_RESULT from `agent/runSubagent`
-USE `read/readFile` where: filePath="project/issues/<ISSUE_NUMBER>/plan/01-action-plan.md"
+SET ACTION_PLAN_PATH := <PATH> (from "Agent Inference" using WORK_ITEM_PATH; append /plan/01-action-plan.md)
+SET TASK_BREAKDOWN_PATH := <PATH> (from "Agent Inference" using WORK_ITEM_PATH; append /plan/02-task-breakdown.md)
+SET TEST_PLAN_PATH := <PATH> (from "Agent Inference" using WORK_ITEM_PATH; append /plan/03-test-plan.md)
+USE `read/readFile` where: filePath=ACTION_PLAN_PATH
 CAPTURE ACTION_PLAN from `read/readFile`
-USE `read/readFile` where: filePath="project/issues/<ISSUE_NUMBER>/plan/02-task-breakdown.md"
+USE `read/readFile` where: filePath=TASK_BREAKDOWN_PATH
 CAPTURE TASK_BREAKDOWN from `read/readFile`
-USE `read/readFile` where: filePath="project/issues/<ISSUE_NUMBER>/plan/03-test-plan.md"
+USE `read/readFile` where: filePath=TEST_PLAN_PATH
 CAPTURE TEST_PLAN from `read/readFile`
 SET PLAN_HANDOFF := <HANDOFF> (from "Agent Inference" using ACTION_PLAN, TASK_BREAKDOWN, TEST_PLAN; include acceptance criteria, tasks, tests, expected evidence, ADRs, and core-components)
 SET PIPELINE_STATUS := <STATUS> (from "Agent Inference" using PLAN_RESULT, PLAN_HANDOFF; require complete AC-* coverage)
@@ -259,10 +285,11 @@ IF PIPELINE_STATUS != "error":
 
 <process id="dispatch-implement" name="Dispatch Implement and validate committed handoff">
 SET CURRENT_STAGE := "implement" (from "Agent Inference")
-SET IMPLEMENT_PROMPT := <PROMPT> (from "Agent Inference" using ISSUE_NUMBER, BRANCH_NAME, PLAN_HANDOFF, VERIFY_RESULT)
+SET IMPLEMENT_PROMPT := <PROMPT> (from "Agent Inference" using ISSUE_NUMBER, WORK_ITEM_PATH, BRANCH_NAME, PLAN_HANDOFF, VERIFY_RESULT)
 USE `agent/runSubagent` where: agent="rpiv-implementer", prompt=IMPLEMENT_PROMPT
 CAPTURE IMPLEMENT_RESULT from `agent/runSubagent`
-USE `read/readFile` where: filePath="project/issues/<ISSUE_NUMBER>/implementation/00-implementation.md"
+SET IMPLEMENTATION_NOTES_PATH := <PATH> (from "Agent Inference" using WORK_ITEM_PATH; append /implementation/00-implementation.md)
+USE `read/readFile` where: filePath=IMPLEMENTATION_NOTES_PATH
 CAPTURE IMPLEMENTATION_EVIDENCE from `read/readFile`
 USE `execute/runInTerminal` where: command="git branch --show-current"
 CAPTURE HANDOFF_BRANCH from `execute/runInTerminal`
@@ -278,7 +305,7 @@ IF PIPELINE_STATUS != "error":
 
 <process id="dispatch-verify" name="Dispatch Verify against the implementation handoff">
 SET CURRENT_STAGE := "verify" (from "Agent Inference")
-SET VERIFY_PROMPT := <PROMPT> (from "Agent Inference" using ISSUE_NUMBER, PLAN_HANDOFF, IMPLEMENT_HANDOFF)
+SET VERIFY_PROMPT := <PROMPT> (from "Agent Inference" using ISSUE_NUMBER, WORK_ITEM_PATH, PLAN_HANDOFF, IMPLEMENT_HANDOFF)
 USE `agent/runSubagent` where: agent="rpiv-verifier", prompt=VERIFY_PROMPT
 CAPTURE VERIFY_RESULT from `agent/runSubagent`
 SET PIPELINE_STATUS := <STATUS> (from "Agent Inference" using VERIFY_RESULT)

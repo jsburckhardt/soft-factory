@@ -29,4 +29,4 @@ project/architecture/core-components/CORE-COMPONENT-260806-project-command-inter
 project/architecture/core-components/CORE-COMPONENT-260806-agent-executable-acceptance-criteria.md — Agent-executable issue criteria contract
 project/architecture/core-components/CORE-COMPONENT-260806-architecture-artifact-naming.md — Date-based architecture artifact naming contract
 project/architecture/core-components/README.md                 — Core-components index
-project/issues/README.md                                       — Issues index and canonical structure
+project/work-items/README.md                                   — Work-items index and canonical structure

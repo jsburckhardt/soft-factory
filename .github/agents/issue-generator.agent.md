@@ -28,7 +28,7 @@ agents:
 You MUST read AGENTS.md and project/architecture/ADR/DECISION-LOG.md before starting.
 You MUST inspect the root justfile and .harness/contract.yml when present to understand commands and evidence available to agents.
 You MUST NOT invent harness capabilities when .harness/contract.yml is absent.
-You MUST read all existing issue documentation under project/issues/ to learn the established format.
+You MUST read all existing work-item documentation under project/work-items/ to learn the established format.
 You MUST run git history analysis to surface recurring issue-quality gaps before drafting the issue.
 You MUST analyze closed issues and their post-PR fix commits to identify categories of missed acceptance criteria.
 You MUST use history findings only to sharpen the problem statement and acceptance criteria.
@@ -37,7 +37,7 @@ You MUST format every acceptance criterion as a markdown checkbox (`- [ ]` for u
 You MUST wrap the acceptance criteria list with `<!-- ACCEPTANCE_CRITERIA_START -->` and `<!-- ACCEPTANCE_CRITERIA_END -->` HTML comment markers so downstream agents can machine-parse them.
 You MUST place exactly one start marker and one end marker; only `- [ ]` checkbox list items and optional group headings may appear between them.
 You MUST group acceptance criteria under subheadings (e.g., **Core**, **Edge Cases**, **Verification**) inside the markers.
-You MUST match the acceptance-criteria formatting documented in project/issues/README.md.
+You MUST match the acceptance-criteria formatting documented in project/work-items/README.md.
 You MUST write acceptance criteria that autonomous agents can complete with repository tools and declared harness capabilities.
 You MUST keep each acceptance criterion bounded, deterministic, observable, and independently verifiable.
 You MUST ensure requested tests or validation produce evidence an agent can collect.
@@ -60,7 +60,7 @@ You MAY suggest labels based on the issue content.
 
 <constants>
 DECISION_LOG_PATH: "project/architecture/ADR/DECISION-LOG.md"
-ISSUES_DIR: "project/issues"
+WORK_ITEMS_DIR: "project/work-items"
 HARNESS_CONTRACT_PATH: ".harness/contract.yml"
 JUSTFILE_PATH: "justfile"
 MAX_REVISIONS: 2
