@@ -16,7 +16,7 @@ This contract applies to issue generation, acceptance-criteria documentation, RP
 
 ### Rules
 - Every acceptance criterion MUST be bounded, deterministic, observable, and independently verifiable.
-- Acceptance criteria MUST be achievable with repository access, configured agent tools, and declared harness capabilities.
+- Acceptance criteria MUST be achievable with repository access and configured agent tools.
 - Requested validation MUST be safe, repeatable, and produce inspectable evidence.
 - Acceptance criteria MUST NOT require unavailable credentials, inaccessible systems, unsupported hardware, indefinite observation, exhaustive proof, or nondeterministic success.
 - Manual-only or subjective validation MUST NOT be required unless the user explicitly requests it and identifies an available reviewer.
@@ -25,7 +25,7 @@ This contract applies to issue generation, acceptance-criteria documentation, RP
 - Acceptance criteria MUST describe outcomes without prescribing implementation or test frameworks.
 
 ### Interfaces
-- Issue Generator inspects `AGENTS.md`, the root `justfile`, and `.harness/contract.yml` when present before drafting criteria.
+- Issue Generator inspects `AGENTS.md` and the root `justfile` when present before drafting criteria.
 - Issue Generator runs an agent-feasibility assessment before rubber-duck review and issue creation.
 - The rubber-duck review challenges criteria that agents cannot execute or verify.
 - Plan maps every accepted criterion to finite tasks, validation, and expected evidence.
@@ -50,7 +50,7 @@ Rejected: A human confirms that the configuration experience feels intuitive.
 
 ## Integration Guidelines
 
-- Derive feasible evidence from declared repository and harness capabilities.
+- Derive feasible evidence from declared repository and agent capabilities.
 - Split broad outcomes into independently verifiable criteria.
 - State necessary external review or access in the problem context before issue creation.
 - Never place credentials or secrets in issue text.

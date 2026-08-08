@@ -1,6 +1,6 @@
 ---
 name: bootstrap
-description: "Bootstrap a new project, create its justfile commands, seed architectural artifacts, and hand off harness creation before RPIV work."
+description: "Bootstrap a new project, create its justfile commands, seed architectural artifacts, and prepare the first issue handoff."
 tools:
   - search/codebase
   - search/fileSearch
@@ -17,13 +17,9 @@ user-invocable: true
 disable-model-invocation: true
 target: vscode
 handoffs:
-  - label: Create Engineering Harness
-    agent: harness-cli-it
-    prompt: Create the repo-local harness, wrap the justfile recipes, update all agents, and verify the harness contract.
-    send: false
-  - label: Start First Issue
-    agent: rpiv-research
-    prompt: Research and classify the first GitHub issue for this newly bootstrapped project.
+  - label: Create First Issue
+    agent: issue-generator
+    prompt: Draft the first problem-focused GitHub issue for this newly bootstrapped project.
     send: false
 ---
 
@@ -57,7 +53,6 @@ You MUST create a root justfile containing all project operating command bodies.
 You MUST expose applicable setup, run, test, lint, format-check, type-check, build, and verify recipes.
 You MUST ask the user to confirm or customize proposed justfile recipes before writing files.
 You MUST NOT create a standalone verification command config.
-You MUST direct the user to run harness-cli-it before starting RPIV work.
 You MUST NOT set up CI/CD pipelines or infrastructure.
 You MUST NOT make feature-level decisions; only foundational project decisions.
 You MUST NOT skip any user confirmation before writing files.
@@ -495,7 +490,7 @@ JUSTFILE_CONTENT: ""
 <process id="bootstrap-router" name="Route bootstrap request">
 RUN `check-bootstrapped`
 IF IS_BOOTSTRAPPED is true:
-  RETURN: format="BOOTSTRAP_BLOCKED", evidence=BOOTSTRAP_EVIDENCE, reason="Project has already been bootstrapped", suggestion="Create a GitHub issue and use the rpiv-research agent to start working on it"
+  RETURN: format="BOOTSTRAP_BLOCKED", evidence=BOOTSTRAP_EVIDENCE, reason="Project has already been bootstrapped", suggestion="Create or select a GitHub issue, then run @rpiv"
 RUN `resolve-artifact-date`
 IF PROJECT_NAME is empty:
   RUN `gather-project-info`
@@ -513,7 +508,7 @@ RUN `update-decision-log`
 RUN `configure-operations`
 RUN `update-project-docs`
 RUN `tailor-devcontainer`
-RETURN: format="BOOTSTRAP_REPORT", adr_list=CREATED_ADRS, core_component_list=CREATED_CORE_COMPONENTS, files_updated=UPDATED_FILES, next_steps="Run @harness-cli-it before starting the first RPIV issue", operating_commands=OPERATING_COMMANDS, project_description=PROJECT_DESCRIPTION, project_name=PROJECT_NAME, scaffold_output=SCAFFOLD_OUTPUT, status="Bootstrapped"
+RETURN: format="BOOTSTRAP_REPORT", adr_list=CREATED_ADRS, core_component_list=CREATED_CORE_COMPONENTS, files_updated=UPDATED_FILES, next_steps="Create the first GitHub issue with @issue-generator, then run @rpiv", operating_commands=OPERATING_COMMANDS, project_description=PROJECT_DESCRIPTION, project_name=PROJECT_NAME, scaffold_output=SCAFFOLD_OUTPUT, status="Bootstrapped"
 </process>
 
 <process id="check-bootstrapped" name="Check if project has already been bootstrapped">

@@ -31,11 +31,9 @@ This contract applies to the RPIV coordinator, all four RPIV stage agents, their
 - Verify MUST inspect the exact implementation commit and independently verify affected application documentation.
 - Verify MUST return missing, stale, inaccurate, or inconclusive application documentation to Implement.
 - Verify MUST decide acceptance, update GitHub, push, and create the pull request.
-- Implement and Verify MUST use `./harness` and `.harness/contract.yml` for validation.
-- Implement MUST run focused harness validation while building and full harness validation before handoff.
-- Verify MUST rerun full harness validation independently.
-- Every RPIV stage MUST read harness friction before phase work.
-- Every RPIV stage MUST record phase friction before success or failure handoff.
+- Implement and Verify MUST use root `justfile` recipes for validation by default.
+- Implement MUST run `just verify-focused` while building and `just verify` before handoff by default.
+- Verify MUST rerun `just verify` independently by default.
 - Verify MUST return code or test defects to Implement.
 - Verify MUST return plan, architecture, scope, or acceptance coverage defects to Plan.
 
@@ -48,8 +46,6 @@ This contract applies to the RPIV coordinator, all four RPIV stage agents, their
 ### Expectations
 - Stage agents do not perform responsibilities owned by another stage.
 - Verify does not author application documentation or repair documentation defects.
-- Stage agents use prior friction to avoid repeating unsupported inference.
-- Stage agents record missing harness proof for the next phase and future runs.
 - Failed verification causes correction and downstream re-execution before acceptance.
 - GitHub acceptance checkboxes are updated only by Verify after independent acceptance.
 
@@ -68,8 +64,8 @@ Behavior change -> Documentation requirement -> Committed documentation -> Verif
 
 - Keep stage prompts and AGENTS.md aligned with this contract.
 - Resolve an existing work-item path before reading or writing stage artifacts.
-- Keep validation behavior in the harness contract.
-- Keep executable project command bodies in the root `justfile` behind the harness.
+- Keep default validation behavior and executable project command bodies in the root `justfile`.
+- Document any adopted command wrapper and update stage agents before they consume it.
 - Preserve acceptance criterion order when assigning stable IDs.
 - Include the Implement handoff commit SHA in verification records.
 - Include documentation changes or a no-impact rationale in implementation and verification records.

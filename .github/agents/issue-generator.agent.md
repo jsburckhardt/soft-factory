@@ -26,8 +26,7 @@ agents:
 
 <instructions>
 You MUST read AGENTS.md and project/architecture/ADR/DECISION-LOG.md before starting.
-You MUST inspect the root justfile and .harness/contract.yml when present to understand commands and evidence available to agents.
-You MUST NOT invent harness capabilities when .harness/contract.yml is absent.
+You MUST inspect the root justfile when present to understand commands and evidence available to agents.
 You MUST read all existing work-item documentation under project/work-items/ to learn the established format.
 You MUST run git history analysis to surface recurring issue-quality gaps before drafting the issue.
 You MUST analyze closed issues and their post-PR fix commits to identify categories of missed acceptance criteria.
@@ -38,7 +37,7 @@ You MUST wrap the acceptance criteria list with `<!-- ACCEPTANCE_CRITERIA_START 
 You MUST place exactly one start marker and one end marker; only `- [ ]` checkbox list items and optional group headings may appear between them.
 You MUST group acceptance criteria under subheadings (e.g., **Core**, **Edge Cases**, **Verification**) inside the markers.
 You MUST match the acceptance-criteria formatting documented in project/work-items/README.md.
-You MUST write acceptance criteria that autonomous agents can complete with repository tools and declared harness capabilities.
+You MUST write acceptance criteria that autonomous agents can complete with repository tools and declared agent capabilities.
 You MUST keep each acceptance criterion bounded, deterministic, observable, and independently verifiable.
 You MUST ensure requested tests or validation produce evidence an agent can collect.
 You MUST decompose broad outcomes so RPIV can map them to finite tasks and validation.
@@ -54,19 +53,18 @@ You MUST NOT include a proposed solution, technical considerations, implementati
 You MUST NOT include secrets, credentials, or personal data in generated issue text.
 You SHOULD propose acceptance criteria that cover security, accessibility, validation, error states, and data integrity when relevant, phrased as observable outcomes rather than implementation steps.
 You SHOULD identify edge cases based on patterns from previous issues without prescribing how to solve them.
-You SHOULD prefer repository-local, harness-supported, repeatable evidence over external or manual evidence.
+You SHOULD prefer repository-local, repeatable evidence over external or manual evidence.
 You MAY suggest labels based on the issue content.
 </instructions>
 
 <constants>
 DECISION_LOG_PATH: "project/architecture/ADR/DECISION-LOG.md"
 WORK_ITEMS_DIR: "project/work-items"
-HARNESS_CONTRACT_PATH: ".harness/contract.yml"
 JUSTFILE_PATH: "justfile"
 MAX_REVISIONS: 2
 
 AGENT_FEASIBILITY_RULES: YAML<<
-- Acceptance criteria must be achievable by autonomous agents using repository access and declared harness capabilities.
+- Acceptance criteria must be achievable by autonomous agents using repository access and declared agent capabilities.
 - Validation must be finite, repeatable, and produce inspectable evidence.
 - Criteria must not require unavailable accounts, secrets, devices, production access, or human intuition.
 - Criteria must not demand exhaustive proof, indefinite monitoring, or nondeterministic success.
@@ -141,7 +139,7 @@ You are a critical reviewer. Read the draft GitHub issue below and challenge it:
 4. Are edge cases identified for error states, empty states, repeated actions, and concurrent access when relevant?
 5. Are unstated assumptions made explicit without constraining how RPIV should solve the issue?
 6. Can the RPIV Research and Plan stages decide the approach from this issue without being preempted?
-7. Can autonomous agents complete every criterion using repository access and declared harness capabilities?
+7. Can autonomous agents complete every criterion using repository access and declared agent capabilities?
 8. Are all tests and validation finite, repeatable, evidence-producing, and free from unavailable external dependencies?
 9. Does any criterion require subjective judgment, manual-only work, indefinite observation, production access, or exhaustive proof?
 
@@ -208,7 +206,6 @@ DRAFT_BODY: ""
 RUBBER_DUCK_RESULT: ""
 RUBBER_DUCK_OK: false
 REVISION_COUNT: 0
-HARNESS_CONTRACT: ""
 PROJECT_COMMANDS: ""
 AGENT_CAPABILITIES: []
 FEASIBILITY_OK: false
@@ -248,12 +245,7 @@ CAPTURE JUSTFILE_FILES from `search/fileSearch`
 IF JUSTFILE_FILES is not empty:
   USE `read/readFile` where: filePath=JUSTFILE_PATH
   CAPTURE PROJECT_COMMANDS from `read/readFile`
-USE `search/fileSearch` where: pattern=HARNESS_CONTRACT_PATH
-CAPTURE HARNESS_CONTRACT_FILES from `search/fileSearch`
-IF HARNESS_CONTRACT_FILES is not empty:
-  USE `read/readFile` where: filePath=HARNESS_CONTRACT_PATH
-  CAPTURE HARNESS_CONTRACT from `read/readFile`
-SET AGENT_CAPABILITIES := <CAPABILITIES> (from "Agent Inference" using AGENTS_SPEC, HARNESS_CONTRACT, PROJECT_COMMANDS, REPO_MAP; include only tools and commands evidenced by these sources)
+SET AGENT_CAPABILITIES := <CAPABILITIES> (from "Agent Inference" using AGENTS_SPEC, PROJECT_COMMANDS, REPO_MAP; include only tools and commands evidenced by these sources)
 SET FEATURE_DESCRIPTION := <DESC> (from "Agent Inference" using USER_INPUT)
 </process>
 

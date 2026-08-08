@@ -3,6 +3,10 @@ CONTRIBUTING.md                                             — Human contributi
 LLM.txt                                                     — This file; repo map for AI agents
 README.md                                                   — Project overview
 .devcontainer/devcontainer.json                             — Dev container configuration
+.devcontainer/post-create.sh                                — One-time container setup for tmux config and GitHub CLI aliases
+.devcontainer/post-start.sh                                 — Per-start shared tmux session and dynamic environment setup
+.devcontainer/tmux-attach.sh                                — VS Code terminal attachment to the shared tmux socket
+.vscode/tasks.json                                          — Automatic folder-open tmux terminal task
 .github/agents/aps-v1.2.2.agent.md                         — APS prompt generator agent
 .github/agents/bootstrap.agent.md                           — Bootstrap agent (new project scaffolding)
 .github/agents/excali.agent.md                              — Excalidraw diagram agent
@@ -25,7 +29,7 @@ project/architecture/ADR/DECISION-LOG.md                       — Registry of a
 project/architecture/core-components/CORE-COMPONENT-260101-template.md — Core-component template (read-only, copy to create date-based artifacts)
 project/architecture/core-components/CORE-COMPONENT-260505-commit-standards.md — Commit standards (Conventional Commits, Co-authored-by)
 project/architecture/core-components/CORE-COMPONENT-260806-rpiv-stage-contract.md — RPIV stage ownership and handoff contract
-project/architecture/core-components/CORE-COMPONENT-260806-project-command-interface.md — Harness and justfile command contract
+project/architecture/core-components/CORE-COMPONENT-260806-project-command-interface.md — Justfile command contract
 project/architecture/core-components/CORE-COMPONENT-260806-agent-executable-acceptance-criteria.md — Agent-executable issue criteria contract
 project/architecture/core-components/CORE-COMPONENT-260806-architecture-artifact-naming.md — Date-based architecture artifact naming contract
 project/architecture/core-components/README.md                 — Core-components index

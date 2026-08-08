@@ -27,8 +27,7 @@ agents:
 You MUST read AGENTS.md before starting.
 You MUST read project/architecture/ADR/DECISION-LOG.md before starting.
 You MUST inspect existing documentation under docs/ and project/ before dispatching any stage.
-You MUST verify ./harness and .harness/contract.yml before dispatching any stage.
-You MUST direct the user to run @harness-cli-it when the harness or contract is missing or invalid.
+You MUST validate that the root justfile exposes verify-focused and verify before dispatching any stage.
 You MUST use the GitHub issue number as the pipeline identifier.
 You MUST use project/work-items/<ISSUE_NUMBER>-<SHORT_DESCRIPTION>/ for pipeline artifacts.
 You MUST resolve an existing work-item directory by issue-number prefix before deriving a new path.
@@ -45,8 +44,6 @@ You MUST enforce this boundary: Plan proves acceptance coverage.
 You MUST enforce this boundary: Implement builds, tests, records evidence, and commits.
 You MUST enforce this boundary: Verify decides acceptance, pushes, and creates the pull request.
 You MUST validate every stage artifact and handoff before proceeding.
-You MUST require each RPIV stage to read harness friction before phase work.
-You MUST require each RPIV stage to record harness friction before success or failure handoff.
 You MUST provide Plan with the issue criteria and Research findings.
 You MUST provide Implement with acceptance criteria, tasks, test plan, and relevant ADRs.
 You MUST provide Verify with branch, commit SHA, clean-tree proof, implementation evidence, documentation evidence, and test results.
@@ -65,8 +62,12 @@ AGENTS_MD_PATH: "AGENTS.md"
 DECISION_LOG_PATH: "project/architecture/ADR/DECISION-LOG.md"
 WORK_ITEMS_DIR: "project/work-items"
 WORK_ITEM_PATTERN: "project/work-items/<ISSUE_NUMBER>-*"
-HARNESS_CONTRACT_PATH: ".harness/contract.yml"
+JUSTFILE_PATH: "justfile"
 BRANCH_PATTERN: "<TYPE>/<ISSUE_NUMBER>-<SHORT_SLUG>"
+REQUIRED_RECIPES: YAML<<
+- verify-focused
+- verify
+>>
 PROTECTED_BRANCHES: YAML<<
 - main
 - master
@@ -143,7 +144,7 @@ IMPLEMENT_RESULT: ""
 VERIFY_RESULT: ""
 PLAN_HANDOFF: {}
 IMPLEMENT_HANDOFF: {}
-HARNESS_READY: false
+COMMAND_INTERFACE_READY: false
 FAILURE_OWNER: ""
 PIPELINE_STATUS: ""
 RETRY_COUNT: 0
@@ -187,17 +188,17 @@ CAPTURE PIPELINE_SPEC from `read/readFile`
 USE `read/readFile` where: filePath=DECISION_LOG_PATH
 CAPTURE DECISION_LOG from `read/readFile`
 SET ISSUE_NUMBER := <NUMBER> (from "Agent Inference" using USER_INPUT)
-USE `search/fileSearch` where: pattern=HARNESS_CONTRACT_PATH
-CAPTURE HARNESS_CONTRACT_FILES from `search/fileSearch`
-IF HARNESS_CONTRACT_FILES is empty:
-  SET VERIFY_RESULT := "Run @harness-cli-it to create ./harness and .harness/contract.yml before RPIV starts." (from "Agent Inference")
+USE `search/fileSearch` where: pattern=JUSTFILE_PATH
+CAPTURE JUSTFILE_FILES from `search/fileSearch`
+IF JUSTFILE_FILES is empty:
+  SET VERIFY_RESULT := "Create a root justfile exposing verify-focused and verify before RPIV starts." (from "Agent Inference")
   SET PIPELINE_STATUS := "error" (from "Agent Inference")
 ELSE:
-  USE `execute/runInTerminal` where: command="./harness doctor --json"
-  CAPTURE HARNESS_DOCTOR from `execute/runInTerminal`
-  SET HARNESS_READY := <READY> (from "Agent Inference" using HARNESS_DOCTOR)
-  IF HARNESS_READY is false:
-    SET VERIFY_RESULT := "Run @harness-cli-it to repair the repo-local harness before RPIV starts." (from "Agent Inference")
+  USE `execute/runInTerminal` where: command="just --list"
+  CAPTURE JUSTFILE_LIST from `execute/runInTerminal`
+  SET COMMAND_INTERFACE_READY := <READY> (from "Agent Inference" using JUSTFILE_LIST, REQUIRED_RECIPES)
+  IF COMMAND_INTERFACE_READY is false:
+    SET VERIFY_RESULT := "The root justfile must expose verify-focused and verify before RPIV starts." (from "Agent Inference")
     SET PIPELINE_STATUS := "error" (from "Agent Inference")
 IF PIPELINE_STATUS = "error":
   RETURN

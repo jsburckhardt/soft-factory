@@ -21,7 +21,6 @@ target: vscode
 <instructions>
 You MUST resolve exactly one project/work-items/<ISSUE_NUMBER>-*/research/00-research.md before any planning work.
 You MUST preserve the resolved work-item directory name for every Plan artifact.
-You MUST read existing harness friction before Plan work.
 You MUST use the embedded ADR template in the ADR_TEMPLATE constant when creating any ADR.
 You MUST use the embedded core-component template in the CORE_COMPONENT_TEMPLATE constant when creating any core-component.
 You MUST read the decision log at DECISION_LOG_PATH before creating any ADR or core-component, initializing it from DECISION_LOG_SKELETON if absent.
@@ -62,7 +61,6 @@ You MUST ensure every task has acceptance criteria.
 You MUST ensure every task has explicit test coverage requirements.
 You MUST ensure every task identifies its expected evidence.
 You MUST ensure every task references relevant ADRs and core-components.
-You MUST record Plan friction before every success or failure handoff.
 You SHOULD reference related existing ADRs when creating new ones.
 You SHOULD order tasks by dependency so blocked tasks appear after their dependencies.
 You SHOULD estimate relative complexity for each task.
@@ -78,8 +76,6 @@ ADR_PATTERN: "ADR-yymmdd-short-slug.md"
 CORE_COMPONENT_PATTERN: "CORE-COMPONENT-yymmdd-short-slug.md"
 ARTIFACT_DATE_COMMAND: "date -u +%y%m%d"
 WORK_ITEMS_DIR: "project/work-items"
-HARNESS_PATH: "./harness"
-FRICTION_QUESTION: "What did the agent have to infer that the harness should have proved?"
 ADR_TEMPLATE: TEXT<<
 # ADR-yymmdd-short-slug: [Short Title of Decision]
 
@@ -387,8 +383,6 @@ ACCEPTANCE_CATALOG: []
 COVERAGE_MATRIX: []
 TASKS: []
 TESTS: []
-FRICTION_CONTEXT: []
-FRICTION_RESULT: ""
 ARCHITECTURE_COMPLETE: false
 COVERAGE_COMPLETE: false
 BREAKDOWN_COMPLETE: false
@@ -401,7 +395,6 @@ TEST_PLAN_COMPLETE: false
 
 <processes>
 <process id="planner-router" name="Route planner request through architecture then task planning">
-RUN `read-friction`
 IF CURRENT_ISSUE_NUMBER is empty:
   RUN `load-context`
 IF ARCHITECTURE_COMPLETE is false:
@@ -414,13 +407,7 @@ IF BREAKDOWN_COMPLETE is false:
   RUN `create-task-breakdown`
 IF TEST_PLAN_COMPLETE is false:
   RUN `create-test-plan`
-RUN `record-friction`
 RETURN: WORK_ITEM_PATH, CREATED_ADRS, CREATED_CORE_COMPONENTS, TASKS, TESTS
-</process>
-
-<process id="read-friction" name="Read prior harness friction before Plan">
-USE `execute/runInTerminal` where: command="./harness friction list --json"
-CAPTURE FRICTION_CONTEXT from `execute/runInTerminal`
 </process>
 
 <process id="load-context" name="Load research brief and existing artifacts">
@@ -461,7 +448,6 @@ IF ADR_CONTENT is not empty:
   USE `search/fileSearch` where: pattern=ADR_FILE_PATH
   CAPTURE ADR_COLLISION from `search/fileSearch`
   IF ADR_COLLISION is not empty:
-    RUN `record-friction`
     RETURN: error="The date-based ADR path already exists; choose a distinct descriptive slug."
   USE `edit/createDirectory` where: dirPath=ADR_DIR
   USE `edit/createFile` where: content=ADR_CONTENT, filePath=ADR_FILE_PATH
@@ -474,7 +460,6 @@ IF CORE_COMPONENT_CONTENT is not empty:
   USE `search/fileSearch` where: pattern=CORE_COMPONENT_FILE_PATH
   CAPTURE CORE_COMPONENT_COLLISION from `search/fileSearch`
   IF CORE_COMPONENT_COLLISION is not empty:
-    RUN `record-friction`
     RETURN: error="The date-based core-component path already exists; choose a distinct descriptive slug."
   USE `edit/createDirectory` where: dirPath=CORE_COMPONENT_DIR
   USE `edit/createFile` where: content=CORE_COMPONENT_CONTENT, filePath=CORE_COMPONENT_FILE_PATH
@@ -502,7 +487,6 @@ ELSE:
 SET COVERAGE_MATRIX := <MATRIX> (from "Agent Inference" using ACCEPTANCE_CATALOG, RESEARCH_BRIEF, CREATED_ADRS, CREATED_CORE_COMPONENTS; map each AC-* ID to implementation tasks, tests or validation, and expected evidence)
 SET COVERAGE_COMPLETE := <COMPLETE> (from "Agent Inference" using ACCEPTANCE_CATALOG, COVERAGE_MATRIX; require one complete mapping for every AC-* ID)
 IF COVERAGE_COMPLETE is false:
-  RUN `record-friction`
   RETURN: error="Acceptance coverage is incomplete. Every AC-* ID requires tasks, validation, and expected evidence."
 </process>
 
@@ -539,13 +523,6 @@ TRY:
 RECOVER (err):
   USE `edit/createFile` where: content=TEST_PLAN_CONTENT, filePath=TEST_PLAN_PATH
 SET TEST_PLAN_COMPLETE := true (from "Agent Inference")
-</process>
-
-<process id="record-friction" name="Record Plan friction before handoff">
-SET FRICTION_ENTRY := <ENTRY> (from "Agent Inference" using FRICTION_CONTEXT, RESEARCH_BRIEF, ACCEPTANCE_CATALOG, COVERAGE_MATRIX, TASKS, TESTS, ARCHITECTURE_COMPLETE, COVERAGE_COMPLETE, FRICTION_QUESTION; include phase=plan, status, inference, missing proof, and evidence; redact secrets and personal data)
-USE `edit/createFile` where: content=FRICTION_ENTRY, filePath="/tmp/rpiv-plan-friction.json"
-USE `execute/runInTerminal` where: command="./harness friction add --phase plan --file /tmp/rpiv-plan-friction.json --json"
-CAPTURE FRICTION_RESULT from `execute/runInTerminal`
 </process>
 </processes>
 

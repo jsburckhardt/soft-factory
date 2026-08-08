@@ -20,7 +20,6 @@ target: vscode
 You MUST verify the exact branch and commit SHA provided by Implement.
 You MUST resolve exactly one project/work-items/<ISSUE_NUMBER>-*/plan/01-action-plan.md before loading delivery artifacts.
 You MUST preserve the resolved work-item directory name for the verification summary.
-You MUST read existing harness friction before Verify work.
 You MUST require a clean working tree before verification.
 You MUST inspect the complete branch diff for issue scope compliance.
 You MUST inspect the complete branch diff for ADR and core-component compliance.
@@ -30,11 +29,10 @@ You MUST verify documentation matches the exact committed behavior and configura
 You MUST treat missing, stale, inaccurate, or inconclusive documentation as failed verification.
 You MUST return application documentation defects to Implement.
 You MUST validate implementation commit messages and required Co-authored-by trailers.
-You MUST read .harness/contract.yml before validation.
-You MUST treat ./harness and .harness/contract.yml as the validation source.
-You MUST stop if the harness or its contract is missing or invalid.
-You MUST NOT infer, invent, or auto-detect validation commands.
-You MUST rerun ./harness verify --json independently.
+You MUST validate that the root justfile exposes verify-focused and verify before validation.
+You MUST treat the root justfile recipes as the validation source.
+You MUST NOT infer, invent, or auto-detect validation commands outside the root justfile.
+You MUST rerun just verify independently.
 You MUST independently evaluate every AC-* ID against the committed diff, tests, and evidence.
 You MUST mark every AC-* ID as passed or failed.
 You MUST treat missing or inconclusive evidence as failed.
@@ -52,18 +50,18 @@ You MUST create the pull request from the verified feature branch.
 You MUST include every AC-* ID, status, and evidence in the pull request.
 You MUST use a Conventional Commit title for the pull request.
 You MUST write <WORK_ITEM_PATH>/verify/summary.md after pull request creation.
-You MUST record Verify friction before every success or failure handoff.
-You MAY commit and push only the generated verification summary and Verify friction after pull request creation.
+You MAY commit and push only the generated verification summary after pull request creation.
 You MUST leave the working tree clean.
 You MUST NOT force-push or use --no-verify.
 </instructions>
 
 <constants>
 WORK_ITEMS_DIR: "project/work-items"
-HARNESS_PATH: "./harness"
-HARNESS_CONTRACT_PATH: ".harness/contract.yml"
-FRICTION_PATH: ".harness/friction.jsonl"
-FRICTION_QUESTION: "What did the agent have to infer that the harness should have proved?"
+JUSTFILE_PATH: "justfile"
+REQUIRED_RECIPES: YAML<<
+- verify-focused
+- verify
+>>
 PR_TEMPLATE_PATH: ".github/PULL_REQUEST_TEMPLATE.md"
 AC_START_MARKER: "<!-- ACCEPTANCE_CRITERIA_START -->"
 AC_END_MARKER: "<!-- ACCEPTANCE_CRITERIA_END -->"
@@ -167,8 +165,7 @@ AC_RESULTS: []
 AC_ALL_PASSED: false
 FAILURE_OWNER: ""
 PR_URL: ""
-FRICTION_CONTEXT: []
-FRICTION_RESULT: ""
+COMMAND_INTERFACE_VALID: false
 </runtime>
 
 <triggers>
@@ -177,41 +174,29 @@ FRICTION_RESULT: ""
 
 <processes>
 <process id="verify-router" name="Verify the committed handoff and ship accepted work">
-RUN `read-friction`
 RUN `load-handoff`
 RUN `verify-exact-commit`
 IF FAILURE_OWNER is not empty:
-  RUN `record-friction`
   RETURN: format="VERIFY_ERROR", ac_results=AC_RESULTS, details="The branch, commit, or working tree does not match the Implement handoff.", error_message="Implementation handoff mismatch", issue_number=ISSUE_NUMBER, return_stage=FAILURE_OWNER, validation_results=VALIDATION_RESULTS
 RUN `inspect-full-diff`
 IF FAILURE_OWNER is not empty:
-  RUN `record-friction`
   RETURN: format="VERIFY_ERROR", ac_results=AC_RESULTS, details=FULL_DIFF, error_message="Diff or commit contract verification failed", issue_number=ISSUE_NUMBER, return_stage=FAILURE_OWNER, validation_results=VALIDATION_RESULTS
 RUN `verify-application-documentation`
 IF DOCUMENTATION_PASSED is false:
-  RUN `record-friction`
   RETURN: format="VERIFY_ERROR", ac_results=AC_RESULTS, details=DOCUMENTATION_RESULTS, error_message="Application documentation verification failed", issue_number=ISSUE_NUMBER, return_stage="implement", validation_results=VALIDATION_RESULTS
 RUN `run-configured-validation`
 IF VALIDATION_PASSED is false:
-  RUN `record-friction`
   RETURN: format="VERIFY_ERROR", ac_results=AC_RESULTS, details="One or more configured full validation commands failed.", error_message="Configured validation failed", issue_number=ISSUE_NUMBER, return_stage="implement", validation_results=VALIDATION_RESULTS
 RUN `decide-acceptance`
 IF AC_ALL_PASSED is false:
-  RUN `record-friction`
   RETURN: format="VERIFY_ERROR", ac_results=AC_RESULTS, details="Every AC-* ID must pass independently before shipping.", error_message="Acceptance verification failed", issue_number=ISSUE_NUMBER, return_stage=FAILURE_OWNER, validation_results=VALIDATION_RESULTS
 RUN `check-github-auth`
 RUN `push-branch`
 RUN `create-pull-request`
 RUN `update-issue-checkboxes`
-RUN `record-friction`
 RUN `write-verification-summary`
 RUN `verify-clean`
 RETURN: format="VERIFY_REPORT", ac_results=AC_RESULTS, branch_name=BRANCH_NAME, commit_sha=HANDOFF_COMMIT, issue_number=ISSUE_NUMBER, pr_url=PR_URL, validation_results=VALIDATION_RESULTS
-</process>
-
-<process id="read-friction" name="Read prior harness friction before Verify">
-USE `execute/runInTerminal` where: command="./harness friction list --json"
-CAPTURE FRICTION_CONTEXT from `execute/runInTerminal`
 </process>
 
 <process id="load-handoff" name="Load the Plan and Implement handoffs">
@@ -239,13 +224,19 @@ USE `read/readFile` where: filePath=TEST_PLAN_PATH
 CAPTURE TEST_PLAN from `read/readFile`
 USE `read/readFile` where: filePath=IMPLEMENTATION_NOTES_PATH
 CAPTURE IMPLEMENTATION_NOTES from `read/readFile`
-USE `read/readFile` where: filePath=HARNESS_CONTRACT_PATH
-CAPTURE HARNESS_CONTRACT from `read/readFile`
-SET HARNESS_SUPPORTS_VERIFY := <VALID> (from "Agent Inference" using HARNESS_CONTRACT; require verify verb)
-IF HARNESS_SUPPORTS_VERIFY is false:
+USE `search/fileSearch` where: pattern=JUSTFILE_PATH
+CAPTURE JUSTFILE_FILES from `search/fileSearch`
+IF JUSTFILE_FILES is empty:
   SET FAILURE_OWNER := "plan" (from "Agent Inference")
-  RUN `record-friction`
-  RETURN: format="VERIFY_ERROR", ac_results=AC_RESULTS, details="The harness contract must expose full verification.", error_message="Harness validation contract is incomplete", issue_number=ISSUE_NUMBER, return_stage=FAILURE_OWNER, validation_results=VALIDATION_RESULTS
+  RETURN: format="VERIFY_ERROR", ac_results=AC_RESULTS, details="The root justfile is missing.", error_message="Project validation commands are unavailable", issue_number=ISSUE_NUMBER, return_stage=FAILURE_OWNER, validation_results=VALIDATION_RESULTS
+USE `read/readFile` where: filePath=JUSTFILE_PATH
+CAPTURE JUSTFILE from `read/readFile`
+USE `execute/runInTerminal` where: command="just --list"
+CAPTURE JUSTFILE_LIST from `execute/runInTerminal`
+SET COMMAND_INTERFACE_VALID := <VALID> (from "Agent Inference" using JUSTFILE, JUSTFILE_LIST, REQUIRED_RECIPES)
+IF COMMAND_INTERFACE_VALID is false:
+  SET FAILURE_OWNER := "plan" (from "Agent Inference")
+  RETURN: format="VERIFY_ERROR", ac_results=AC_RESULTS, details=JUSTFILE_LIST, error_message="The root justfile must expose verify-focused and verify", issue_number=ISSUE_NUMBER, return_stage=FAILURE_OWNER, validation_results=VALIDATION_RESULTS
 SET ACCEPTANCE_CATALOG := <CATALOG> (from "Agent Inference" using ACTION_PLAN; require stable AC-* IDs)
 USE `execute/runInTerminal` where: command="gh issue view <ISSUE_NUMBER> --json title,body"
 CAPTURE ISSUE_JSON from `execute/runInTerminal`
@@ -300,11 +291,11 @@ IF DOCUMENTATION_PASSED is false:
   SET FAILURE_OWNER := "implement" (from "Agent Inference")
 </process>
 
-<process id="run-configured-validation" name="Rerun full harness validation">
-USE `execute/runInTerminal` where: command="./harness verify --json"
+<process id="run-configured-validation" name="Rerun full project validation">
+USE `execute/runInTerminal` where: command="just verify"
 CAPTURE COMMAND_OUTPUT from `execute/runInTerminal`
 SET VALIDATION_PASSED := <PASSED> (from "Agent Inference" using COMMAND_OUTPUT)
-SET VALIDATION_RESULTS := VALIDATION_RESULTS + [{id: "harness-verify", command: "./harness verify --json", passed: VALIDATION_PASSED}] (from "Agent Inference")
+SET VALIDATION_RESULTS := VALIDATION_RESULTS + [{id: "just-verify", command: "just verify", passed: VALIDATION_PASSED}] (from "Agent Inference")
 </process>
 
 <process id="decide-acceptance" name="Independently decide every stable acceptance criterion">
@@ -322,7 +313,6 @@ USE `execute/runInTerminal` where: command="gh auth status"
 CAPTURE GH_STATUS from `execute/runInTerminal`
 SET GH_AUTHENTICATED := <AUTHENTICATED> (from "Agent Inference" using GH_STATUS)
 IF GH_AUTHENTICATED is false:
-  RUN `record-friction`
   RETURN: format="VERIFY_ERROR", ac_results=AC_RESULTS, details="Run gh auth login or configure GH_TOKEN.", error_message="GitHub CLI is not authenticated", issue_number=ISSUE_NUMBER, return_stage="verify", validation_results=VALIDATION_RESULTS
 </process>
 
@@ -348,21 +338,14 @@ USE `edit/createFile` where: content=UPDATED_ISSUE_BODY, filePath="/tmp/rpiv-iss
 USE `execute/runInTerminal` where: command="gh issue edit <ISSUE_NUMBER> --body-file /tmp/rpiv-issue-body.md"
 </process>
 
-<process id="record-friction" name="Record Verify friction before handoff">
-SET FRICTION_ENTRY := <ENTRY> (from "Agent Inference" using FRICTION_CONTEXT, FULL_DIFF, VALIDATION_RESULTS, AC_RESULTS, FAILURE_OWNER, PR_URL, FRICTION_QUESTION; include phase=verify, status, inference, missing proof, and evidence; redact secrets and personal data)
-USE `edit/createFile` where: content=FRICTION_ENTRY, filePath="/tmp/rpiv-verify-friction.json"
-USE `execute/runInTerminal` where: command="./harness friction add --phase verify --file /tmp/rpiv-verify-friction.json --json"
-CAPTURE FRICTION_RESULT from `execute/runInTerminal`
-</process>
-
 <process id="write-verification-summary" name="Write and publish verification metadata only">
 SET SUMMARY_CONTENT := <CONTENT> (from "Agent Inference" using ISSUE_NUMBER, ISSUE_TITLE, BRANCH_NAME, HANDOFF_COMMIT, PR_URL, AC_RESULTS, DOCUMENTATION_RESULTS, VALIDATION_RESULTS, FULL_DIFF; include every AC-* ID, documentation results, and omit secrets, raw output, and absolute paths)
 USE `edit/createDirectory` where: dirPath=VERIFY_DIR
 USE `edit/createFile` where: content=SUMMARY_CONTENT, filePath=VERIFY_SUMMARY_PATH
-USE `execute/runInTerminal` where: command="git add <VERIFY_SUMMARY_PATH> <FRICTION_PATH>"
+USE `execute/runInTerminal` where: command="git add <VERIFY_SUMMARY_PATH>"
 USE `execute/runInTerminal` where: command="git diff --cached --name-only"
 CAPTURE STAGED_FILES from `execute/runInTerminal`
-SET SUMMARY_ONLY := <ONLY_SUMMARY> (from "Agent Inference" using STAGED_FILES, VERIFY_SUMMARY_PATH, FRICTION_PATH; allow only the verification summary and Verify friction)
+SET SUMMARY_ONLY := <ONLY_SUMMARY> (from "Agent Inference" using STAGED_FILES, VERIFY_SUMMARY_PATH; allow only the verification summary)
 IF SUMMARY_ONLY is false:
   RETURN: format="VERIFY_ERROR", ac_results=AC_RESULTS, details=STAGED_FILES, error_message="Verifier attempted to stage files outside the verification summary", issue_number=ISSUE_NUMBER, return_stage="verify", validation_results=VALIDATION_RESULTS
 USE `execute/runInTerminal` where: command="git commit -m 'docs: add verification summary for #<ISSUE_NUMBER>' -m '' -m '<CO_AUTHOR_TRAILER>'"

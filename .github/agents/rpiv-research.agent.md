@@ -22,7 +22,6 @@ target: vscode
 
 <instructions>
 You MUST fetch the GitHub issue before researching.
-You MUST read existing harness friction before Research work.
 You MUST validate that the issue contains structured markdown acceptance criteria.
 You MUST preserve the acceptance criteria verbatim and in issue order.
 You MUST read relevant documentation under docs/ and project/.
@@ -47,7 +46,6 @@ You MUST NOT make or propose architectural decisions.
 You MUST NOT propose ADR or core-component titles.
 You MUST NOT edit application code, tests, ADRs, core-components, or plans.
 You MUST write only <WORK_ITEM_PATH>/research/00-research.md.
-You MUST record Research friction before every success or failure handoff.
 You MUST follow the RESEARCH_BRIEF format.
 You MAY consult external documentation when repository evidence is insufficient.
 </instructions>
@@ -56,8 +54,6 @@ You MAY consult external documentation when repository evidence is insufficient.
 DECISION_LOG_PATH: "project/architecture/ADR/DECISION-LOG.md"
 WORK_ITEMS_DIR: "project/work-items"
 WORK_ITEM_PATTERN: "project/work-items/<ISSUE_NUMBER>-*"
-HARNESS_PATH: "./harness"
-FRICTION_QUESTION: "What did the agent have to infer that the harness should have proved?"
 SCOPE_TYPES: YAML<<
 - issue
 - architecture_decision
@@ -124,8 +120,6 @@ REPOSITORY_FINDINGS: []
 CONSTRAINTS: []
 RELEVANT_ARCHITECTURE: []
 RISKS: []
-FRICTION_CONTEXT: []
-FRICTION_RESULT: ""
 RESEARCH_COMPLETE: false
 </runtime>
 
@@ -135,19 +129,12 @@ RESEARCH_COMPLETE: false
 
 <processes>
 <process id="research-router" name="Investigate the issue and write the research brief">
-RUN `read-friction`
 RUN `fetch-issue`
 RUN `resolve-work-item-path`
 RUN `gather-repository-evidence`
 RUN `classify-scope`
 RUN `write-research-brief`
-RUN `record-friction`
 RETURN: ISSUE_NUMBER, SCOPE_TYPE, WORK_ITEM_PATH
-</process>
-
-<process id="read-friction" name="Read prior harness friction before Research">
-USE `execute/runInTerminal` where: command="./harness friction list --json"
-CAPTURE FRICTION_CONTEXT from `execute/runInTerminal`
 </process>
 
 <process id="fetch-issue" name="Fetch issue details and preserve acceptance criteria">
@@ -158,7 +145,6 @@ SET ISSUE_TITLE := <TITLE> (from "Agent Inference" using ISSUE_JSON)
 SET ISSUE_BODY := <BODY> (from "Agent Inference" using ISSUE_JSON)
 SET ACCEPTANCE_CRITERIA := <CRITERIA> (from "Agent Inference" using ISSUE_BODY; preserve checkbox text and order)
 IF ACCEPTANCE_CRITERIA is empty:
-  RUN `record-friction`
   RETURN: error="Issue #<ISSUE_NUMBER> is missing structured acceptance criteria."
 </process>
 
@@ -168,7 +154,6 @@ CAPTURE EXISTING_WORK_ITEM_FILES from `search/fileSearch`
 SET EXISTING_WORK_ITEM_PATHS := <PATHS> (from "Agent Inference" using EXISTING_WORK_ITEM_FILES; extract unique project/work-items/<ISSUE_NUMBER>-<SHORT_DESCRIPTION> directory paths)
 SET EXISTING_WORK_ITEM_COUNT := <COUNT> (from "Agent Inference" using EXISTING_WORK_ITEM_PATHS)
 IF EXISTING_WORK_ITEM_COUNT > 1:
-  RUN `record-friction`
   RETURN: error="More than one work-item directory uses issue #<ISSUE_NUMBER>."
 IF EXISTING_WORK_ITEM_COUNT = 1:
   SET WORK_ITEM_PATH := <PATH> (from "Agent Inference" using EXISTING_WORK_ITEM_PATHS)
@@ -205,13 +190,6 @@ SET RESEARCH_DIR := <PATH> (from "Agent Inference" using WORK_ITEM_PATH; append 
 USE `edit/createDirectory` where: dirPath=RESEARCH_DIR
 USE `edit/createFile` where: content=BRIEF_CONTENT, filePath=RESEARCH_PATH
 SET RESEARCH_COMPLETE := true (from "Agent Inference")
-</process>
-
-<process id="record-friction" name="Record Research friction before handoff">
-SET FRICTION_ENTRY := <ENTRY> (from "Agent Inference" using FRICTION_CONTEXT, REPOSITORY_FINDINGS, CONSTRAINTS, RISKS, RESEARCH_COMPLETE, FRICTION_QUESTION; include phase=research, status, inference, missing proof, and evidence; redact secrets and personal data)
-USE `edit/createFile` where: content=FRICTION_ENTRY, filePath="/tmp/rpiv-research-friction.json"
-USE `execute/runInTerminal` where: command="./harness friction add --phase research --file /tmp/rpiv-research-friction.json --json"
-CAPTURE FRICTION_RESULT from `execute/runInTerminal`
 </process>
 </processes>
 
