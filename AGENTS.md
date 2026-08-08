@@ -24,13 +24,11 @@ You MUST return to the Plan stage if implementation diverges from an ADR or core
 You MUST inspect existing repo code and documentation before proposing new work.
 You MUST NOT skip any stage in the pipeline.
 You MUST keep raw project operating commands in the root justfile.
-You MUST treat ./harness and .harness/contract.yml as the validation source for Implement and Verify.
-You MUST run @harness-cli-it before RPIV when ./harness or .harness/contract.yml is missing or invalid.
-You MUST read harness friction at the beginning of every RPIV stage.
-You MUST record harness friction at the end of every RPIV stage.
+You MUST treat root justfile recipes as the default validation source for Implement and Verify.
+You MUST require the root justfile to expose verify-focused and verify before RPIV.
 You MUST enforce this RPIV boundary: RPIV orchestrates, Research investigates, Plan proves coverage, Implement builds and provides evidence, Verify decides acceptance and creates the PR.
 You MUST require Implement to maintain affected application documentation and Verify to inspect it independently.
-You MUST keep issue acceptance criteria bounded, observable, and executable by configured agents with repository and harness capabilities.
+You MUST keep issue acceptance criteria bounded, observable, and executable by configured agents with repository capabilities.
 You MUST update the APS version badge in README.md and the APS_BADGE constant when the APS skill is upgraded.
 You MUST mark a PR review comment as resolved via the GitHub API after fixing the issue it raised.
 </instructions>
@@ -100,7 +98,7 @@ onboard-repo:
     - must not scaffold or modify application source code
 bootstrap:
   file: .github/agents/bootstrap.agent.md
-  purpose: Bootstrap a new project, create its justfile command interface, and hand off harness creation before RPIV work.
+  purpose: Bootstrap a new project, create its justfile command interface, and prepare the first issue handoff.
   tools:
     - codebase exploration and editing
     - file creation and editing
@@ -146,7 +144,6 @@ bootstrap:
     - must ensure the development environment provides the just command runner
     - must ask user to confirm or customize proposed justfile recipes
     - must not create a standalone verification command config
-    - must hand off harness creation before RPIV work
     - must not set up CI/CD pipelines or infrastructure
     - must not make feature-level decisions
 rpiv:
@@ -168,12 +165,10 @@ rpiv:
   templates: []
   guardrails:
     - must create or confirm the issue feature branch before Research
-    - must verify the harness and contract before Research
-    - must direct the user to run @harness-cli-it when the harness or contract is missing or invalid
+    - must verify the root justfile exposes verify-focused and verify before Research
     - must execute Research, Plan, Implement, and Verify in strict order
     - must delegate stage work to rpiv-research, rpiv-planner, rpiv-implementer, and rpiv-verifier
     - must validate each stage artifact before proceeding
-    - must require every stage to read friction before work and record friction before handoff
     - Plan to Implement handoff must include the exact work-item path, acceptance criteria, tasks, test plan, and relevant ADRs
     - Implement to Verify handoff must include the exact work-item path, branch, commit SHA, clean-tree proof, implementation evidence, documentation evidence, and test results
     - verification code, test, or application documentation failures return to Implement
@@ -204,7 +199,6 @@ rpiv-research:
     - extract acceptance criteria from the issue and include them in the research brief
     - inspect existing repo code and docs before recording findings
     - record only constraints, risks, relevant ADRs and core-components, and repository findings
-    - read harness friction before Research and record Research friction before handoff
     - must not design solutions, create tasks, define tests, or propose architectural artifacts
 rpiv-planner:
   file: .github/agents/rpiv-planner.agent.md
@@ -243,7 +237,6 @@ rpiv-planner:
     - assign stable AC-1, AC-2, and subsequent IDs in issue order
     - map every AC ID to implementation tasks, tests or validation, and expected evidence
     - include AC IDs in the action plan, task breakdown, and test plan
-    - read harness friction before Plan and record Plan friction before handoff
     - every task must have acceptance criteria
     - every task must have explicit test coverage requirements
     - every task must identify expected evidence
@@ -259,8 +252,7 @@ rpiv-implementer:
     - project/work-items/<ISSUE_NUMBER>-<SHORT_DESCRIPTION>/plan/
     - project/architecture/ADR/
     - project/architecture/core-components/
-    - .harness/contract.yml
-    - harness
+    - justfile
     - application source code
     - README.md
     - docs/
@@ -281,10 +273,9 @@ rpiv-implementer:
     - cover README, API, configuration, usage, migration, architecture, operational, and deployment documentation when applicable
     - record documentation evidence or an explicit no-impact rationale in implementation notes
     - return to Plan when documentation requires an ADR or core-component contract change
-    - treat ./harness and .harness/contract.yml as the validation source
-    - run ./harness verify-focused --json while building and fix failures
-    - run ./harness verify --json before handoff and fix failures
-    - read harness friction before Implement and record Implement friction before handoff
+    - treat root justfile recipes as the validation source
+    - run just verify-focused while building and fix failures
+    - run just verify before handoff and fix failures
     - record concrete implementation evidence for every AC ID
     - commit the implementation and hand off a clean working tree
     - must not check GitHub acceptance criteria or claim final verification
@@ -301,8 +292,7 @@ rpiv-verifier:
     - project/architecture/core-components/
     - AGENTS.md
     - project/work-items/<ISSUE_NUMBER>-<SHORT_DESCRIPTION>/
-    - .harness/contract.yml
-    - harness
+    - justfile
     - .github/PULL_REQUEST_TEMPLATE.md
     - application source code and test files
     - README.md
@@ -317,9 +307,8 @@ rpiv-verifier:
     - must inspect the full branch diff for issue scope and architecture compliance
     - must independently inspect every application documentation category affected by the implementation
     - must fail missing, stale, inaccurate, or inconclusive documentation and return it to Implement
-    - must treat ./harness and .harness/contract.yml as the validation source
-    - must rerun ./harness verify --json independently
-    - must read harness friction before Verify and record Verify friction before handoff
+    - must treat root justfile recipes as the validation source
+    - must rerun just verify independently
     - must not auto-detect or invent validation commands
     - must independently mark every AC ID passed or failed with concrete evidence
     - must not proceed to push or PR creation if any acceptance criterion fails validation
@@ -332,37 +321,6 @@ rpiv-verifier:
     - must not modify application source code, tests, or application documentation
     - must verify the branch is clean after all commits
     - must write summary.md to project/work-items/<ISSUE_NUMBER>-<SHORT_DESCRIPTION>/verify/ after PR creation
-harness-cli-it:
-  file: .github/agents/harness-cli-it.agent.md
-  purpose: Create the repo-local engineering harness, migrate legacy validation into its contract, update agents, and remove the legacy config.
-  tools:
-    - codebase exploration and reading
-    - file creation and editing
-    - terminal execution
-  read_paths:
-    - justfile
-    - legacy verification command config when present
-    - AGENTS.md
-    - .github/agents/
-    - project files defining operating commands
-  write_paths:
-    - harness
-    - .harness/contract.yml
-    - .harness/evidence/
-    - .harness/friction.jsonl
-    - .harness/README.md
-    - AGENTS.md
-    - .github/agents/*.agent.md
-  templates: []
-  guardrails:
-    - must wrap existing commands instead of inventing a build system
-    - must import legacy verification commands into focused and full harness validation
-    - must expose ./harness verify-focused and ./harness verify
-    - must make RPIV agents read friction before work and record friction before handoff
-    - must update AGENTS.md and all repo agent definitions to use the harness
-    - must remove legacy verification config references from updated agents
-    - must delete the legacy config only after the harness passes validation
-    - must verify no active legacy config references remain
 issue-generator:
   file: .github/agents/issue-generator.agent.md
   purpose: Analyze codebase history for issue-quality gaps, draft a problem-focused GitHub issue with structured agent-executable acceptance criteria, dispatch a rubber-duck subagent to critique it, then create the issue via gh. Runs before the RPIV pipeline to produce feasible work without preempting RPIV Research or Plan.
@@ -377,7 +335,6 @@ issue-generator:
     - AGENTS.md
     - LLM.txt
     - justfile
-    - .harness/contract.yml
     - project/work-items/
     - application source code
   write_paths:
@@ -390,7 +347,7 @@ issue-generator:
     - must not include proposed solutions, technical considerations, implementation plans, architecture decisions, technology choices, dependency choices, API designs, file paths, or test-framework prescriptions unless explicitly provided by the user as problem context
     - must format acceptance criteria as markdown checkboxes with ACCEPTANCE_CRITERIA_START/END HTML markers
     - must make every acceptance criterion bounded, deterministic, observable, and independently verifiable by configured agents
-    - must use repository and declared harness capabilities when proposing validation evidence
+    - must use repository and declared agent capabilities when proposing validation evidence
     - must reject unavailable, subjective, manual-only, destructive-production, unbounded, or exhaustive validation requirements
     - must identify essential external or human prerequisites explicitly instead of encoding impossible agent tasks
     - must dispatch a rubber-duck subagent to critique the draft before creating the issue

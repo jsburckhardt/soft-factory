@@ -48,7 +48,8 @@
                 "editor.tabSize": 4,
                 // "python.defaultInterpreterPath": "/home/vscode/.venv/bin/python",
                 "files.autoSave": "onWindowChange",
-                "chat.customAgentInSubagent.enabled": true
+                "chat.customAgentInSubagent.enabled": true,
+                "task.allowAutomaticTasks": "on"
             },
             "extensions": [
                 "GitHub.vscode-github-actions",
@@ -65,7 +66,7 @@
             ]
         }
     },
-    // "postCreateCommand": "bash ./.devcontainer/setupEnv.sh",
+    "postCreateCommand": "bash .devcontainer/post-create.sh",
     "containerEnv": {
         "DISPLAY": "dummy",
         "PYTHONUNBUFFERED": "True",
@@ -79,7 +80,7 @@
         "GIT_PAGER": "",
         "GH_PAGER": ""
     },
-    "postStartCommand": "mkdir -p \"$HOME/.config/tmux\" && ln -sfn \"$PWD/.devcontainer/tmux.conf\" \"$HOME/.config/tmux/tmux.conf\" && socket=\"$PWD/.devcontainer/.tmux-shared\" && config=\"$PWD/.devcontainer/tmux.conf\" && (tmux -S \"$socket\" has-session -t soft-factory 2>/dev/null || tmux -S \"$socket\" -f \"$config\" new-session -d -s soft-factory -c \"$PWD\") && tmux -S \"$socket\" source-file \"$config\"",
+    "postStartCommand": "bash .devcontainer/post-start.sh",
     "remoteUser": "vscode",
     "hostRequirements": {
         "memory": "4gb"

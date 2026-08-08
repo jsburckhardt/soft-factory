@@ -34,6 +34,6 @@ Closes #<!-- ISSUE_NUMBER -->
 - [ ] Implement handoff branch and commit SHA verified exactly
 - [ ] Full branch diff reviewed for scope and architecture compliance
 - [ ] Affected application documentation is complete and matches the committed behavior
-- [ ] `./harness verify --json` passes
+- [ ] `just verify` passes
 - [ ] Every `AC-*` criterion independently passed with evidence
 - [ ] Branch is clean with no uncommitted changes
