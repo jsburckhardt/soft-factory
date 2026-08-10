@@ -10,4 +10,4 @@ mkdir -p "$config_dir"
 ln -sfn "$config_file" "$config_dir/tmux.conf"
 
 gh alias set --clobber --shell login \
-    'eval "$(tmux show-environment -g -s BROWSER 2>/dev/null || true)"; eval "$(tmux show-environment -g -s WAYLAND_DISPLAY 2>/dev/null || true)"; eval "$(tmux show-environment -g -s XDG_RUNTIME_DIR 2>/dev/null || true)"; gh auth login --web --clipboard'
+    'eval "$(tmux show-environment -g -s BROWSER 2>/dev/null || true)"; eval "$(tmux show-environment -g -s VSCODE_IPC_HOOK_CLI 2>/dev/null || true)"; eval "$(tmux show-environment -g -s WAYLAND_DISPLAY 2>/dev/null || true)"; eval "$(tmux show-environment -g -s XDG_RUNTIME_DIR 2>/dev/null || true)"; gh auth login --web --clipboard'

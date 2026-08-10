@@ -44,6 +44,11 @@ You MUST update AGENTS.md to register the bootstrap in the AGENTS constant.
 You MUST update LLM.txt with any new project-specific file references.
 You MUST tailor .devcontainer/devcontainer.json to the chosen tech stack by removing unnecessary features.
 You MUST ensure the development environment provides the just command runner.
+You MUST detect whether the repository template already provides a root justfile before any project writes.
+You MUST request explicit confirmation before replacing or regenerating an inherited root justfile.
+You MUST treat only an explicit replacement confirmation as permission to edit an inherited root justfile.
+You MUST return before scaffolding or writing files when replacement is declined or remains unconfirmed.
+You MUST preserve the inherited root justfile byte-for-byte when replacement is not confirmed.
 You MUST name ADRs using ADR-yymmdd-short-slug.md with the UTC creation date.
 You MUST name core-components using CORE-COMPONENT-yymmdd-short-slug.md with the UTC creation date.
 You MUST use each full date-and-slug basename as the artifact ID.
@@ -76,6 +81,7 @@ APP_DOCS_PATH: "docs/README.md"
 LLM_TXT_PATH: "LLM.txt"
 DEVCONTAINER_PATH: ".devcontainer/devcontainer.json"
 JUSTFILE_PATH: "justfile"
+JUSTFILE_REPLACEMENT_PROMPT: "A root justfile is inherited from the repository template. Explicitly confirm replacement or regeneration before bootstrap writes any files."
 JUSTFILE_CONTRACT: YAML<<
 required:
   - verify-focused
@@ -400,6 +406,22 @@ WHERE:
 - <UPDATE_LIST> is Markdown.
 </format>
 
+<format id="JUSTFILE_REPLACEMENT_CONFIRMATION" name="Justfile Replacement Confirmation" purpose="Obtain explicit permission before replacing an inherited root justfile.">
+## Confirm Root Justfile Replacement
+
+**Path:** <PATH>
+
+<PROMPT>
+
+**Preservation:** <PRESERVATION>
+
+Reply with an explicit confirmation to replace or regenerate this file, or decline to stop bootstrap without writes.
+WHERE:
+- <PATH> is String.
+- <PRESERVATION> is String.
+- <PROMPT> is String.
+</format>
+
 <format id="BOOTSTRAP_REPORT" name="Bootstrap Report" purpose="Summarize all actions taken during project bootstrap.">
 # Bootstrap Report
 
@@ -480,6 +502,9 @@ CREATED_CORE_COMPONENTS: []
 UPDATED_FILES: []
 OPERATING_COMMANDS: {}
 JUSTFILE_CONTENT: ""
+JUSTFILE_EXISTS: false
+INHERITED_JUSTFILE_CONTENT: ""
+JUSTFILE_REPLACEMENT_DECISION: "pending"
 </runtime>
 
 <triggers>
@@ -492,6 +517,7 @@ RUN `check-bootstrapped`
 IF IS_BOOTSTRAPPED is true:
   RETURN: format="BOOTSTRAP_BLOCKED", evidence=BOOTSTRAP_EVIDENCE, reason="Project has already been bootstrapped", suggestion="Create or select a GitHub issue, then run @rpiv"
 RUN `resolve-artifact-date`
+RUN `detect-inherited-justfile`
 IF PROJECT_NAME is empty:
   RUN `gather-project-info`
 SET ARTIFACT_LIST := <LIST> (from "Agent Inference" using LANGUAGE, CROSS_CUTTING_CONCERNS, ARTIFACT_DATE, ADR_PATTERN, CORE_COMPONENT_PATTERN)
@@ -499,6 +525,12 @@ SET UPDATE_LIST := <LIST> (from "Agent Inference" using README_PATH, APP_DOCS_PA
 SET DEVELOPMENT_STANDARDS_SUMMARY := <SUMMARY> (from "Agent Inference" using DEVELOPMENT_STANDARDS, LANGUAGE)
 IF INFO_CONFIRMED is false:
   RETURN: format="BOOTSTRAP_SUMMARY", artifact_list=ARTIFACT_LIST, cross_cutting_list=CROSS_CUTTING_CONCERNS, development_standards_summary=DEVELOPMENT_STANDARDS_SUMMARY, framework=FRAMEWORK, init_command=INIT_COMMAND, language=LANGUAGE, operating_commands=OPERATING_COMMANDS, package_manager=PACKAGE_MANAGER, project_description=PROJECT_DESCRIPTION, project_goal=PROJECT_GOAL, project_name=PROJECT_NAME, test_runner=TEST_RUNNER, update_list=UPDATE_LIST
+IF JUSTFILE_EXISTS is true:
+  RUN `resolve-justfile-replacement-decision`
+  IF JUSTFILE_REPLACEMENT_DECISION == "pending":
+    RETURN: format="JUSTFILE_REPLACEMENT_CONFIRMATION", path=JUSTFILE_PATH, prompt=JUSTFILE_REPLACEMENT_PROMPT, preservation="No project files have been written; declining leaves the inherited justfile unchanged."
+  IF JUSTFILE_REPLACEMENT_DECISION != "confirmed":
+    RETURN: format="BOOTSTRAP_BLOCKED", evidence="No project files were written and the inherited root justfile remains unchanged.", reason="Root justfile replacement was not confirmed", suggestion="Rerun bootstrap only if you want to explicitly confirm replacement or regeneration of the inherited justfile"
 RUN `scaffold-project`
 RUN `create-tech-stack-adr`
 IF CROSS_CUTTING_CONCERNS is not empty:
@@ -525,6 +557,21 @@ ELSE:
 <process id="resolve-artifact-date" name="Resolve the UTC architecture artifact date">
 USE `execute/runInTerminal` where: command=ARTIFACT_DATE_COMMAND
 CAPTURE ARTIFACT_DATE from `execute/runInTerminal`
+</process>
+
+<process id="detect-inherited-justfile" name="Detect a repository-template root justfile before writes">
+USE `search/fileSearch` where: pattern=JUSTFILE_PATH
+CAPTURE INHERITED_JUSTFILE_FILES from `search/fileSearch`
+IF INHERITED_JUSTFILE_FILES is not empty:
+  USE `read/readFile` where: filePath=JUSTFILE_PATH
+  CAPTURE INHERITED_JUSTFILE_CONTENT from `read/readFile`
+  SET JUSTFILE_EXISTS := true (from "Agent Inference")
+ELSE:
+  SET JUSTFILE_EXISTS := false (from "Agent Inference")
+</process>
+
+<process id="resolve-justfile-replacement-decision" name="Require an explicit inherited justfile replacement decision">
+SET JUSTFILE_REPLACEMENT_DECISION := <DECISION> (from "Agent Inference" using USER_INPUT, JUSTFILE_REPLACEMENT_PROMPT; set confirmed only for explicit replacement approval, declined for explicit refusal, and pending otherwise)
 </process>
 
 <process id="gather-project-info" name="Gather project identity, tech stack, and cross-cutting concerns from user">
@@ -636,7 +683,10 @@ SET UPDATED_FILES := UPDATED_FILES + [DEVCONTAINER_PATH] (from "Agent Inference"
 
 <process id="configure-operations" name="Write project operating commands to the root justfile">
 SET JUSTFILE_CONTENT := <CONTENT> (from "Agent Inference" using OPERATING_COMMANDS, JUSTFILE_CONTRACT; create deterministic recipes with raw project commands only in recipe bodies)
-USE `edit/createFile` where: content=JUSTFILE_CONTENT, filePath=JUSTFILE_PATH
+IF JUSTFILE_EXISTS is true:
+  USE `edit/editFiles` where: content=JUSTFILE_CONTENT, filePath=JUSTFILE_PATH
+ELSE:
+  USE `edit/createFile` where: content=JUSTFILE_CONTENT, filePath=JUSTFILE_PATH
 USE `execute/runInTerminal` where: command="just --list"
 CAPTURE JUSTFILE_LIST from `execute/runInTerminal`
 SET JUSTFILE_VALID := <VALID> (from "Agent Inference" using JUSTFILE_LIST, JUSTFILE_CONTRACT)

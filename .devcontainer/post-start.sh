@@ -16,6 +16,12 @@ if [[ -n "${BROWSER:-}" ]]; then
     tmux -S "$socket_file" set-environment -g BROWSER "$BROWSER"
 fi
 
+if [[ -n "${VSCODE_IPC_HOOK_CLI:-}" ]]; then
+    tmux -S "$socket_file" set-environment -g VSCODE_IPC_HOOK_CLI "$VSCODE_IPC_HOOK_CLI"
+else
+    tmux -S "$socket_file" set-environment -gr VSCODE_IPC_HOOK_CLI
+fi
+
 if [[ -n "${WAYLAND_DISPLAY:-}" ]]; then
     tmux -S "$socket_file" set-environment -g WAYLAND_DISPLAY "$WAYLAND_DISPLAY"
 fi
