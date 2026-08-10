@@ -101,4 +101,3 @@ After dependent work, prove root `justfile` remains unchanged from `HEAD`, track
 ### Expected Evidence
 - Empty root `justfile` diff, recipe listing, and both zero-exit validation outputs.
 - Completed `implementation/00-implementation.md` with AC-indexed and documentation evidence.
-

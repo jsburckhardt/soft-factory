@@ -128,4 +128,3 @@ Tracking output, empty file diff, recipe listing, and both zero-exit outputs.
 | AC-12 | TEST-5 | T-4 |
 
 Every AC has a task, finite validation, and concrete expected evidence. Tests require no credentials, interactive login, destructive external state, or out-of-scope changes.
-

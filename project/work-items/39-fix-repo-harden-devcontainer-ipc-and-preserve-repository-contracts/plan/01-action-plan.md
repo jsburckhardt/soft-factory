@@ -59,4 +59,3 @@
 - Do not delete `justfile` or `project/architecture/soft-factory-pipeline.excalidraw`.
 - Do not replace the deleted automatic tmux attachment task unless separately requested.
 - Do not modify architecture artifacts or `DECISION-LOG.md`.
-
