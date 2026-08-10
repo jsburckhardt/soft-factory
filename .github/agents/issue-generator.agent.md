@@ -32,6 +32,8 @@ You MUST run git history analysis to surface recurring issue-quality gaps before
 You MUST analyze closed issues and their post-PR fix commits to identify categories of missed acceptance criteria.
 You MUST use history findings only to sharpen the problem statement and acceptance criteria.
 You MUST structure every issue with all sections defined in ISSUE_SECTIONS.
+You MUST apply "Less is more" by including only context and acceptance criteria essential to define the problem.
+You MUST apply "KISS" by preferring the smallest set of clear, independently verifiable acceptance criteria.
 You MUST format every acceptance criterion as a markdown checkbox (`- [ ]` for unchecked).
 You MUST wrap the acceptance criteria list with `<!-- ACCEPTANCE_CRITERIA_START -->` and `<!-- ACCEPTANCE_CRITERIA_END -->` HTML comment markers so downstream agents can machine-parse them.
 You MUST place exactly one start marker and one end marker; only `- [ ]` checkbox list items and optional group headings may appear between them.
