@@ -2,6 +2,12 @@ AGENTS.md                                                   — Agent definition
 CONTRIBUTING.md                                             — Human contribution guide
 LLM.txt                                                     — This file; repo map for AI agents
 README.md                                                   — Project overview
+.github/agents/foreman.agent.md                              — APS repository mission coordinator above RPIV
+.foreman/README.md                                          — Local strategic context, graph, registry, and inbox layout
+docs/foreman.md                                             — Foreman setup, configuration, lifecycle, and recovery
+scripts/foreman.py                                          — Validated graph/state/event data contracts
+tests/test_foreman.py                                       — Inert graph, lifecycle, persistence, and agent contract checks
+justfile                                                   — Operating commands, Foreman runtime, and validation entrypoints
 .devcontainer/devcontainer.json                             — Dev container configuration
 .devcontainer/post-create.sh                                — One-time container setup for tmux config and GitHub CLI aliases
 .devcontainer/post-start.sh                                 — Per-start shared tmux session and dynamic environment setup
@@ -11,7 +17,7 @@ README.md                                                   — Project overview
 .github/agents/excali.agent.md                              — Excalidraw diagram agent
 .github/agents/rpiv.agent.md                                — rpiv agent (full RPIV pipeline coordinator)
 .github/agents/onboard-repo.agent.md                        — Onboard-repo agent (introduce Soft Factory to existing repos)
-.github/agents/rpiv-verifier.agent.md                 — rpiv-verifier agent (test validation, commits, PR creation)
+.github/agents/rpiv-verifier.agent.md                 — rpiv-verifier agent (independent acceptance and PR delivery)
 .github/agents/rpiv-implementer.agent.md              — rpiv-implementer agent (code, tests, verification)
 .github/agents/rpiv-planner.agent.md                  — rpiv-planner agent (ADRs, core-components, action plans, task breakdown, test plans)
 .github/agents/rpiv-research.agent.md                 — rpiv-research agent (exploration, scope classification)
@@ -24,6 +30,9 @@ project/README.md                                             — Project docume
 project/architecture/README.md                                 — Architecture documentation index
 project/architecture/ADR/ADR-260101-template.md                — ADR template (read-only, copy to create date-based artifacts)
 project/architecture/ADR/DECISION-LOG.md                       — Registry of all ADR and core-component decisions
+project/architecture/ADR/ADR-260906-foreman-control-plane.md   — Foreman above RPIV; CLI/worktree/tmux architecture
+project/architecture/core-components/CORE-COMPONENT-260906-foreman-orchestration.md — Mission scheduling and worker ownership
+project/architecture/core-components/CORE-COMPONENT-260906-rpiv-observability.md — State/events and communication contract
 project/architecture/core-components/CORE-COMPONENT-260101-template.md — Core-component template (read-only, copy to create date-based artifacts)
 project/architecture/core-components/CORE-COMPONENT-260505-commit-standards.md — Commit standards (Conventional Commits, Co-authored-by)
 project/architecture/core-components/CORE-COMPONENT-260806-rpiv-stage-contract.md — RPIV stage ownership and handoff contract

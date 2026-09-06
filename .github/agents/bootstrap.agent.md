@@ -45,6 +45,10 @@ You MUST update LLM.txt with any new project-specific file references.
 You MUST tailor .devcontainer/devcontainer.json to the chosen tech stack by removing unnecessary features.
 You MUST ensure the development environment provides the just command runner.
 You MUST detect whether the repository template already provides a root justfile before any project writes.
+You MUST preserve the inherited Foreman agent, CLI worker agents, .foreman workspace guide, scripts/foreman.py, and Foreman/RPIV recipes when bootstrapping a consumer repository.
+You MUST keep .trees and local Foreman/RPIV runtime state ignored by Git.
+You MUST retain Python 3, tmux, Git, just, and Copilot CLI prerequisites when Foreman is enabled.
+You MUST NOT start Foreman or launch workers merely because the template includes them.
 You MUST request explicit confirmation before replacing or regenerating an inherited root justfile.
 You MUST treat only an explicit replacement confirmation as permission to edit an inherited root justfile.
 You MUST return before scaffolding or writing files when replacement is declined or remains unconfirmed.

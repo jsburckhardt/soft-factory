@@ -1,7 +1,15 @@
 # Agents — Soft Factory Pipeline Specification
 
 <instructions>
-Every piece of work MUST flow through exactly four stages in order: Research, Plan, Implement, Verify.
+Foreman MUST own repository-level missions, strategic context, the issue dependency graph, scheduling, and mission completion.
+Foreman MUST remain above RPIV and MUST NOT become a fifth pipeline stage or take over issue execution.
+Foreman MUST use isolated .trees/issue-<number> worktrees and rpiv-<number> Copilot CLI windows in its owned tmux session.
+Foreman MUST obey explicit capacity, permission, ownership, recovery, and integrated-delivery gates.
+RPIV MUST persist standalone and managed lifecycle state/events under the RPIV Observability contract.
+Validation and PR delivery MUST remain activities inside Verify.
+New or changed agents MUST use the installed APS skill and the applicable host adapter.
+Every issue delivery MUST flow through exactly four stages in order: Research, Plan, Implement, Verify.
+Repository-level Foreman intake, context maintenance, and scheduling are coordination activities, not additional issue-delivery stages.
 You MUST classify scope_type as exactly one of: issue, architecture_decision, core_component.
 You MUST NOT create an architectural decision outside of an ADR document.
 You MUST NOT create reusable cross-cutting behavior outside of a core-component document.
@@ -54,6 +62,42 @@ PIPELINE_STAGES: YAML<<
   purpose: Verify the exact implementation and application documentation, decide acceptance, update GitHub, push, and open the PR
 >>
 AGENTS: YAML<<
+foreman:
+  file: .github/agents/foreman.agent.md
+  purpose: Own repository missions, evolving strategic context, GitHub issue graphs, and isolated RPIV worker scheduling.
+  tools:
+    - repository exploration and reading
+    - control-plane file creation and editing
+    - root justfile recipes for GitHub, tmux, worktrees, and Copilot CLI
+    - user decisions
+  read_paths:
+    - AGENTS.md
+    - README.md
+    - docs/
+    - project/
+    - justfile
+    - application source code
+    - .foreman/
+    - .trees/issue-*/project/work-items/*/state.json
+    - .trees/issue-*/project/work-items/*/events.jsonl
+  write_paths:
+    - .foreman/context/
+    - .foreman/mission.json
+    - .foreman/registry.json
+    - .foreman/inbox/
+    - .foreman/issue-request.json
+  templates: []
+  guardrails:
+    - must understand the mission and repository before decomposing deliverables
+    - must preserve strategic context with sources and freshness metadata
+    - must reuse relevant issues and use issue-generator with rubber-duck review for new nodes
+    - must validate dependency graphs and enforce max_workers including waiting workers
+    - must use merged integration evidence available to a dependent worker
+    - must reconcile existing ownership before launch or recovery
+    - must use structured messages and events instead of terminal scraping or keystroke injection
+    - must require explicit opt-in before using yolo permissions
+    - must not perform issue Research, Plan, implementation, tests, or worker file edits
+    - must re-evaluate original mission conditions before completion
 onboard-repo:
   file: .github/agents/onboard-repo.agent.md
   purpose: Introduce the Soft Factory engineering flow into an existing repository by analysing its codebase, inferring architectural decisions already embedded in the code, scaffolding the documentation infrastructure, and creating the first GitHub issue and seeding it with a full repository-understanding brief.
@@ -165,6 +209,10 @@ rpiv:
   templates: []
   guardrails:
     - must create or confirm the issue feature branch before Research
+    - must run as a primary CLI coordinator with four leaf stage agents
+    - must preserve Foreman worker identity without accepting mission-level work
+    - must publish standalone or managed state.json and ordered events through just rpiv-state
+    - must consume typed controller commands at safe boundaries without executing message text
     - must verify the root justfile exposes verify-focused and verify before Research
     - must execute Research, Plan, Implement, and Verify in strict order
     - must delegate stage work to rpiv-research, rpiv-planner, rpiv-implementer, and rpiv-verifier
@@ -400,6 +448,9 @@ VERIFY_RESULT: ""
 
 <processes>
 <process id="pipeline-route" name="Route work through the RPIV pipeline">
+SET REQUEST_SCOPE := <MISSION_OR_SINGLE_ISSUE> (from Agent Inference)
+IF REQUEST_SCOPE = "mission":
+  RETURN: agent="foreman", boundary="Primary mission coordinator; delegate issue outcomes to isolated RPIV sessions."
 RUN `research`
 RUN `plan`
 RUN `implement`

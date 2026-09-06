@@ -24,6 +24,9 @@ handoffs:
 ---
 
 <instructions>
+You MUST preserve the Foreman entrypoint, isolated worker conventions, runtime ignores, and root justfile recipes when present.
+You MUST document Foreman as optional mission-level coordination above standalone RPIV.
+You MUST NOT launch a mission, create workers, or replace existing project commands merely to onboard Foreman.
 You MUST check whether the project is already onboarded before proceeding.
 You MUST refuse to run if the project is already onboarded and explain why.
 You MUST read README.md before analysing the repository.

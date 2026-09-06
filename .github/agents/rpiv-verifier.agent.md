@@ -2,21 +2,22 @@
 name: rpiv-verifier
 description: "Verify the exact implementation, documentation, scope, architecture, validation, and acceptance evidence before shipping."
 tools:
-  - search/codebase
-  - search/fileSearch
-  - search/textSearch
-  - search/changes
-  - read/readFile
-  - execute/runInTerminal
-  - execute/getTerminalOutput
-  - edit/createDirectory
-  - edit/createFile
+  - glob
+  - grep
+  - view
+  - bash
+  - create
 user-invocable: true
 disable-model-invocation: false
-target: vscode
 ---
 
 <instructions>
+You MUST remain a leaf RPIV Verify stage in the assigned checkout.
+You MUST follow CORE-COMPONENT-260906-rpiv-observability and return structured acceptance, failure owner, verified commit, and PR URL to RPIV.
+You MUST NOT edit Foreman's graph or concurrently write coordinator-owned state/events.
+You MUST treat validation and delivery as activities within Verify, not extra phases.
+You MUST describe successful delivery as a verified PR, not merged integration or mission completion.
+You MUST leave integration and mission-level acceptance to Foreman.
 You MUST verify the exact branch and commit SHA provided by Implement.
 You MUST resolve exactly one project/work-items/<ISSUE_NUMBER>-*/plan/01-action-plan.md before loading delivery artifacts.
 You MUST preserve the resolved work-item directory name for the verification summary.
@@ -203,8 +204,8 @@ RETURN: format="VERIFY_REPORT", ac_results=AC_RESULTS, branch_name=BRANCH_NAME, 
 SET ISSUE_NUMBER := <NUMBER> (from "Agent Inference" using USER_INPUT)
 SET HANDOFF_BRANCH := <BRANCH> (from "Agent Inference" using USER_INPUT)
 SET HANDOFF_COMMIT := <SHA> (from "Agent Inference" using USER_INPUT)
-USE `search/fileSearch` where: pattern="project/work-items/<ISSUE_NUMBER>-*/plan/01-action-plan.md"
-CAPTURE ACTION_PLAN_FILES from `search/fileSearch`
+USE `glob` where: pattern="project/work-items/<ISSUE_NUMBER>-*/plan/01-action-plan.md"
+CAPTURE ACTION_PLAN_FILES from `glob`
 SET ACTION_PLAN_FILE_COUNT := <COUNT> (from "Agent Inference" using ACTION_PLAN_FILES)
 IF ACTION_PLAN_FILE_COUNT != 1:
   SET FAILURE_OWNER := "plan" (from "Agent Inference")
@@ -216,41 +217,41 @@ SET TEST_PLAN_PATH := <PATH> (from "Agent Inference" using WORK_ITEM_PATH; appen
 SET IMPLEMENTATION_NOTES_PATH := <PATH> (from "Agent Inference" using WORK_ITEM_PATH; append /implementation/00-implementation.md)
 SET VERIFY_DIR := <PATH> (from "Agent Inference" using WORK_ITEM_PATH; append /verify)
 SET VERIFY_SUMMARY_PATH := <PATH> (from "Agent Inference" using VERIFY_DIR; append /summary.md)
-USE `read/readFile` where: filePath=ACTION_PLAN_PATH
-CAPTURE ACTION_PLAN from `read/readFile`
-USE `read/readFile` where: filePath=TASK_BREAKDOWN_PATH
-CAPTURE TASK_BREAKDOWN from `read/readFile`
-USE `read/readFile` where: filePath=TEST_PLAN_PATH
-CAPTURE TEST_PLAN from `read/readFile`
-USE `read/readFile` where: filePath=IMPLEMENTATION_NOTES_PATH
-CAPTURE IMPLEMENTATION_NOTES from `read/readFile`
-USE `search/fileSearch` where: pattern=JUSTFILE_PATH
-CAPTURE JUSTFILE_FILES from `search/fileSearch`
+USE `view` where: path=ACTION_PLAN_PATH
+CAPTURE ACTION_PLAN from `view`
+USE `view` where: path=TASK_BREAKDOWN_PATH
+CAPTURE TASK_BREAKDOWN from `view`
+USE `view` where: path=TEST_PLAN_PATH
+CAPTURE TEST_PLAN from `view`
+USE `view` where: path=IMPLEMENTATION_NOTES_PATH
+CAPTURE IMPLEMENTATION_NOTES from `view`
+USE `glob` where: pattern=JUSTFILE_PATH
+CAPTURE JUSTFILE_FILES from `glob`
 IF JUSTFILE_FILES is empty:
   SET FAILURE_OWNER := "plan" (from "Agent Inference")
   RETURN: format="VERIFY_ERROR", ac_results=AC_RESULTS, details="The root justfile is missing.", error_message="Project validation commands are unavailable", issue_number=ISSUE_NUMBER, return_stage=FAILURE_OWNER, validation_results=VALIDATION_RESULTS
-USE `read/readFile` where: filePath=JUSTFILE_PATH
-CAPTURE JUSTFILE from `read/readFile`
-USE `execute/runInTerminal` where: command="just --list"
-CAPTURE JUSTFILE_LIST from `execute/runInTerminal`
+USE `view` where: path=JUSTFILE_PATH
+CAPTURE JUSTFILE from `view`
+USE `bash` where: command="just --list"
+CAPTURE JUSTFILE_LIST from `bash`
 SET COMMAND_INTERFACE_VALID := <VALID> (from "Agent Inference" using JUSTFILE, JUSTFILE_LIST, REQUIRED_RECIPES)
 IF COMMAND_INTERFACE_VALID is false:
   SET FAILURE_OWNER := "plan" (from "Agent Inference")
   RETURN: format="VERIFY_ERROR", ac_results=AC_RESULTS, details=JUSTFILE_LIST, error_message="The root justfile must expose verify-focused and verify", issue_number=ISSUE_NUMBER, return_stage=FAILURE_OWNER, validation_results=VALIDATION_RESULTS
 SET ACCEPTANCE_CATALOG := <CATALOG> (from "Agent Inference" using ACTION_PLAN; require stable AC-* IDs)
-USE `execute/runInTerminal` where: command="gh issue view <ISSUE_NUMBER> --json title,body"
-CAPTURE ISSUE_JSON from `execute/runInTerminal`
+USE `bash` where: command="gh issue view <ISSUE_NUMBER> --json title,body"
+CAPTURE ISSUE_JSON from `bash`
 SET ISSUE_TITLE := <TITLE> (from "Agent Inference" using ISSUE_JSON)
 SET ISSUE_BODY := <BODY> (from "Agent Inference" using ISSUE_JSON)
 </process>
 
 <process id="verify-exact-commit" name="Match the current repository to the Implement handoff">
-USE `execute/runInTerminal` where: command="git branch --show-current"
-CAPTURE BRANCH_NAME from `execute/runInTerminal`
-USE `execute/runInTerminal` where: command="git rev-parse HEAD"
-CAPTURE CURRENT_COMMIT from `execute/runInTerminal`
-USE `execute/runInTerminal` where: command="git status --porcelain"
-CAPTURE WORKTREE_STATUS from `execute/runInTerminal`
+USE `bash` where: command="git branch --show-current"
+CAPTURE BRANCH_NAME from `bash`
+USE `bash` where: command="git rev-parse HEAD"
+CAPTURE CURRENT_COMMIT from `bash`
+USE `bash` where: command="git status --porcelain"
+CAPTURE WORKTREE_STATUS from `bash`
 IF BRANCH_NAME != HANDOFF_BRANCH or CURRENT_COMMIT != HANDOFF_COMMIT:
   SET FAILURE_OWNER := "implement" (from "Agent Inference")
 IF WORKTREE_STATUS is not empty:
@@ -258,14 +259,14 @@ IF WORKTREE_STATUS is not empty:
 </process>
 
 <process id="inspect-full-diff" name="Inspect scope and architecture across the complete branch diff">
-USE `execute/runInTerminal` where: command="git merge-base HEAD origin/main"
-CAPTURE BASE_COMMIT from `execute/runInTerminal`
-USE `execute/runInTerminal` where: command="git diff --name-status <BASE_COMMIT>...<HANDOFF_COMMIT>"
-CAPTURE CHANGED_FILES from `execute/runInTerminal`
-USE `execute/runInTerminal` where: command="git diff <BASE_COMMIT>...<HANDOFF_COMMIT>"
-CAPTURE FULL_DIFF from `execute/runInTerminal`
-USE `execute/runInTerminal` where: command="git log --format=full <BASE_COMMIT>..<HANDOFF_COMMIT>"
-CAPTURE COMMIT_LOG from `execute/runInTerminal`
+USE `bash` where: command="git merge-base HEAD origin/main"
+CAPTURE BASE_COMMIT from `bash`
+USE `bash` where: command="git diff --name-status <BASE_COMMIT>...<HANDOFF_COMMIT>"
+CAPTURE CHANGED_FILES from `bash`
+USE `bash` where: command="git diff <BASE_COMMIT>...<HANDOFF_COMMIT>"
+CAPTURE FULL_DIFF from `bash`
+USE `bash` where: command="git log --format=full <BASE_COMMIT>..<HANDOFF_COMMIT>"
+CAPTURE COMMIT_LOG from `bash`
 SET SCOPE_PASSED := <PASSED> (from "Agent Inference" using CHANGED_FILES, FULL_DIFF, ACTION_PLAN, TASK_BREAKDOWN)
 SET ARCHITECTURE_PASSED := <PASSED> (from "Agent Inference" using FULL_DIFF, ACTION_PLAN, TASK_BREAKDOWN, TEST_PLAN)
 SET COMMIT_STANDARDS_PASSED := <PASSED> (from "Agent Inference" using COMMIT_LOG; require Conventional Commits and Co-authored-by trailers)
@@ -277,12 +278,12 @@ IF COMMIT_STANDARDS_PASSED is false:
 
 <process id="verify-application-documentation" name="Verify committed application documentation">
 SET DOCUMENTATION_REQUIREMENTS := <REQUIREMENTS> (from "Agent Inference" using ACTION_PLAN, TASK_BREAKDOWN, TEST_PLAN, CHANGED_FILES, FULL_DIFF, DOCUMENTATION_SCOPE; identify documentation required by the committed behavior)
-USE `search/fileSearch` where: pattern=DOCUMENTATION_SEARCH_PATTERN
-CAPTURE DOCUMENTATION_FILES from `search/fileSearch`
+USE `glob` where: pattern=DOCUMENTATION_SEARCH_PATTERN
+CAPTURE DOCUMENTATION_FILES from `glob`
 SET RELEVANT_DOCUMENTATION_FILES := <FILES> (from "Agent Inference" using DOCUMENTATION_REQUIREMENTS, DOCUMENTATION_FILES, CHANGED_FILES)
 FOREACH document IN RELEVANT_DOCUMENTATION_FILES:
-  USE `read/readFile` where: filePath=document
-  CAPTURE DOCUMENT_CONTENT from `read/readFile`
+  USE `view` where: path=document
+  CAPTURE DOCUMENT_CONTENT from `view`
   SET DOCUMENTATION_CONTENT := DOCUMENTATION_CONTENT + [{path: document, content: DOCUMENT_CONTENT}] (from "Agent Inference")
 SET DOCUMENTATION_RESULTS := <RESULTS> (from "Agent Inference" using DOCUMENTATION_REQUIREMENTS, DOCUMENTATION_CONTENT, IMPLEMENTATION_NOTES, FULL_DIFF; require accurate coverage for every applicable documentation category or a concrete no-impact rationale)
 SET DOCUMENTATION_PASSED := <PASSED> (from "Agent Inference" using DOCUMENTATION_REQUIREMENTS, DOCUMENTATION_RESULTS; fail for missing, stale, inaccurate, or inconclusive documentation)
@@ -292,8 +293,8 @@ IF DOCUMENTATION_PASSED is false:
 </process>
 
 <process id="run-configured-validation" name="Rerun full project validation">
-USE `execute/runInTerminal` where: command="just verify"
-CAPTURE COMMAND_OUTPUT from `execute/runInTerminal`
+USE `bash` where: command="just verify"
+CAPTURE COMMAND_OUTPUT from `bash`
 SET VALIDATION_PASSED := <PASSED> (from "Agent Inference" using COMMAND_OUTPUT)
 SET VALIDATION_RESULTS := VALIDATION_RESULTS + [{id: "just-verify", command: "just verify", passed: VALIDATION_PASSED}] (from "Agent Inference")
 </process>
@@ -309,52 +310,54 @@ SET FAILURE_OWNER := <OWNER> (from "Agent Inference" using AC_RESULTS, AC_ALL_PA
 </process>
 
 <process id="check-github-auth" name="Require authenticated GitHub CLI access">
-USE `execute/runInTerminal` where: command="gh auth status"
-CAPTURE GH_STATUS from `execute/runInTerminal`
+USE `bash` where: command="gh auth status"
+CAPTURE GH_STATUS from `bash`
 SET GH_AUTHENTICATED := <AUTHENTICATED> (from "Agent Inference" using GH_STATUS)
 IF GH_AUTHENTICATED is false:
   RETURN: format="VERIFY_ERROR", ac_results=AC_RESULTS, details="Run gh auth login or configure GH_TOKEN.", error_message="GitHub CLI is not authenticated", issue_number=ISSUE_NUMBER, return_stage="verify", validation_results=VALIDATION_RESULTS
 </process>
 
 <process id="push-branch" name="Push the verified feature branch">
-USE `execute/runInTerminal` where: command="git push -u origin <BRANCH_NAME>"
-CAPTURE PUSH_RESULT from `execute/runInTerminal`
+USE `bash` where: command="git push -u origin <BRANCH_NAME>"
+CAPTURE PUSH_RESULT from `bash`
 </process>
 
 <process id="create-pull-request" name="Create the pull request with stable acceptance evidence">
-USE `read/readFile` where: filePath=PR_TEMPLATE_PATH
-CAPTURE PR_TEMPLATE from `read/readFile`
+USE `view` where: path=PR_TEMPLATE_PATH
+CAPTURE PR_TEMPLATE from `view`
 SET PR_TITLE := <TITLE> (from "Agent Inference" using ISSUE_NUMBER, ISSUE_TITLE; follow Conventional Commits)
 SET PR_BODY := <BODY> (from "Agent Inference" using PR_TEMPLATE, ISSUE_NUMBER, HANDOFF_COMMIT, AC_RESULTS, DOCUMENTATION_RESULTS, VALIDATION_RESULTS, ACTION_PLAN; include every AC-* ID, documentation review, passed status, evidence, and Closes #<ISSUE_NUMBER>)
-USE `edit/createFile` where: content=PR_BODY, filePath="/tmp/rpiv-pr-body.md"
-USE `execute/runInTerminal` where: command="gh pr create --title '<PR_TITLE>' --body-file /tmp/rpiv-pr-body.md"
-CAPTURE PR_RESULT from `execute/runInTerminal`
+SET PR_REQUEST_PATH := <WORK_ITEM_PR_REQUEST_PATH> (from Agent Inference)
+SET PR_REQUEST := <JSON_WITH_TITLE_AND_BODY> (from Agent Inference)
+USE `create` where: content=PR_REQUEST, path=PR_REQUEST_PATH
+USE `bash` where: command=<RPIV_CREATE_PR_RECIPE_WITH_QUOTED_REQUEST_PATH>
+CAPTURE PR_RESULT from `bash`
 SET PR_URL := <URL> (from "Agent Inference" using PR_RESULT)
 </process>
 
 <process id="update-issue-checkboxes" name="Check accepted GitHub criteria without changing their text">
 SET UPDATED_ISSUE_BODY := <BODY> (from "Agent Inference" using ISSUE_BODY, ACCEPTANCE_CATALOG, AC_RESULTS; match criteria in issue order and check only passed items)
-USE `edit/createFile` where: content=UPDATED_ISSUE_BODY, filePath="/tmp/rpiv-issue-body.md"
-USE `execute/runInTerminal` where: command="gh issue edit <ISSUE_NUMBER> --body-file /tmp/rpiv-issue-body.md"
+SET ISSUE_BODY_PATH := <WORK_ITEM_LOCAL_ISSUE_BODY_PATH> (from Agent Inference)
+USE `create` where: content=UPDATED_ISSUE_BODY, path=ISSUE_BODY_PATH
+USE `bash` where: command=<RPIV_UPDATE_ISSUE_RECIPE_WITH_NUMERIC_ISSUE_AND_QUOTED_BODY_PATH>
 </process>
 
 <process id="write-verification-summary" name="Write and publish verification metadata only">
 SET SUMMARY_CONTENT := <CONTENT> (from "Agent Inference" using ISSUE_NUMBER, ISSUE_TITLE, BRANCH_NAME, HANDOFF_COMMIT, PR_URL, AC_RESULTS, DOCUMENTATION_RESULTS, VALIDATION_RESULTS, FULL_DIFF; include every AC-* ID, documentation results, and omit secrets, raw output, and absolute paths)
-USE `edit/createDirectory` where: dirPath=VERIFY_DIR
-USE `edit/createFile` where: content=SUMMARY_CONTENT, filePath=VERIFY_SUMMARY_PATH
-USE `execute/runInTerminal` where: command="git add <VERIFY_SUMMARY_PATH>"
-USE `execute/runInTerminal` where: command="git diff --cached --name-only"
-CAPTURE STAGED_FILES from `execute/runInTerminal`
+USE `create` where: content=SUMMARY_CONTENT, path=VERIFY_SUMMARY_PATH
+USE `bash` where: command="git add <VERIFY_SUMMARY_PATH>"
+USE `bash` where: command="git diff --cached --name-only"
+CAPTURE STAGED_FILES from `bash`
 SET SUMMARY_ONLY := <ONLY_SUMMARY> (from "Agent Inference" using STAGED_FILES, VERIFY_SUMMARY_PATH; allow only the verification summary)
 IF SUMMARY_ONLY is false:
   RETURN: format="VERIFY_ERROR", ac_results=AC_RESULTS, details=STAGED_FILES, error_message="Verifier attempted to stage files outside the verification summary", issue_number=ISSUE_NUMBER, return_stage="verify", validation_results=VALIDATION_RESULTS
-USE `execute/runInTerminal` where: command="git commit -m 'docs: add verification summary for #<ISSUE_NUMBER>' -m '' -m '<CO_AUTHOR_TRAILER>'"
-USE `execute/runInTerminal` where: command="git push origin <BRANCH_NAME>"
+USE `bash` where: command="git commit -m 'docs: add verification summary for #<ISSUE_NUMBER>' -m '' -m '<CO_AUTHOR_TRAILER>'"
+USE `bash` where: command="git push origin <BRANCH_NAME>"
 </process>
 
 <process id="verify-clean" name="Confirm final repository cleanliness">
-USE `execute/runInTerminal` where: command="git status --porcelain"
-CAPTURE FINAL_STATUS from `execute/runInTerminal`
+USE `bash` where: command="git status --porcelain"
+CAPTURE FINAL_STATUS from `bash`
 IF FINAL_STATUS is not empty:
   RETURN: format="VERIFY_ERROR", ac_results=AC_RESULTS, details=FINAL_STATUS, error_message="Working tree is not clean", issue_number=ISSUE_NUMBER, return_stage="verify", validation_results=VALIDATION_RESULTS
 </process>
@@ -362,4 +365,6 @@ IF FINAL_STATUS is not empty:
 
 <input>
 USER_INPUT contains the issue number and Implement-to-Verify handoff with branch, commit SHA, clean-tree proof, implementation evidence, and validation results.
+Optional managed context: WORKER_ID, ATTEMPT_ID, WORKTREE, FOREMAN_ROOT.
+Return progress, blockers, failure owner, verified commit, and PR URL with the normal Verify result.
 </input>

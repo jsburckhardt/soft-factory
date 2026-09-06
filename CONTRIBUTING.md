@@ -12,6 +12,12 @@ Each stage has clear inputs, outputs, and artifact locations. No stage may be sk
 
 ## How to Start Work on an Issue
 
+For a mission spanning multiple issues, start with the `foreman` agent. It
+understands repository/product context, reuses or creates reviewed issue nodes,
+and coordinates their dependencies and isolated RPIV workers. Foreman is not a
+pipeline stage and never takes over issue execution. See
+[the Foreman guide](docs/foreman.md).
+
 1. **Create a GitHub Issue** describing the work to be done.
 2. **Run the `rpiv` pipeline** — the full-pipeline coordinator handles each stage in order, starting from the issue number. Research creates `project/work-items/<ISSUE_NUMBER>-<SHORT_DESCRIPTION>/`, and later stages preserve that path. Use individual stage workflows as needed: `rpiv-research`, `rpiv-planner`, `rpiv-implementer`, and `rpiv-verifier`.
 
@@ -46,10 +52,10 @@ Each stage has clear inputs, outputs, and artifact locations. No stage may be sk
 
 - The `rpiv-verifier` workflow runs the full test suite and confirms all tests pass
 - Independently verifies affected application documentation matches the committed behavior
-- Creates logical, atomic commits following [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/)
+- Inspects implementation commits created by Implement; it may commit only its verification summary
 - Pushes to a feature branch (`<type>/<ISSUE_NUMBER>-<short-slug>`)
 - Opens a pull request with `Closes #<ISSUE_NUMBER>` in the body
-- Assigns the PR to Copilot for review
+- Returns the verified commit and PR URL; Foreman separately evaluates integration and mission outcomes
 
 ## Where Artifacts Belong
 
@@ -63,6 +69,9 @@ Each stage has clear inputs, outputs, and artifact locations. No stage may be sk
 | ADRs | `project/architecture/ADR/` (global, not issue-scoped) |
 | Core-Components | `project/architecture/core-components/` (global, not issue-scoped) |
 | Decision log | `project/architecture/ADR/DECISION-LOG.md` |
+| RPIV state and event history (local, ignored) | `project/work-items/<ISSUE_NUMBER>-<SHORT_DESCRIPTION>/{state.json,events.jsonl}` |
+| Foreman strategic context and mission graph (local, ignored) | `.foreman/` |
+| Isolated worker checkouts (local, ignored) | `.trees/issue-<ISSUE_NUMBER>/` |
 
 ## How to Propose ADRs and Core-Components
 

@@ -2,22 +2,14 @@
 name: rpiv-research
 description: "Investigate a GitHub issue and record constraints, risks, relevant architecture, acceptance criteria, and repository findings for the Plan stage."
 tools:
-  - search/codebase
-  - search/fileSearch
-  - search/textSearch
-  - search/usages
-  - read/readFile
-  - read/problems
-  - web/fetch
-  - web/githubRepo
-  - execute/runInTerminal
-  - execute/getTerminalOutput
-  - edit/createDirectory
-  - edit/createFile
-  - todo
+  - glob
+  - grep
+  - view
+  - web_fetch
+  - bash
+  - create
 user-invocable: true
 disable-model-invocation: false
-target: vscode
 ---
 
 <instructions>
@@ -45,7 +37,12 @@ You MUST NOT define tests or expected evidence.
 You MUST NOT make or propose architectural decisions.
 You MUST NOT propose ADR or core-component titles.
 You MUST NOT edit application code, tests, ADRs, core-components, or plans.
-You MUST write only <WORK_ITEM_PATH>/research/00-research.md.
+You MUST write only the research brief and its initial runtime observability files.
+You MUST initialize WORKER_STARTED through just rpiv-state immediately after resolving/creating the work item.
+You MUST follow CORE-COMPONENT-260906-rpiv-observability and preserve the managed worker/attempt identity.
+You MUST include restart: true in the initial event only when an explicit new-attempt restart was authorized; preserve prior history.
+You MUST return blockers, progress, and new prerequisite findings to the RPIV coordinator, not create mission graph nodes yourself.
+You MUST remain a leaf stage; repository-level Foreman context does not replace issue Research.
 You MUST follow the RESEARCH_BRIEF format.
 You MAY consult external documentation when repository evidence is insufficient.
 </instructions>
@@ -131,6 +128,7 @@ RESEARCH_COMPLETE: false
 <process id="research-router" name="Investigate the issue and write the research brief">
 RUN `fetch-issue`
 RUN `resolve-work-item-path`
+RUN `initialize-observability`
 RUN `gather-repository-evidence`
 RUN `classify-scope`
 RUN `write-research-brief`
@@ -139,8 +137,8 @@ RETURN: ISSUE_NUMBER, SCOPE_TYPE, WORK_ITEM_PATH
 
 <process id="fetch-issue" name="Fetch issue details and preserve acceptance criteria">
 SET ISSUE_NUMBER := <NUMBER> (from "Agent Inference" using USER_INPUT)
-USE `execute/runInTerminal` where: command="gh issue view <ISSUE_NUMBER> --json title,body,labels,assignees,milestone"
-CAPTURE ISSUE_JSON from `execute/runInTerminal`
+USE `bash` where: command="gh issue view <ISSUE_NUMBER> --json title,body,labels,assignees,milestone"
+CAPTURE ISSUE_JSON from `bash`
 SET ISSUE_TITLE := <TITLE> (from "Agent Inference" using ISSUE_JSON)
 SET ISSUE_BODY := <BODY> (from "Agent Inference" using ISSUE_JSON)
 SET ACCEPTANCE_CRITERIA := <CRITERIA> (from "Agent Inference" using ISSUE_BODY; preserve checkbox text and order)
@@ -149,8 +147,8 @@ IF ACCEPTANCE_CRITERIA is empty:
 </process>
 
 <process id="resolve-work-item-path" name="Resolve the stable work-item directory">
-USE `search/fileSearch` where: pattern="project/work-items/<ISSUE_NUMBER>-*/**"
-CAPTURE EXISTING_WORK_ITEM_FILES from `search/fileSearch`
+USE `glob` where: pattern="project/work-items/<ISSUE_NUMBER>-*/**"
+CAPTURE EXISTING_WORK_ITEM_FILES from `glob`
 SET EXISTING_WORK_ITEM_PATHS := <PATHS> (from "Agent Inference" using EXISTING_WORK_ITEM_FILES; extract unique project/work-items/<ISSUE_NUMBER>-<SHORT_DESCRIPTION> directory paths)
 SET EXISTING_WORK_ITEM_COUNT := <COUNT> (from "Agent Inference" using EXISTING_WORK_ITEM_PATHS)
 IF EXISTING_WORK_ITEM_COUNT > 1:
@@ -168,16 +166,26 @@ SET RESEARCH_PATH := <PATH> (from "Agent Inference" using WORK_ITEM_PATH; append
 </process>
 
 <process id="gather-repository-evidence" name="Gather findings, constraints, and relevant architecture">
-USE `search/fileSearch` where: pattern="project/architecture/ADR/ADR-*.md"
-CAPTURE EXISTING_ADRS from `search/fileSearch`
-USE `search/fileSearch` where: pattern="project/architecture/core-components/CORE-COMPONENT-*.md"
-CAPTURE EXISTING_CORE_COMPONENTS from `search/fileSearch`
-USE `read/readFile` where: filePath=DECISION_LOG_PATH
-CAPTURE DECISION_LOG from `read/readFile`
+USE `glob` where: pattern="project/architecture/ADR/ADR-*.md"
+CAPTURE EXISTING_ADRS from `glob`
+USE `glob` where: pattern="project/architecture/core-components/CORE-COMPONENT-*.md"
+CAPTURE EXISTING_CORE_COMPONENTS from `glob`
+USE `view` where: path=DECISION_LOG_PATH
+CAPTURE DECISION_LOG from `view`
 SET REPOSITORY_FINDINGS := <FINDINGS> (from "Agent Inference" using ISSUE_BODY, EXISTING_ADRS, EXISTING_CORE_COMPONENTS, DECISION_LOG; inspect relevant docs, source, and tests)
 SET CONSTRAINTS := <CONSTRAINT_LIST> (from "Agent Inference" using REPOSITORY_FINDINGS, EXISTING_ADRS, EXISTING_CORE_COMPONENTS, DECISION_LOG)
 SET RELEVANT_ARCHITECTURE := <ARCHITECTURE_LIST> (from "Agent Inference" using ISSUE_BODY, EXISTING_ADRS, EXISTING_CORE_COMPONENTS, DECISION_LOG)
 SET RISKS := <RISK_LIST> (from "Agent Inference" using ISSUE_BODY, REPOSITORY_FINDINGS, CONSTRAINTS)
+</process>
+
+<process id="initialize-observability" name="Initialize observable Research without creating a second work-item path">
+SET INITIAL_EVENT := <WORKER_STARTED_RESEARCH_EVENT_JSON> (from Agent Inference)
+SET EVENT_REQUEST_PATH := <WORK_ITEM_EVENT_REQUEST_PATH> (from "Agent Inference")
+USE `create` where: content=INITIAL_EVENT, path=EVENT_REQUEST_PATH
+USE `bash` where: command=<RPIV_STATE_RECIPE_WITH_NUMERIC_ISSUE_AND_QUOTED_REQUEST_PATH>
+CAPTURE STATE_RESULT from `bash`
+ASSERT runtime initialization succeeded before gathering repository evidence
+RETURN: STATE_RESULT
 </process>
 
 <process id="classify-scope" name="Classify the issue without selecting a solution">
@@ -187,12 +195,13 @@ SET SCOPE_TYPE := <SCOPE> (from "Agent Inference" using ISSUE_BODY, REPOSITORY_F
 <process id="write-research-brief" name="Write the research-only handoff">
 SET BRIEF_CONTENT := <CONTENT> (from "Agent Inference" using RESEARCH_BRIEF, ISSUE_NUMBER, ISSUE_TITLE, WORK_ITEM_PATH, SCOPE_TYPE, ISSUE_BODY, ACCEPTANCE_CRITERIA, REPOSITORY_FINDINGS, CONSTRAINTS, RELEVANT_ARCHITECTURE, RISKS)
 SET RESEARCH_DIR := <PATH> (from "Agent Inference" using WORK_ITEM_PATH; append /research)
-USE `edit/createDirectory` where: dirPath=RESEARCH_DIR
-USE `edit/createFile` where: content=BRIEF_CONTENT, filePath=RESEARCH_PATH
+USE `create` where: content=BRIEF_CONTENT, path=RESEARCH_PATH
 SET RESEARCH_COMPLETE := true (from "Agent Inference")
 </process>
 </processes>
 
 <input>
 USER_INPUT is a GitHub issue number or URL and optional Research-stage constraints.
+Managed identity context is optional and contains ISSUE_NUMBER, WORKER_ID, ATTEMPT_ID, WORKTREE, FOREMAN_ROOT.
+Return progress, blockers, failure owner, and prerequisite findings with the normal Research result.
 </input>

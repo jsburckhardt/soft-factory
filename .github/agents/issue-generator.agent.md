@@ -2,29 +2,29 @@
 name: issue-generator
 description: "Draft problem-focused GitHub issues with structured, agent-executable acceptance criteria, critique them with a rubber-duck subagent, then create them via gh."
 tools:
-  - search/codebase
-  - search/textSearch
-  - search/fileSearch
-  - search/changes
-  - search/usages
-  - read/readFile
-  - read/problems
-  - execute/runInTerminal
-  - execute/getTerminalOutput
-  - edit/createDirectory
-  - edit/createFile
-  - web/fetch
-  - web/githubRepo
-  - agent/runSubagent
-  - todo
+  - glob
+  - grep
+  - view
+  - bash
+  - create
+  - edit
+  - web_fetch
+  - task
 user-invocable: true
 disable-model-invocation: false
-target: vscode
 agents:
   - "*"
 ---
 
 <instructions>
+You MUST accept Foreman mission context as problem context without taking over mission scheduling or issue Plan.
+You MUST run as a primary CLI session when dispatching the rubber-duck leaf reviewer.
+You MUST retain request_id and outcome links from .foreman/issue-request.json when invoked by Foreman.
+You MUST reconcile matching existing issues and .foreman/issue-result.json before repeating issue creation.
+You MUST include the request_id as a non-executable correlation marker in the issue Problem section for uncertain-result recovery.
+You MUST write .foreman/issue-result.json after each creation with request_id, issue number, URL, outcome links, and review disposition.
+You MUST record partial creation failures and created issue identities before returning; never fabricate a successful result.
+You MUST NOT start RPIV or bypass rubber-duck review for Foreman requests.
 You MUST read AGENTS.md and project/architecture/ADR/DECISION-LOG.md before starting.
 You MUST inspect the root justfile when present to understand commands and evidence available to agents.
 You MUST read all existing work-item documentation under project/work-items/ to learn the established format.
@@ -222,6 +222,21 @@ ISSUE_NUMBER: ""
 
 <processes>
 <process id="generate-issue" name="Generate a GitHub issue end-to-end">
+RUN `load-foreman-request`
+IF REQUEST_ALREADY_DELIVERED:
+  RETURN: ISSUE_URL, ISSUE_NUMBER
+IF MANAGED_REQUEST:
+  RUN `generate-foreman-batch`
+  RETURN: FOREMAN_RESULT
+RUN `generate-single-issue`
+RETURN: format="ISSUE_CREATED", issue_title=DRAFT_TITLE, issue_url=ISSUE_URL, issue_number=ISSUE_NUMBER, review_summary=RUBBER_DUCK_RESULT, sections_list=ISSUE_SECTIONS
+</process>
+
+<process id="generate-single-issue" name="Review and create one independently deliverable issue">
+SET REVISION_COUNT := 0 (from Agent Inference)
+SET RUBBER_DUCK_OK := false (from Agent Inference)
+SET ISSUE_URL := "" (from Agent Inference)
+SET ISSUE_NUMBER := "" (from Agent Inference)
 RUN `analyze-context`
 RUN `analyze-history`
 RUN `draft-issue`
@@ -232,33 +247,79 @@ RUN `rubber-duck-review`
 IF RUBBER_DUCK_OK is false:
   RUN `revise-draft`
 RUN `create-issue`
-RETURN: format="ISSUE_CREATED", issue_title=DRAFT_TITLE, issue_url=ISSUE_URL, issue_number=ISSUE_NUMBER, review_summary=RUBBER_DUCK_RESULT, sections_list=ISSUE_SECTIONS
+RETURN: ISSUE_URL, ISSUE_NUMBER, RUBBER_DUCK_RESULT
+</process>
+
+<process id="generate-foreman-batch" name="Produce separate reviewed issue nodes and preserve partial results">
+SET CANDIDATES := <REQUEST_CANDIDATES_WITH_STABLE_IDS_PROBLEMS_AND_OUTCOMES> (from Agent Inference)
+FOREACH candidate IN CANDIDATES:
+  SET CURRENT_CANDIDATE := <CANDIDATE_CONTEXT> (from Agent Inference)
+  SET ALREADY_CREATED := <CANDIDATE_CORRELATION_MATCHES_EXISTING_ISSUE> (from Agent Inference)
+  IF ALREADY_CREATED is false:
+    RUN `generate-single-issue`
+  ELSE:
+    SET ISSUE_URL := <EXISTING_CANDIDATE_ISSUE_URL> (from Agent Inference)
+    SET ISSUE_NUMBER := <EXISTING_CANDIDATE_ISSUE_NUMBER> (from Agent Inference)
+  RUN `record-foreman-result`
+  ASSERT this candidate has a real reviewed issue or a persisted error before processing another candidate
+RETURN: FOREMAN_RESULT
+</process>
+
+<process id="load-foreman-request" name="Correlate managed intake without duplicating existing issues">
+SET MANAGED_REQUEST := <USER_INPUT_EXPLICITLY_REFERENCES_FOREMAN_REQUEST> (from Agent Inference)
+SET REQUEST_ALREADY_DELIVERED := false (from Agent Inference)
+IF MANAGED_REQUEST:
+  USE `view` where: path=".foreman/issue-request.json"
+  CAPTURE FOREMAN_REQUEST from `view`
+  USE `glob` where: pattern=".foreman/issue-result.json"
+  CAPTURE PRIOR_RESULT_FILES from `glob`
+  FOREACH result IN PRIOR_RESULT_FILES:
+    USE `view` where: path=".foreman/issue-result.json"
+    CAPTURE PRIOR_RESULT from `view`
+  USE `bash` where: command="just foreman-backlog"
+  CAPTURE EXISTING_ISSUES from `bash`
+  SET REQUEST_ALREADY_DELIVERED := <REQUEST_CORRELATION_MATCHES_EXISTING_REVIEWED_ISSUE> (from Agent Inference)
+  SET ISSUE_URL := <EXISTING_MATCHED_ISSUE_URL_IF_ANY> (from Agent Inference)
+  SET ISSUE_NUMBER := <EXISTING_MATCHED_ISSUE_NUMBER_IF_ANY> (from Agent Inference)
+  ASSERT ambiguous creation results are reconciled, including closed issues, before retrying creation
+RETURN: REQUEST_ALREADY_DELIVERED
+</process>
+
+<process id="record-foreman-result" name="Persist the reviewed node handoff after each successful creation">
+IF MANAGED_REQUEST:
+  ASSERT issue creation returned a real URL and number before recording success
+  SET FOREMAN_RESULT := <ACCUMULATED_CORRELATED_CANDIDATE_RESULTS_AND_ERRORS> (from Agent Inference)
+  SET RESULT_JSON := <SERIALIZED_FOREMAN_RESULT_PRESERVING_PRIOR_CANDIDATE_RESULTS> (from Agent Inference)
+  USE `create` where: content=RESULT_JSON, path=".foreman/issue-result.json"
+RETURN: ISSUE_URL, ISSUE_NUMBER
 </process>
 
 <process id="analyze-context" name="Read project context and existing issues">
-USE `read/readFile` where: filePath=DECISION_LOG_PATH
-CAPTURE DECISION_LOG from `read/readFile`
-USE `read/readFile` where: filePath="AGENTS.md"
-CAPTURE AGENTS_SPEC from `read/readFile`
-USE `read/readFile` where: filePath="LLM.txt"
-CAPTURE REPO_MAP from `read/readFile`
-USE `search/fileSearch` where: pattern=JUSTFILE_PATH
-CAPTURE JUSTFILE_FILES from `search/fileSearch`
+USE `view` where: path=DECISION_LOG_PATH
+CAPTURE DECISION_LOG from `view`
+USE `view` where: path="AGENTS.md"
+CAPTURE AGENTS_SPEC from `view`
+USE `view` where: path="LLM.txt"
+CAPTURE REPO_MAP from `view`
+USE `glob` where: pattern=JUSTFILE_PATH
+CAPTURE JUSTFILE_FILES from `glob`
 IF JUSTFILE_FILES is not empty:
-  USE `read/readFile` where: filePath=JUSTFILE_PATH
-  CAPTURE PROJECT_COMMANDS from `read/readFile`
+  USE `view` where: path=JUSTFILE_PATH
+  CAPTURE PROJECT_COMMANDS from `view`
 SET AGENT_CAPABILITIES := <CAPABILITIES> (from "Agent Inference" using AGENTS_SPEC, PROJECT_COMMANDS, REPO_MAP; include only tools and commands evidenced by these sources)
 SET FEATURE_DESCRIPTION := <DESC> (from "Agent Inference" using USER_INPUT)
+IF MANAGED_REQUEST:
+  SET FEATURE_DESCRIPTION := <CURRENT_CANDIDATE_PROBLEM_AND_OUTCOME_CONTEXT_ONLY> (from Agent Inference)
 </process>
 
 <process id="analyze-history" name="Run git history analysis for pitfall detection">
 SET HISTORY_OUTPUTS := [] (from "Agent Inference")
 FOREACH cmd IN HISTORY_COMMANDS:
-  USE `execute/runInTerminal` where: command=cmd.command
-  CAPTURE CMD_OUTPUT from `execute/runInTerminal`
+  USE `bash` where: command=cmd.command
+  CAPTURE CMD_OUTPUT from `bash`
   SET HISTORY_OUTPUTS := HISTORY_OUTPUTS + [{name: cmd.name, output: CMD_OUTPUT}] (from "Agent Inference")
-USE `execute/runInTerminal` where: command="git --no-pager log --all --format='%h %s' | grep -i 'fix:\\|address\\|correct\\|align' | head -30"
-CAPTURE FIX_PATTERNS from `execute/runInTerminal`
+USE `bash` where: command="git --no-pager log --all --format='%h %s' | grep -i 'fix:\\|address\\|correct\\|align' | head -30"
+CAPTURE FIX_PATTERNS from `bash`
 SET HISTORY_ANALYSIS := <ANALYSIS> (from "Agent Inference" using HISTORY_OUTPUTS, FIX_PATTERNS, QUALITY_LENSES)
 </process>
 
@@ -281,8 +342,8 @@ IF FEASIBILITY_OK is false:
 
 <process id="rubber-duck-review" name="Dispatch subagent to critique the draft">
 SET REVIEW_PROMPT := <PROMPT> (from "Agent Inference" using RUBBER_DUCK_PROMPT, DRAFT_TITLE, DRAFT_BODY, AGENT_CAPABILITIES, AGENT_FEASIBILITY_RULES)
-USE `agent/runSubagent` where: prompt=REVIEW_PROMPT
-CAPTURE RUBBER_DUCK_RESULT from `agent/runSubagent`
+USE `task` where: agent_type="general-purpose", description="Critique issue criteria", name="rubber-duck", prompt=REVIEW_PROMPT
+CAPTURE RUBBER_DUCK_RESULT from `task`
 SET RUBBER_DUCK_OK := <IS_APPROVED> (from "Agent Inference" using RUBBER_DUCK_RESULT)
 </process>
 
@@ -300,9 +361,11 @@ IF RUBBER_DUCK_OK is false AND REVISION_COUNT >= MAX_REVISIONS:
 </process>
 
 <process id="create-issue" name="Create the issue via GitHub CLI">
-USE `edit/createFile` where: content=DRAFT_BODY, filePath="/tmp/issue-body.md"
-USE `execute/runInTerminal` where: command="gh issue create --title '<DRAFT_TITLE>' --body-file /tmp/issue-body.md"
-CAPTURE CREATE_OUTPUT from `execute/runInTerminal`
+SET CREATE_REQUEST := <JSON_WITH_TITLE_AND_REVIEWED_BODY> (from Agent Inference)
+SET CREATE_REQUEST_PATH := ".foreman/issue-create.json" (from Agent Inference)
+USE `create` where: content=CREATE_REQUEST, path=CREATE_REQUEST_PATH
+USE `bash` where: command="just issue-create .foreman/issue-create.json"
+CAPTURE CREATE_OUTPUT from `bash`
 SET ISSUE_URL := <URL> (from "Agent Inference" using CREATE_OUTPUT)
 SET ISSUE_NUMBER := <NUMBER> (from "Agent Inference" using CREATE_OUTPUT)
 </process>
@@ -310,4 +373,6 @@ SET ISSUE_NUMBER := <NUMBER> (from "Agent Inference" using CREATE_OUTPUT)
 
 <input>
 USER_INPUT is a feature request description or area of the codebase to investigate for issue generation.
+Optional Foreman input is .foreman/issue-request.json containing request_id, mission_id, outcome links, and candidate problem descriptions.
+For managed requests, persist .foreman/issue-result.json with matching request_id, created or reused issue identities, review disposition, and errors.
 </input>

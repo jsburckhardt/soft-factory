@@ -9,6 +9,10 @@ This directory contains all project management documentation organized by catego
 | `architecture/` | Architectural decisions, core-components, and templates |
 | `work-items/` | Human-readable RPIV work-item artifacts (research briefs, plans, implementation notes) |
 
+Foreman keeps long-lived strategic context and its local mission/worker ledger
+in [`.foreman/`](../.foreman/README.md), outside bounded issue artifacts.
+Architectural decisions and shared contracts remain global under `architecture/`.
+
 ## Conventions
 
 - Each work-item folder uses `<issue-number>-<short-description>` (for example, `work-items/42-improve-cache-invalidation/`)

@@ -6,7 +6,7 @@ This file is the single registry of all architectural decisions and core-compone
 
 | ID | Title | Status | Date |
 |----|-------|--------|------|
-| _No ADRs yet. Copy `ADR-260101-template.md` and name it `ADR-yymmdd-short-slug.md`._ | | | |
+| ADR-260906-foreman-control-plane | Foreman Control Plane | Accepted | 2026-09-06 |
 
 ## Core-Components
 
@@ -17,6 +17,8 @@ This file is the single registry of all architectural decisions and core-compone
 | CORE-COMPONENT-260806-project-command-interface | Project Command Interface | Adopted | 2026-08-06 |
 | CORE-COMPONENT-260806-agent-executable-acceptance-criteria | Agent-Executable Acceptance Criteria | Adopted | 2026-08-06 |
 | CORE-COMPONENT-260806-architecture-artifact-naming | Architecture Artifact Naming | Adopted | 2026-08-06 |
+| CORE-COMPONENT-260906-foreman-orchestration | Foreman Orchestration | Adopted | 2026-09-06 |
+| CORE-COMPONENT-260906-rpiv-observability | RPIV Observability | Adopted | 2026-09-06 |
 
 ## Decisions
 
@@ -49,3 +51,10 @@ Short, actionable statements derived from ADRs and core-components. More than on
 | 23 | Require Implement to update affected application documentation and Verify to inspect it | CORE-COMPONENT-260806-rpiv-stage-contract | 2026-08-06 |
 | 24 | Store RPIV artifacts under stable `project/work-items/<issue-number>-<short-description>/` paths | CORE-COMPONENT-260806-rpiv-stage-contract | 2026-08-07 |
 | 25 | Reuse an existing same-issue work-item directory before creating a new artifact path | CORE-COMPONENT-260806-rpiv-stage-contract | 2026-08-07 |
+| 26 | Place mission orchestration above unchanged single-issue RPIV | ADR-260906-foreman-control-plane | 2026-09-06 |
+| 27 | Run isolated Copilot RPIV sessions in issue worktrees and dedicated tmux windows | ADR-260906-foreman-control-plane | 2026-09-06 |
+| 28 | Gate dependency readiness and mission completion on integrated delivery evidence | CORE-COMPONENT-260906-foreman-orchestration | 2026-09-06 |
+| 29 | Reconcile owned workers and enforce capacity before scheduling or recovery | CORE-COMPONENT-260906-foreman-orchestration | 2026-09-06 |
+| 30 | Persist RPIV phase, status, identity, and ordered lifecycle events independently of Foreman | CORE-COMPONENT-260906-rpiv-observability | 2026-09-06 |
+| 31 | Preserve four-stage RPIV while exposing standalone and managed worker lifecycle state | CORE-COMPONENT-260806-rpiv-stage-contract | 2026-09-06 |
+| 32 | Correlate recoverable pauses and failure ownership with the existing worker attempt | CORE-COMPONENT-260906-rpiv-observability | 2026-09-06 |
