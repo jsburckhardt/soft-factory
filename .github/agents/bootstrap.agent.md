@@ -45,9 +45,15 @@ You MUST update LLM.txt with any new project-specific file references.
 You MUST tailor .devcontainer/devcontainer.json to the chosen tech stack by removing unnecessary features.
 You MUST ensure the development environment provides the just command runner.
 You MUST detect whether the repository template already provides a root justfile before any project writes.
-You MUST preserve the inherited Foreman agent, CLI worker agents, .foreman workspace guide, scripts/foreman.py, and Foreman/RPIV recipes when bootstrapping a consumer repository.
+You MUST preserve the inherited APS Foreman/RPIV agents, workspace guide, and shared contracts while adapting commands to the consuming project.
 You MUST keep .trees and local Foreman/RPIV runtime state ignored by Git.
-You MUST retain Python 3, tmux, Git, just, and Copilot CLI prerequisites when Foreman is enabled.
+You MUST NOT introduce Python or another language solely to run Foreman.
+You MUST offer worker execution as an explicit project-level opt-in, disabled unless confirmed.
+You MUST record the actual project stack, repository/base, setup/validation recipes, and worker capability choices in .foreman/project.json.
+You MUST generate only approved thin host-operation recipes when workers are enabled; graph, scheduling, registry, and state decisions remain in APS.
+You MUST NOT mistake inherited template ADRs or agent files for evidence that a new consumer project is already bootstrapped.
+You MUST write the project's completed-initialization marker only after scaffolding, commands, and documentation are ready.
+You MAY handle an explicit foreman-setup request for an existing project without rerunning application scaffolding or creating the first issue.
 You MUST NOT start Foreman or launch workers merely because the template includes them.
 You MUST request explicit confirmation before replacing or regenerating an inherited root justfile.
 You MUST treat only an explicit replacement confirmation as permission to edit an inherited root justfile.
@@ -85,6 +91,9 @@ APP_DOCS_PATH: "docs/README.md"
 LLM_TXT_PATH: "LLM.txt"
 DEVCONTAINER_PATH: ".devcontainer/devcontainer.json"
 JUSTFILE_PATH: "justfile"
+PROFILE_PATH: ".foreman/project.json"
+FOREMAN_GUIDE: "docs/foreman.md"
+TEMPLATE_ADRS: ["project/architecture/ADR/ADR-260101-template.md", "project/architecture/ADR/ADR-260906-foreman-control-plane.md"]
 JUSTFILE_REPLACEMENT_PROMPT: "A root justfile is inherited from the repository template. Explicitly confirm replacement or regeneration before bootstrap writes any files."
 JUSTFILE_CONTRACT: YAML<<
 required:
@@ -100,6 +109,7 @@ applicable:
   - build
 rules:
   - Store raw project commands only in recipe bodies.
+  - Preserve inherited issue-create, rpiv-create-pr, and rpiv-update-issue signatures or adapt their callers together.
   - Allow recipe arguments when the underlying tool supports focused execution.
   - Make verify-focused run the configured focused validation recipes.
   - Make verify run every configured full validation recipe.
@@ -389,6 +399,9 @@ DEV_STANDARDS: YAML<<
 ## Justfile Recipes
 <OPERATING_COMMANDS>
 
+## Foreman Capability
+<FOREMAN_PROPOSAL>
+
 ## Artifacts to Create
 <ARTIFACT_LIST>
 
@@ -398,6 +411,7 @@ WHERE:
 - <ARTIFACT_LIST> is Markdown.
 - <CROSS_CUTTING_LIST> is Markdown.
 - <DEVELOPMENT_STANDARDS_SUMMARY> is Markdown.
+- <FOREMAN_PROPOSAL> is String.
 - <FRAMEWORK> is String.
 - <INIT_COMMAND> is String.
 - <LANGUAGE> is String.
@@ -509,6 +523,10 @@ JUSTFILE_CONTENT: ""
 JUSTFILE_EXISTS: false
 INHERITED_JUSTFILE_CONTENT: ""
 JUSTFILE_REPLACEMENT_DECISION: "pending"
+FOREMAN_ENABLED: false
+CONFIG_ONLY: false
+PROJECT_PROFILE: {}
+FOREMAN_PROPOSAL: ""
 </runtime>
 
 <triggers>
@@ -517,6 +535,10 @@ JUSTFILE_REPLACEMENT_DECISION: "pending"
 
 <processes>
 <process id="bootstrap-router" name="Route bootstrap request">
+SET CONFIG_ONLY := <USER_EXPLICITLY_REQUESTS_FOREMAN_SETUP_ONLY> (from Agent Inference)
+IF CONFIG_ONLY:
+  RUN `configure-existing-foreman`
+  RETURN: PROJECT_PROFILE
 RUN `check-bootstrapped`
 IF IS_BOOTSTRAPPED is true:
   RETURN: format="BOOTSTRAP_BLOCKED", evidence=BOOTSTRAP_EVIDENCE, reason="Project has already been bootstrapped", suggestion="Create or select a GitHub issue, then run @rpiv"
@@ -525,10 +547,10 @@ RUN `detect-inherited-justfile`
 IF PROJECT_NAME is empty:
   RUN `gather-project-info`
 SET ARTIFACT_LIST := <LIST> (from "Agent Inference" using LANGUAGE, CROSS_CUTTING_CONCERNS, ARTIFACT_DATE, ADR_PATTERN, CORE_COMPONENT_PATTERN)
-SET UPDATE_LIST := <LIST> (from "Agent Inference" using README_PATH, APP_DOCS_PATH, AGENTS_MD_PATH, LLM_TXT_PATH, DEVCONTAINER_PATH, DECISION_LOG_PATH, JUSTFILE_PATH)
+SET UPDATE_LIST := <LIST> (from "Agent Inference" using README_PATH, APP_DOCS_PATH, AGENTS_MD_PATH, LLM_TXT_PATH, DEVCONTAINER_PATH, DECISION_LOG_PATH, JUSTFILE_PATH, PROFILE_PATH)
 SET DEVELOPMENT_STANDARDS_SUMMARY := <SUMMARY> (from "Agent Inference" using DEVELOPMENT_STANDARDS, LANGUAGE)
 IF INFO_CONFIRMED is false:
-  RETURN: format="BOOTSTRAP_SUMMARY", artifact_list=ARTIFACT_LIST, cross_cutting_list=CROSS_CUTTING_CONCERNS, development_standards_summary=DEVELOPMENT_STANDARDS_SUMMARY, framework=FRAMEWORK, init_command=INIT_COMMAND, language=LANGUAGE, operating_commands=OPERATING_COMMANDS, package_manager=PACKAGE_MANAGER, project_description=PROJECT_DESCRIPTION, project_goal=PROJECT_GOAL, project_name=PROJECT_NAME, test_runner=TEST_RUNNER, update_list=UPDATE_LIST
+  RETURN: format="BOOTSTRAP_SUMMARY", artifact_list=ARTIFACT_LIST, cross_cutting_list=CROSS_CUTTING_CONCERNS, development_standards_summary=DEVELOPMENT_STANDARDS_SUMMARY, foreman_proposal=FOREMAN_PROPOSAL, framework=FRAMEWORK, init_command=INIT_COMMAND, language=LANGUAGE, operating_commands=OPERATING_COMMANDS, package_manager=PACKAGE_MANAGER, project_description=PROJECT_DESCRIPTION, project_goal=PROJECT_GOAL, project_name=PROJECT_NAME, test_runner=TEST_RUNNER, update_list=UPDATE_LIST
 IF JUSTFILE_EXISTS is true:
   RUN `resolve-justfile-replacement-decision`
   IF JUSTFILE_REPLACEMENT_DECISION == "pending":
@@ -544,6 +566,7 @@ RUN `update-decision-log`
 RUN `configure-operations`
 RUN `update-project-docs`
 RUN `tailor-devcontainer`
+RUN `write-project-profile`
 RETURN: format="BOOTSTRAP_REPORT", adr_list=CREATED_ADRS, core_component_list=CREATED_CORE_COMPONENTS, files_updated=UPDATED_FILES, next_steps="Create the first GitHub issue with @issue-generator, then run @rpiv", operating_commands=OPERATING_COMMANDS, project_description=PROJECT_DESCRIPTION, project_name=PROJECT_NAME, scaffold_output=SCAFFOLD_OUTPUT, status="Bootstrapped"
 </process>
 
@@ -551,11 +574,15 @@ RETURN: format="BOOTSTRAP_REPORT", adr_list=CREATED_ADRS, core_component_list=CR
 USE `search/fileSearch` where: pattern="project/architecture/ADR/ADR-*.md"
 CAPTURE ADR_FILES from `search/fileSearch`
 SET EXISTING_ADRS := <FILES> (from "Agent Inference" using ADR_FILES, ADR_TEMPLATE_PATH; exclude the template path)
-IF EXISTING_ADRS is not empty:
-  SET IS_BOOTSTRAPPED := true (from "Agent Inference")
-  SET BOOTSTRAP_EVIDENCE := <EVIDENCE> (from "Agent Inference" using EXISTING_ADRS)
-ELSE:
-  SET IS_BOOTSTRAPPED := false (from "Agent Inference")
+USE `search/fileSearch` where: pattern=PROFILE_PATH
+CAPTURE PROFILE_FILES from `search/fileSearch`
+FOREACH profile IN PROFILE_FILES:
+  USE `read/readFile` where: filePath=PROFILE_PATH
+  CAPTURE SAVED_PROFILE from `read/readFile`
+SET PROJECT_ADRS := <EXISTING_ADRS_EXCLUDING_INHERITED_TEMPLATE_ADRS> (from Agent Inference)
+SET BOOTSTRAP_EVIDENCE := <COMPLETED_PROFILE_OR_CONFIRMED_PROJECT_SPECIFIC_INITIALIZATION> (from Agent Inference)
+SET IS_BOOTSTRAPPED := <CONCRETE_INITIALIZATION_EVIDENCE_EXISTS> (from Agent Inference)
+ASSERT inherited template ADRs and .github agent files alone never establish project initialization
 </process>
 
 <process id="resolve-artifact-date" name="Resolve the UTC architecture artifact date">
@@ -590,6 +617,11 @@ SET INIT_COMMAND := <CMD> (from "Agent Inference" using LANGUAGE, TECH_STACK_INI
 SET CROSS_CUTTING_CONCERNS := <CONCERNS> (from "Agent Inference" using USER_INPUT)
 SET DEVELOPMENT_STANDARDS := <STANDARDS> (from "Agent Inference" using LANGUAGE, DEV_STANDARDS, USER_INPUT)
 SET OPERATING_COMMANDS := <RECIPES> (from "Agent Inference" using LANGUAGE, FRAMEWORK, TECH_STACK_INIT, TEST_RUNNER, JUSTFILE_CONTRACT, USER_INPUT; map applicable operations to raw command bodies)
+SET FOREMAN_ENABLED := <EXPLICIT_USER_WORKER_OPT_IN_OTHERWISE_FALSE> (from Agent Inference)
+IF FOREMAN_ENABLED:
+  USE `read/readFile` where: filePath=FOREMAN_GUIDE
+  SET OPERATING_COMMANDS := <PROJECT_COMMANDS_PLUS_APPROVED_THIN_HOST_PRIMITIVES> (from Agent Inference)
+SET FOREMAN_PROPOSAL := <DISABLED_OR_EXPLICIT_PROFILE_CAPACITY_PERMISSIONS_AND_RECIPES> (from Agent Inference)
 </process>
 
 <process id="scaffold-project" name="Initialize the project using the chosen tech stack">
@@ -699,8 +731,45 @@ IF JUSTFILE_VALID is false:
 SET UPDATED_FILES := UPDATED_FILES + [JUSTFILE_PATH] (from "Agent Inference")
 </process>
 
+<process id="write-project-profile" name="Record the consumer's actual capabilities after initialization">
+SET PROJECT_PROFILE := <NON_SECRET_PROFILE_WITH_COMPLETE_MARKER_STACK_AND_RECIPES> (from Agent Inference)
+ASSERT worker execution is disabled unless approved recipes, tools, capacity, and permissions are recorded
+USE `search/fileSearch` where: pattern=PROFILE_PATH
+CAPTURE EXISTING_PROFILE from `search/fileSearch`
+IF EXISTING_PROFILE is empty:
+  USE `edit/createFile` where: content=<SERIALIZED_PROJECT_PROFILE>, filePath=PROFILE_PATH
+ELSE:
+  USE `edit/editFiles` where: content=<PROFILE_PRESERVING_EXISTING_PROJECT_SETTINGS>, filePath=PROFILE_PATH
+RETURN: PROJECT_PROFILE
+</process>
+
+<process id="configure-existing-foreman" name="Enable or adjust Foreman without bootstrapping the application again">
+USE `read/readFile` where: filePath=FOREMAN_GUIDE
+USE `read/readFile` where: filePath=README_PATH
+USE `read/readFile` where: filePath=JUSTFILE_PATH
+USE `search/fileSearch` where: pattern=PROFILE_PATH
+CAPTURE PROFILE_FILES from `search/fileSearch`
+FOREACH profile IN PROFILE_FILES:
+  USE `read/readFile` where: filePath=PROFILE_PATH
+  CAPTURE SAVED_PROFILE from `read/readFile`
+SET EXISTING_PROJECT := <CONFIRMED_APPLICATION_STACK_AND_OPERATING_CAPABILITIES> (from Agent Inference)
+ASSERT this is an existing project and no application scaffolding is requested
+SET FOREMAN_ENABLED := <EXPLICIT_USER_WORKER_OPT_IN_OTHERWISE_FALSE> (from Agent Inference)
+SET SETUP_APPROVED := <USER_CONFIRMS_PROFILE_AND_TARGETED_RECIPE_CHANGES> (from Agent Inference)
+IF SETUP_APPROVED is false:
+  RETURN: status="confirmation-required", reason="Confirm the project profile and thin host operations; no files have changed."
+SET OPERATING_COMMANDS := <EXISTING_COMMANDS_WITH_ONLY_APPROVED_HOST_ADDITIONS> (from Agent Inference)
+USE `edit/editFiles` where: content=<PRESERVED_JUSTFILE_WITH_APPROVED_PRIMITIVES>, filePath=JUSTFILE_PATH
+USE `execute/runInTerminal` where: command="just --list"
+CAPTURE CONFIRMED_RECIPES from `execute/runInTerminal`
+ASSERT every enabled operation maps to an available recipe and its documented arguments
+RUN `write-project-profile`
+RETURN: PROJECT_PROFILE
+</process>
+
 </processes>
 
 <input>
 USER_INPUT is the user's description of the project they want to bootstrap, including project name, goal, tech stack preferences, and cross-cutting concerns.
+An explicit foreman-setup request configures only an existing project's profile and approved host recipes; it does not scaffold code or launch workers.
 </input>

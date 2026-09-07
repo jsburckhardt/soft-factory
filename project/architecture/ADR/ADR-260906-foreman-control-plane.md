@@ -6,70 +6,81 @@ Accepted
 
 ## Context
 
-RPIV delivers one issue. A product mission can span dependent issues, concurrent
-workers, architectural constraints, and integration decisions. The repository
-template needs a persistent engineering lead without expanding RPIV into a
-project scheduler.
+RPIV delivers one issue. A product mission can span dependent issues,
+concurrent workers, and integration decisions. Soft Factory is a template for
+many projects, not an application that should impose an orchestration service
+or implementation language on every consumer.
 
 ## Decision
 
-Add an APS-managed Foreman agent above RPIV. Foreman owns mission understanding,
-repository context, issue decomposition, a live dependency graph, scheduling,
-recovery, and mission-level acceptance. Each issue still follows exactly
-Research -> Plan -> Implement -> Verify. Validation and PR delivery are Verify
-activities, not additional stages.
+Foreman is an APS agent above RPIV. It owns repository understanding, mission
+decomposition, the work graph, readiness and capacity decisions, worker
+coordination, recovery, and mission completion. Those behaviors stay in its
+prompt and shared contracts, not in a Python scheduler or equivalent runtime.
 
-V1 represents work with GitHub Issues and runs independent Copilot CLI sessions
-in `.trees/issue-<number>` worktrees. The dedicated tmux session `foreman` has a
-control window at index zero and a named `rpiv-<number>` window per worker.
-Independent CLI sessions avoid relying on nested subagent delegation: RPIV is
-the primary coordinator in each worker session and its stages are leaf agents.
+The template ships the agents, contracts, documentation, and a minimal root
+`justfile`. When a project starts, bootstrap selects its actual stack and
+commands with the user; onboarding discovers and preserves an existing stack.
+Both can record a project profile and, with explicit approval, add thin
+worker-operation recipes appropriate to that project. Foreman can understand
+and plan a mission without enabling worker execution.
 
-Repository context, graph, and worker registry live under `.foreman/`. Runtime
-state is local and ignored by Git. RPIV independently exposes `state.json` and
-an append-only event history beside its canonical work item. JSON files carry
-messages; tmux notifications wake consumers. Terminal text is never parsed as
-state and messages are never injected as shell input.
+V1 uses GitHub Issues as deliverables. A project opting into the Copilot
+CLI/tmux adapter uses one `foreman` session, `rpiv-N` worker identities, and
+isolated `.trees/issue-N` worktrees. RPIV is the primary coordinator in each
+worker CLI session; its four stages are leaf agents. Research -> Plan ->
+Implement -> Verify is unchanged.
 
-Root `justfile` recipes own operating commands. A standard-library Python
-module implements data validation, atomic state publication, and deterministic
-ready-set calculation; the Foreman agent makes product/coordination decisions.
-No external graph framework, autonomous merge policy, or unattended permission
-bypass is introduced.
+The agent owns `.foreman/mission.json` and `.foreman/registry.json` as data.
+The consuming project's non-secret `.foreman/project.json` records configured
+commands and capabilities. RPIV writes a current state snapshot and immutable
+event files using its host file tools. Typed message files carry communication;
+an enabled tmux adapter may signal that new data is available. Notifications
+and terminal output are not authoritative state.
+
+Command recipes perform concrete operations such as creating a worktree,
+opening a console, launching Copilot, and inspecting GitHub delivery. They do
+not parse the graph, calculate readiness, mutate the mission, or decide
+acceptance. A project may later adopt a small persistence helper if a proven
+need justifies it through its own architecture process.
+
+This amends the initial implementation choice: remove the Python control
+runtime and its dependency rather than translate that runtime into Bash or
+another language.
 
 ## Alternatives
 
 | Alternative | Pros | Cons | Why Rejected |
 |-------------|------|------|--------------|
-| Expand RPIV into a mission agent | Fewer entrypoints | Mixes issue execution and mission ownership | Breaks the single-issue boundary |
-| Launch subagents in one working tree | Simple startup | Concurrent changes and undocumented nested delegation | Insufficient isolation |
-| Scrape tmux output or inject message keystrokes | Minimal transport | Ambiguous state; idle shells can execute text | Unsafe and not machine-readable |
-| Adopt Herd/HERDR immediately | Potential richer coordination | No evaluated dependency or migration contract | Defer comparison; keep transport replaceable |
-| Implement another issue tracker or UI now | Broader surface | Unnecessary V1 scope | GitHub and structured files suffice |
+| Ship a Python scheduler and state engine | Deterministic mechanics | Imposes a runtime and splits APS ownership | Too much infrastructure for a reusable template |
+| Port the same engine to shell or JavaScript | Different dependency profile | Still duplicates agent orchestration | Does not solve the ownership problem |
+| Expand RPIV into a mission agent | Fewer entrypoints | Mixes issue delivery and project coordination | Breaks the issue boundary |
+| Enable workers when the template is cloned | Immediate activity | No project-specific commands, scope, or permission agreement | Unsafe default |
+| Require a different tracker or Herd/HERDR | Potential richer operations | Unevaluated dependency and integration cost | Defer; keep contracts transport-independent |
 
 ## Consequences
 
 ### Positive
-- Strategic context survives worker and controller restarts.
-- Workers remain independently usable and retain clear ownership.
-- Dependency readiness and mission completion require integrated evidence.
+- Consumers choose their own language, package manager, and operating commands.
+- Foreman behavior has one owner: the APS agent.
+- Repositories may use standalone RPIV or enable Foreman workers when ready.
 
 ### Negative
-- V1 requires a POSIX environment, Python 3, tmux, Git, just, and Copilot CLI.
-- Local runtime state must be retained or backed up to resume a mission.
-- Interactive permission or product decisions can require human attention.
+- Prompt-level reconciliation is not an automatic transactional storage engine.
+- Worker execution needs explicitly configured project recipes and permissions.
+- Interrupted or inconsistent data requires reconciliation, not guessed success.
 
 ### Neutral
-- Foreman does not merge PRs automatically.
-- GitHub/Copilot authentication is required when running workers, not when
-  editing this template or executing its inert local checks.
+- Foreman does not automatically merge PRs, delete worktrees, or bypass permissions.
+- GitHub and Copilot access are required for the operations that use them, not
+  for editing the template or recording local context.
 
 ## Related Issues
 
-- Direct repository-template update requested by the user; no GitHub issue.
+- Direct user-requested template update and simplification; no separate issue.
 
 ## References
 
 - [Foreman contract](../core-components/CORE-COMPONENT-260906-foreman-orchestration.md)
 - [RPIV observability](../core-components/CORE-COMPONENT-260906-rpiv-observability.md)
-- [APS CLI adapter](../../../.github/skills/agnostic-prompt-standard/platforms/copilot-cli/adaptor.md)
+- [Project command interface](../core-components/CORE-COMPONENT-260806-project-command-interface.md)

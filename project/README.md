@@ -11,6 +11,8 @@ This directory contains all project management documentation organized by catego
 
 Foreman keeps long-lived strategic context and its local mission/worker ledger
 in [`.foreman/`](../.foreman/README.md), outside bounded issue artifacts.
+Bootstrap/onboarding records the consumer's confirmed capabilities in the
+committed `.foreman/project.json`; worker operations are an explicit opt-in.
 Architectural decisions and shared contracts remain global under `architecture/`.
 
 ## Conventions

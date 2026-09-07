@@ -10,6 +10,14 @@ Research → Plan → Implement → Verify
 
 Each stage has clear inputs, outputs, and artifact locations. No stage may be skipped.
 
+## Starting a Project from the Template
+
+Use `bootstrap` to choose a new project's stack and commands, or `onboard-repo`
+to discover and preserve an existing application's setup. Initialization records
+`.foreman/project.json` and may add thin worker operations to the root justfile
+with explicit approval. Foreman is an APS agent, not a bundled Python runtime;
+worker execution is optional and disabled until configured.
+
 ## How to Start Work on an Issue
 
 For a mission spanning multiple issues, start with the `foreman` agent. It
@@ -69,7 +77,8 @@ pipeline stage and never takes over issue execution. See
 | ADRs | `project/architecture/ADR/` (global, not issue-scoped) |
 | Core-Components | `project/architecture/core-components/` (global, not issue-scoped) |
 | Decision log | `project/architecture/ADR/DECISION-LOG.md` |
-| RPIV state and event history (local, ignored) | `project/work-items/<ISSUE_NUMBER>-<SHORT_DESCRIPTION>/{state.json,events.jsonl}` |
+| RPIV state and event history (local, ignored) | `project/work-items/<ISSUE_NUMBER>-<SHORT_DESCRIPTION>/state.json` and `events/<attempt>/*.json` |
+| Consuming project capabilities (committed) | `.foreman/project.json` |
 | Foreman strategic context and mission graph (local, ignored) | `.foreman/` |
 | Isolated worker checkouts (local, ignored) | `.trees/issue-<ISSUE_NUMBER>/` |
 

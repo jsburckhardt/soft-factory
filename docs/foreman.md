@@ -1,328 +1,219 @@
-# Foreman
+# Foreman: an APS agent for each consuming project
 
-Foreman converts product intent into a live dependency graph of deliverable
-GitHub issues. It retains repository understanding and coordinates isolated
-RPIV workers until integrated results satisfy the mission. It does not code,
-run issue tests, edit worker files, or micromanage RPIV stages.
+**Foreman is the agent, not a Python application.** It understands a mission,
+maintains repository context and an issue graph, decides what can run, and
+coordinates RPIV outcomes. The template supplies that workflow and its
+contracts; each consuming project supplies its actual tools and commands.
 
-| Plane | Owns |
-|-------|------|
-| Control | Foreman, strategic context, graph, scheduling, registry, recovery |
-| Execution | Independent Copilot CLI sessions, issue worktrees, four-stage RPIV |
-| Observability | Work-item state, ordered events, typed messages, tmux consoles |
+| Owner | Responsibility |
+|-------|----------------|
+| Foreman APS agent | Context, mission, decomposition, graph, scheduling, recovery, outcomes |
+| RPIV agents | Deliver one issue through Research -> Plan -> Implement -> Verify |
+| Project `justfile` | Thin, explicitly configured operating commands |
+| JSON/Markdown files | Persistent data read and written through agent file tools |
 
-## Prerequisites and scope
+There is no Foreman scheduler package, daemon, state CLI, or template-wide
+language dependency. The installed APS framework remains revision 1.2.2.
 
-V1 targets POSIX/Linux with Git, just, Python 3.9+, tmux, and Copilot CLI. The
-devcontainer supplies Git, just, tmux, and Copilot, and explicitly installs
-Python 3. GitHub/Copilot access is needed to create issues or execute
-workers, **not to edit the template or run local contract checks**.
+## When a project starts
 
-The Foreman/RPIV/issue-generator agents use the installed APS framework revision
-1.2.2 and CLI adapter. Their tool names target Copilot CLI rather than VS Code's
-namespaced tools. The bootstrap/onboarding and unrelated agents retain their
-existing editor integrations. An editor-only host needs an APS platform
-adaptation; it must not assume nested worker delegation is portable.
+1. **Choose the entrypoint.** Use `bootstrap` for a new project or `onboard-repo`
+   for an existing application. Inherited Foreman ADRs and agent files do not
+   mean the consuming project has already been initialized.
+2. **Establish the actual environment.** Bootstrap gathers the product goal,
+   language, framework, package manager, and development conventions. Onboarding
+   discovers those from the existing source and documentation.
+3. **Confirm project commands.** Generate or preserve setup, run, build, and
+   applicable quality commands in the root justfile. `verify-focused` and
+   `verify` must run the consuming project's real checks, not merely the
+   template's starter whitespace commands.
+4. **Choose whether to enable Foreman workers.** The default is disabled.
+   Enabling them requires approval of the host adapter, thin operation recipes,
+   capacity, repository/base branch, and permission mode.
+5. **Record capabilities.** Write the non-secret `.foreman/project.json` profile
+   and completed-initialization marker after setup succeeds. Keep product
+   architecture decisions in the usual global ADR/core-component documents.
+6. **Start work.** Use standalone RPIV for one issue, or give Foreman a PRD or
+   vague product direction. No mission, worktree, or worker starts just because
+   a project was created from the template.
 
-No process starts when this template is cloned. No UI, alternate tracker, Herd
-dependency, automatic merge, or unattended permission bypass is included.
-Herd/HERDR is a future transport evaluation, not an assumed implementation.
+For example, one consumer can use Go modules and Go commands; another can use
+Node and pnpm; a third can choose Python and uv. None needs Python **for
+Foreman**. Development-container features are selected for the project itself.
 
-## Intake and startup
+An already-initialized project can request `bootstrap` in explicit
+`foreman-setup` mode to configure only the profile and approved host recipes.
+That mode preserves the existing application and does not rerun scaffolding,
+create a first issue, or launch workers.
 
-Select the `foreman` agent and give it a PRD or a statement such as "add
-collaborative editing." It inspects product behavior, source, documentation,
-architecture records, constraints, conventions, and existing work. It records
-the objective, measurable outcomes, essential unresolved decisions, and sourced
-context under `.foreman/context/`.
+## Project profile
 
-Foreman creates `.foreman/mission.json` using the schema below. For an initial
-mission, `nodes` may be empty while decomposition is pending. Once the mission
-is recorded, start the controller explicitly:
-
-```text
-just foreman-validate .foreman/mission.json
-just foreman-start
-just foreman-attach
-```
-
-The default tmux socket hosts session `foreman`, with controller window zero.
-This is intentionally separate from the devcontainer's `soft-factory` session
-on its custom socket. An existing session is reused only when its ownership
-marker matches this checkout. An unrelated same-name session is an error.
-
-The controller remains an interactive Copilot session. RPIV workers are bounded
-programmatic CLI processes that exit after their outcome, allowing dead
-consoles to be retired and capacity to be reused. Configured CLI permissions
-remain in force; a worker lacking approval reports a permission failure for
-human resolution rather than silently adding broad permissions. Returning a
-waiting report does not discard mission context; attach and request resume
-after the recorded prerequisite is resolved.
-
-## Mission and graph schema
+This is an example of what initialization writes for a Go consumer, not a
+configuration shipped pre-enabled by this template:
 
 ```json
 {
   "version": 1,
-  "id": "organization-support",
-  "objective": "Allow users to manage organizations and membership",
+  "initialization": {"complete": true, "mode": "bootstrap"},
+  "project": "example-service",
+  "repository": "example/example-service",
   "base_ref": "origin/main",
-  "max_workers": 4,
-  "permission_mode": "interactive",
-  "paused": false,
-  "revision": 1,
-  "revision_reason": "Initial mission decomposition",
-  "conditions": [
-    {
-      "id": "OUT-1",
-      "description": "Organization membership behavior is delivered with observable evidence",
-      "evidence": []
-    }
-  ],
-  "nodes": [
-    {
-      "issue": 21,
-      "depends_on": [],
-      "outcomes": ["OUT-1"],
-      "priority": 0,
-      "status": "queued",
-      "blockers": []
-    },
-    {
-      "issue": 22,
-      "depends_on": [],
-      "outcomes": ["OUT-1"],
-      "priority": 0,
-      "status": "queued",
-      "blockers": []
-    },
-    {
-      "issue": 23,
-      "depends_on": [21],
-      "outcomes": ["OUT-1"],
-      "priority": 1,
-      "status": "queued",
-      "blockers": []
-    }
-  ]
+  "stack": {"languages": ["go"], "package_manager": "go"},
+  "recipes": {
+    "setup": "setup",
+    "verify_focused": "verify-focused",
+    "verify": "verify"
+  },
+  "workers": {
+    "enabled": false,
+    "adapter": "copilot-cli-tmux",
+    "max_workers": 4,
+    "permission_mode": "configured",
+    "session": "foreman",
+    "worktree_root": ".trees",
+    "operations": {}
+  }
 }
 ```
 
-Issue numbers above are illustrative: substitute real issues produced/reused by
-the reviewed issue-generation flow. Optional `parent` describes hierarchy, not
-a delivery dependency. `outcomes` links every node back to the mission.
+The recipe names must exist in that project's justfile. An enabled operation
+entry records its recipe, ordered argument names, and expected output.
+Configuration contains data, not raw shell fragments or credentials.
+Missing configuration means worker execution is unavailable; Foreman may still
+understand the mission and retain its context.
 
-The ready set is sorted by priority (lower first), then issue number. Queued
-nodes without blockers may run only after all dependencies are `integrated`.
-Reservations count against `max_workers`, even when a worker is waiting,
-blocked, or partially launched. Invalid capacity, references, cycles, identity,
-or evidence causes an explicit error instead of permissive scheduling.
+## Thin host operations, not another scheduler
 
-The controller owns graph edits. Record a revision/reason when changing scope,
-dependencies, or outcome mappings. Never erase active work to simplify the
-graph. Cancellation needs `cancellation_reason` explaining outcome disposition
-and does not satisfy dependencies.
+When workers are enabled, bootstrap/onboarding configures these operations
+using the chosen host's existing tools. They are **not implemented by a bundled
+Foreman runtime**, and no particular recipe names beyond the profile mappings
+are assumed by the agent.
 
-New nodes use `.foreman/issue-request.json` with a stable `request_id`,
-`mission_id`, and `candidates` array. Each candidate has `id`, `problem`, and
-`outcomes`; it becomes a separate reviewed issue, not one combined mission
-ticket. Foreman uses
-`just foreman-issues .foreman/issue-request.json` to open a **primary**
-issue-generator CLI session in `backlog`. That agent performs rubber-duck
-review and records `.foreman/issue-result.json`, including partial successes.
-The result contains `request_id`, `mission_id`, an `issues` array with candidate
-IDs, numbers, URLs, outcomes, and review dispositions, and an `errors` array.
-Correlate both request and candidate IDs and reconcile existing issues before
-retries. The bounded backlog process exits after its batch. This avoids nested
-Foreman -> issue-generator -> reviewer subagents.
+| Operation | Primitive responsibility |
+|-----------|--------------------------|
+| `prepare` | Create or explicitly reuse the assigned issue branch/worktree from the agreed base |
+| `launch` | Start the named Copilot CLI session in that worktree using a bootstrap file |
+| `inspect` | Report actual worktree, branch, console, and process identities |
+| `signal`, `wait` | Notify a reader and wait for a bounded interval; carry no executable message text |
+| `resume` | Continue an explicitly paused, matching attempt without overwriting work |
+| `retire` | Close an owned, stopped console; do not remove its worktree or branch |
+| `issues` | Run a primary issue-generator session and collect its correlated results |
+| `delivery` | Obtain GitHub PR and Git ancestry evidence for the configured repository/base |
 
-## Worker launch and isolation
+Recipes must quote input data, surface errors, protect existing resources, and
+avoid implicit permission escalation. They must not parse the mission graph,
+calculate readiness, manage a second worker registry, or decide acceptance.
+Foreman performs those responsibilities in APS before and after each operation.
+
+For the CLI/tmux adapter, the expected layout is:
 
 ```text
-just foreman-status
-just foreman-launch 21
-just foreman-resources
+tmux session: foreman
+  0: foreman
+  1: rpiv-21 -> .trees/issue-21 -> primary Copilot CLI -> RPIV
+  2: rpiv-22 -> .trees/issue-22 -> primary Copilot CLI -> RPIV
 ```
 
-The launch recipe checks tools/access, owned session, clean controller checkout,
-graph readiness, permission mode, branch/window conflicts, and dependency
-ancestry. It fetches the configured base, reserves capacity, creates the
-worktree, and opens the worker console.
+Use the project's branch naming convention rather than an imposed application
+branch name. The dedicated `foreman` session does not commandeer the
+devcontainer's existing shared `soft-factory` session/socket.
 
-| Identity | Issue 21 |
-|----------|----------|
-| Worktree | `.trees/issue-21` |
-| Default branch | `feat/21-work` |
-| Worker/window | `rpiv-21` |
-| Execution attempt | Generated UUID, preserved for the running attempt |
-| Worker agent | `rpiv` in a separate primary Copilot CLI session |
+Normal configured CLI permissions remain in force. `--yolo` is never inferred
+from a request to deliver a feature; it requires explicit approval and an
+observable launch mode. The profile maps a bounded worker process and its
+inputs; RPIV is a primary coordinator and its stages are leaf workers, avoiding
+undocumented nested delegation.
 
-Bootstrap supplies `ISSUE_NUMBER`, `WORKER_ID`, `ATTEMPT_ID`, `WORKTREE`, and
-`FOREMAN_ROOT`; the environment carries `RPIV_WORKER`, `RPIV_ATTEMPT`, and
-`FOREMAN_ROOT`. The worker receives its normal RPIV mandate and communication
-contract. Its four stage agents remain leaf workers.
+## Persistent context and graph
 
-The `.trees` checkout is not a container/security sandbox; Git's object database
-and host resources are shared. Do not run untrusted code merely because it is
-in another worktree.
+Foreman maintains `.foreman/context/{vision,repository,architecture,constraints}.md`
+with source paths, observed commit/date, uncertainties, and refresh triggers.
+Its strategic context outlives individual work items.
 
-Interactive permissions are the default. After explicit user approval, set
-the mission's `permission_mode` to `yolo` and explicitly pass `yolo` to the
-launch recipe. The recipe requires these modes to agree and displays the mode
-before creating resources. Agents must never infer this approval from a
-general request to deliver a feature.
+`.foreman/mission.json` records mission identity, objective, observable
+conditions, assumptions, pause state, graph revision/reason, and issue nodes.
+Nodes include `issue`, `depends_on`, `outcomes`, `priority`, `status`, and
+`blockers`; optional `parent` is organizational, not a delivery dependency.
 
-## State and communication
+The agent checks references and cycles and computes the ready set itself.
+Queued, unblocked nodes whose prerequisites are integrated are ordered by
+priority then issue number, within the agreed capacity. Every reserved or
+still-live worker counts, including blocked/waiting workers.
 
-Research resolves exactly one canonical work-item directory, preserving its
-name after title changes. It initializes state there. Before that point,
-Foreman's reservation reports `starting`; there is no fabricated issue path.
+`.foreman/registry.json` is the agent's resource ledger. It records issue,
+worker, attempt, branch, worktree, console, reservation, and launch outcome.
+There is one active controller. It records a reservation before launch and
+reconciles partial failures rather than creating duplicate workers.
+
+New deliverables pass through issue-generator and rubber-duck review.
+`.foreman/issue-request.json` carries request/mission IDs and candidate IDs,
+problem descriptions, and outcome links. `.foreman/issue-result.json` preserves
+created/reused issue identities, review dispositions, and partial failures.
+Foreman does not combine an entire mission into one oversized issue or repeat
+an uncertain creation without checking the correlation.
+
+## RPIV state and communication
+
+Research resolves the stable work-item directory before initializing state:
 
 ```text
-project/work-items/21-add-organization-model/
+project/work-items/21-add-organizations/
   state.json
-  events.jsonl
-  .attempts/
+  events/<attempt>/000000000001.json
+  events/<attempt>/000000000002.json
   research/
   plan/
   implementation/
   verify/
 ```
 
-Runtime files are Git-ignored so they cannot dirty Implement/Verify commit
-handoffs. Keep them locally for resume. `state.json` is the last accepted event;
-`events.jsonl` is append-only for the current attempt. Old attempts are archived.
+Research initializes the first event on the coordinator's behalf; the
+coordinator is the single writer thereafter. It creates one immutable JSON
+event with host file tools, reads it back, then updates `state.json`. No
+language-specific state command is required. The
+[observability contract](../project/architecture/core-components/CORE-COMPONENT-260906-rpiv-observability.md)
+defines fields, transitions, replay, interruption recovery, and error ownership.
 
-The coordinator creates `.event-request.json` in its work-item directory and
-uses the recipe below; state identity and sequence are generated by the helper.
-Reuse `request_id` only for an identical retry.
+Managed bootstrap inputs are `ISSUE_NUMBER`, `WORKER_ID`, `ATTEMPT_ID`,
+`WORKTREE`, `FOREMAN_ROOT`, and optional `RESUME`. Standalone RPIV uses the
+current checkout and the same state/event protocol without a Foreman profile.
 
-```json
-{
-  "request_id": "implement-entry-1",
-  "event": "PHASE_CHANGED",
-  "phase": "implement",
-  "status": "running",
-  "reason": "",
-  "evidence": {}
-}
-```
+`send(worker, message)` creates a uniquely identified command file under
+`.foreman/inbox/rpiv-N/`, bound to issue/worker/attempt. The optional transport
+signal is only a wakeup hint. `receive(event)` reads event files and advances
+the agent's persisted cursor only after checking identity and sequence.
+Commands are `pause`, `resume`, `cancel`, and `refresh`; workers acknowledge IDs
+in `PROGRESS` evidence at safe stage boundaries. Messages are never shell input.
 
-```text
-just rpiv-state 21 project/work-items/21-add-organization-model/.event-request.json
-just rpiv-inbox
-```
+Immutable events preserve history, but this is not an automatic transactional
+storage engine. A malformed event, interrupted snapshot update, or identity
+conflict requires explicit reconciliation. Earlier experimental `events.jsonl`
+files are not silently converted or discarded.
 
-The first event is `WORKER_STARTED` in `research/running`. Phase values remain
-`research`, `plan`, `implement`, and `verify`. Status separately describes
-running/waiting/blocked/failed/needs-human/replanning/done. The coordinator
-publishes stage transitions and validated handoffs; leaf workers return their
-progress rather than writing concurrently.
+## Delivery, recovery, and completion
 
-Events include `WORKER_STARTED`, `PHASE_CHANGED`, `PROGRESS`, `BLOCKED`,
-`NEEDS_DECISION`, `FAILED`, and `COMPLETED`. Completion requires phase `verify`,
-status `done`, and evidence containing `commit` and `pr_url`. Failure/blocker
-events require a reason. Logs correlate issue, worker, attempt, sequence,
-branch, worktree, and timestamp.
-Exceptional events also carry `evidence.category` and `evidence.owner` using the
-failure-routing table below (for example `dependency` / `foreman`). This makes
-recovery ownership observable without parsing an arbitrary explanation.
+RPIV completion means Verify delivered an accepted PR. Foreman independently
+requires merged/integrated prerequisite evidence available in the dependent
+worker's base. Neither an open PR nor a process exit satisfies that gate.
 
-`send(worker, message)` uses a JSON file, for example:
+Worker findings can cause new reviewed nodes, graph revisions, or cooperative
+pauses. Scope and architecture corrections return to Plan; code/documentation
+corrections return to Implement. Transient failures have at most one reconciled
+restart; dependency and human decisions do not trigger blind retries.
 
-```json
-{"command": "pause", "reason": "Resolve the authorization prerequisite"}
-```
+After all relevant work is integrated, Foreman re-evaluates each original
+mission condition. Missing or inconclusive outcome evidence keeps the mission
+incomplete. It does not auto-merge PRs or remove worktrees.
 
-```text
-just foreman-send 21 .foreman/pause-request.json
-just foreman-observe
-just foreman-wait
-```
+## Template versus project files
 
-Supported commands are `pause`, `resume`, `cancel`, and `refresh`. The inbox
-assigns a command ID and binds it to the current attempt. Workers read commands
-at safe stage boundaries, ignore already-acknowledged IDs, and acknowledge
-using `PROGRESS` evidence. A pause/cancel is cooperative, not a forced process
-termination. Foreman waits for acknowledgements before revising affected work.
+The profile is committed, non-secret project configuration. Context, mission,
+registry, inbox, and work-item runtime files are local and Git-ignored.
+Application docs and human-readable RPIV artifacts remain tracked.
 
-Payloads remain in JSON files; tmux `wait-for` notifications only wake
-consumers. No `send-keys`, shell evaluation, or scrollback parsing is used.
-Consumers reread durable history after a bounded wait, so missed wakeups cannot
-lose messages. Malformed or conflicting history is a reconciliation error.
-
-## Delivery, adaptation, and completion
-
-RPIV `COMPLETED` means Verify delivered an accepted PR. Foreman marks the node
-`delivered`, then independently gathers integration evidence:
-
-```text
-just foreman-delivery 21 45
-```
-
-Here 45 is the actual PR number. The recipe requires a merged PR linked to the
-issue and verifies its merge commit is in the refreshed configured base.
-Foreman records `delivery: {pr, merge_commit, base_commit}` before marking the
-node `integrated`. Launch checks dependency ancestry again against the exact
-new worktree base. An unmerged PR, closed issue, success message, or process
-exit cannot unblock dependents.
-
-Research findings may reveal new prerequisite work or bad decomposition.
-Foreman pauses affected workers, records the finding, requests reviewed issue
-nodes, revises the graph, and routes issue-level changes back to Plan. It never
-patches a worker's plan or bypasses an ADR.
-
-Before declaring the mission complete, Foreman re-evaluates each original
-condition, records concrete integrated evidence, and checks its outcome links.
-All workers exiting is not enough. An unmet/inconclusive condition remains a
-reported gap even if every PR was delivered.
-
-## Pause, restart, and recovery
-
-`just foreman-pause` closes the scheduling gate; it does not interrupt live
-workers. Send typed pause requests to each affected worker and wait for
-acknowledgements. Resolve the reason before `just foreman-resume` and matching
-worker `resume` messages.
-If a cooperatively paused programmatic worker has already exited, use
-`just foreman-continue 21` after sending the resume message. This respawns only
-the owned dead console in the same worktree/attempt. RPIV validates its saved
-handoffs and continues the first unfinished stage; it does not recreate the
-branch or mistake its existing artifacts for unrelated changes.
-
-On restart, reconcile mission, registry, tmux ownership/attempt markers,
-worktree/branch identity, and state/history. Existing matching resources are
-retained; unrelated resources are never overwritten. Repeating launch for a
-reserved issue is rejected, not duplicated. Reattach to the existing console
-to continue. A partial launch retains its reservation until its resources are
-explicitly reconciled.
-
-After a worker process is stopped, `just foreman-retire 21` closes only an owned
-dead console and releases its reservation. It leaves the branch and worktree
-intact. If a reservation has no console after a partial failure, inspect
-`just foreman-resources` and the ledger and resolve it explicitly; do not guess
-that missing state implies completion. A new attempt must preserve old work
-and history and use an explicit restart request, not overwrite an active log.
-
-| Failure class | Owner and action |
-|---------------|------------------|
-| Transient execution | Foreman; at most one reconciled restart, then escalate |
-| Validation failure | RPIV Implement; normal correction cycle, then fail |
-| Dependency blocker | Foreman; await integration or revise graph, no blind retry |
-| Decomposition/scope | Foreman + Plan; pause, revise issue/graph, rerun downstream |
-| Architecture conflict | Plan; ADR/core-component decision required |
-| Human/permission decision | User via Foreman; no automatic retry/resume |
-
-Other independent workers can continue. Foreman does not auto-merge or delete
-worktrees. Keep `.foreman/` and ignored work-item runtime files for resumability;
-they are local state, not a remote backup.
-
-## Template maintenance
-
-`just verify-focused` and `just verify` run inert standard-library fixtures and
-agent contract checks. They do not authenticate, create GitHub issues, launch
-Copilot sessions, or manipulate an existing tmux session. Raw operating commands
-live in the root `justfile`; `scripts/foreman.py` handles data contracts.
-
-Bootstrap/onboarding must preserve these recipes, ignores, agent identities,
-and shared contracts. Upgrading the APS skill also requires updating the
-README badge and `APS_BADGE`; this change does not upgrade APS.
+The starter justfile contains generic validation entrypoints and small safe
+GitHub publication wrappers. Project initialization replaces starter validation
+with actual stack-specific commands and adds worker primitives only on opt-in.
+If stronger persistence or another transport later becomes necessary, adopt it
+in the consuming project's architecture rather than impose it on every template
+consumer.

@@ -5,7 +5,7 @@ ARG PIP_INDEX_URL
 ARG RestoreSources
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends python3 wl-clipboard \
+    && apt-get install -y --no-install-recommends wl-clipboard \
     && rm -rf /var/lib/apt/lists/*
 
 ENV NPM_CONFIG_REGISTRY="${NPM_CONFIG_REGISTRY:-https://registry.npmjs.org/}" \

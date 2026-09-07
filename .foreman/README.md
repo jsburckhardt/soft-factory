@@ -1,14 +1,15 @@
-# Foreman local workspace
+# Foreman project data
 
-Foreman stores long-lived repository context in `context/vision.md`,
-`context/repository.md`, `context/architecture.md`, and `context/constraints.md`.
-Each entry records sources, observed commit/date, unresolved questions, and
-refresh triggers.
+Foreman is the APS agent in `.github/agents/foreman.agent.md`, not a runtime
+application in this directory.
 
-`mission.json` holds the active mission and work graph. `registry.json` holds
-worker reservations. `inbox/` holds typed commands; `.lock` serializes local
-control-plane mutations. These files are local and Git-ignored, not committed
-backlog substitutes. Retain this directory when resuming a mission.
+Bootstrap/onboarding creates the consuming project's non-secret `project.json`
+profile after its stack and commands are confirmed. That file is committed.
+Worker execution is disabled unless the project explicitly configures it.
 
-See [the operator guide](../docs/foreman.md) for schemas, commands, lifecycle,
-and the distinction between Foreman and RPIV.
+The agent maintains local `context/`, `mission.json`, `registry.json`, issue
+request/results, and `inbox/` data using host file tools. These files are
+Git-ignored; retain them for mission resume. They do not contain executable
+configuration or duplicate a backlog service.
+
+See [the project initialization and Foreman guide](../docs/foreman.md).

@@ -9,7 +9,7 @@ When an agent runs the pipeline for GitHub Issue `#42` titled "Improve cache inv
 ```
 project/work-items/42-improve-cache-invalidation/
   state.json               ← Current RPIV phase/status/identity (local, ignored)
-  events.jsonl             ← Ordered lifecycle history (local, ignored)
+  events/<attempt>/*.json   ← Immutable lifecycle event files (local, ignored)
   research/
     00-research.md          ← Research brief (scope classification, findings)
   plan/
@@ -38,7 +38,7 @@ project/work-items/42-improve-cache-invalidation/
 - The coordinator is the lifecycle writer; stages return progress/blockers rather than racing to update state
 - Phase is exactly research, plan, implement, or verify; waiting/blocked/failed/replanning are statuses
 - Verify completion means a delivered PR, not merged integration or mission completion
-- Retain ignored state/events and `.attempts/` when resuming; do not commit machine-local runtime files
+- Retain ignored state/events when resuming; the agents use host file tools, not a state CLI or language-specific runtime
 
 See [RPIV Observability](../architecture/core-components/CORE-COMPONENT-260906-rpiv-observability.md)
 and [Foreman operations](../../docs/foreman.md).

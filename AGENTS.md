@@ -2,6 +2,10 @@
 
 <instructions>
 Foreman MUST own repository-level missions, strategic context, the issue dependency graph, scheduling, and mission completion.
+Foreman MUST keep orchestration in APS rather than a bundled scheduler or language-specific runtime.
+Bootstrap and onboarding MUST establish the consuming project's stack, command capabilities, and optional Foreman profile without imposing an application language.
+Foreman worker execution MUST remain disabled until project-specific host recipes and permissions are explicitly configured.
+Inherited template ADRs and agent files MUST NOT be mistaken for completed project initialization.
 Foreman MUST remain above RPIV and MUST NOT become a fifth pipeline stage or take over issue execution.
 Foreman MUST use isolated .trees/issue-<number> worktrees and rpiv-<number> Copilot CLI windows in its owned tmux session.
 Foreman MUST obey explicit capacity, permission, ownership, recovery, and integrated-delivery gates.
@@ -79,7 +83,7 @@ foreman:
     - application source code
     - .foreman/
     - .trees/issue-*/project/work-items/*/state.json
-    - .trees/issue-*/project/work-items/*/events.jsonl
+    - .trees/issue-*/project/work-items/*/events/*/*.json
   write_paths:
     - .foreman/context/
     - .foreman/mission.json
@@ -89,6 +93,8 @@ foreman:
   templates: []
   guardrails:
     - must understand the mission and repository before decomposing deliverables
+    - must read the consuming project's profile and not assume a bundled worker runtime
+    - must maintain graph, readiness, reservations, and observation state with agent tools
     - must preserve strategic context with sources and freshness metadata
     - must reuse relevant issues and use issue-generator with rubber-duck review for new nodes
     - must validate dependency graphs and enforce max_workers including waiting workers
@@ -116,6 +122,7 @@ onboard-repo:
     - AGENTS.md
     - LLM.txt
     - application source code
+    - .foreman/project.json
   write_paths:
     - project/architecture/ADR/ADR-yymmdd-short-slug.md
     - project/architecture/core-components/CORE-COMPONENT-yymmdd-short-slug.md
@@ -124,11 +131,15 @@ onboard-repo:
     - README.md
     - AGENTS.md
     - LLM.txt
+    - .foreman/project.json
+    - justfile
   templates:
     - project/architecture/ADR/ADR-260101-template.md
     - project/architecture/core-components/CORE-COMPONENT-260101-template.md
   guardrails:
     - must check whether the project is already onboarded before proceeding
+    - must distinguish inherited template artifacts from completed consumer onboarding
+    - must preserve the discovered stack and configure Foreman workers only with approval
     - must refuse to run if the project already has the Soft Factory engineering flow
     - must analyse the existing codebase to infer tech stack and architectural decisions
     - must infer cross-cutting concerns from the existing source code
@@ -156,6 +167,7 @@ bootstrap:
     - project/architecture/ADR/DECISION-LOG.md
     - .devcontainer/devcontainer.json
     - justfile
+    - .foreman/project.json
     - README.md
     - AGENTS.md
     - LLM.txt
@@ -169,12 +181,16 @@ bootstrap:
     - LLM.txt
     - .devcontainer/devcontainer.json
     - justfile
+    - .foreman/project.json
   templates:
     - project/architecture/ADR/ADR-260101-template.md
     - project/architecture/core-components/CORE-COMPONENT-260101-template.md
   guardrails:
     - must check whether the project has already been bootstrapped before proceeding
-    - must refuse to run if the project is already bootstrapped
+    - must not treat inherited Foreman architecture as proof the project is bootstrapped
+    - must record confirmed project capabilities and optional worker configuration
+    - must keep Foreman orchestration in APS and generate only thin approved host recipes
+    - must refuse repeated application scaffolding after initialization; explicit foreman-setup is configuration-only
     - must gather project name, description, and goal from the user interactively
     - must ask user to choose tech stack and identify cross-cutting concerns
     - must scaffold the project using the appropriate init command
@@ -211,7 +227,7 @@ rpiv:
     - must create or confirm the issue feature branch before Research
     - must run as a primary CLI coordinator with four leaf stage agents
     - must preserve Foreman worker identity without accepting mission-level work
-    - must publish standalone or managed state.json and ordered events through just rpiv-state
+    - must publish standalone or managed state.json and immutable events using host file tools
     - must consume typed controller commands at safe boundaries without executing message text
     - must verify the root justfile exposes verify-focused and verify before Research
     - must execute Research, Plan, Implement, and Verify in strict order

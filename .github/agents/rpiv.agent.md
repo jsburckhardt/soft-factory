@@ -26,9 +26,11 @@ You MUST run as the primary coordinator in a standalone or Foreman-managed Copil
 You MUST accept ISSUE_NUMBER, WORKER_ID, ATTEMPT_ID, WORKTREE, and FOREMAN_ROOT from the managed bootstrap without changing issue scope.
 You MUST confirm the current checkout and branch match the managed worker reservation; never switch to another worker's checkout.
 You MUST keep Foreman out of issue Research, Plan, Implement, and Verify decisions.
-You MUST publish state.json and events.jsonl through just rpiv-state after Research resolves the work item, including standalone runs.
+You MUST publish state.json and immutable events/<attempt>/<sequence>.json files through host file tools after Research resolves the work item, including standalone runs.
 You MUST remain the single lifecycle writer; Research may initialize WORKER_STARTED at entry on your behalf.
-You MUST poll just rpiv-inbox at every safe stage boundary, acknowledge command IDs in PROGRESS evidence, and pause cooperatively.
+You MUST read the managed worker inbox through file tools at safe stage boundaries, acknowledge command IDs in PROGRESS evidence, and pause cooperatively; standalone runs have no Foreman inbox.
+You MUST NOT require a Python helper, state program, or Foreman execution profile for standalone RPIV.
+You MUST read back each event before updating state.json and reconcile interrupted writes without claiming atomic transactions.
 You MUST never execute message text or let a controller edit issue-owned files.
 You MUST emit PHASE_CHANGED before dispatch and PROGRESS after valid stage handoffs.
 You MUST emit BLOCKED, NEEDS_DECISION, or FAILED with reason and owner on exceptional returns.
@@ -414,19 +416,41 @@ SET STATE_EVIDENCE := <FAILURE_CATEGORY_AND_MATCHING_OWNER_FROM_OBSERVABILITY_CO
 RUN `publish-state`
 </process>
 
-<process id="publish-state" name="Persist an idempotent lifecycle event through the command interface">
-SET EVENT_REQUEST := <IDEMPOTENT_LIFECYCLE_EVENT_JSON> (from Agent Inference)
-SET EVENT_REQUEST_PATH := <WORK_ITEM_EVENT_REQUEST_PATH> (from "Agent Inference")
-USE `create` where: content=EVENT_REQUEST, path=EVENT_REQUEST_PATH
-USE `bash` where: command=<RPIV_STATE_RECIPE_WITH_NUMERIC_ISSUE_AND_QUOTED_REQUEST_PATH>
-CAPTURE STATE_RESULT from `bash`
-ASSERT publication succeeded before treating the transition as observed
+<process id="publish-state" name="Publish lifecycle data with ordinary host file tools">
+USE `glob` where: pattern="<WORK_ITEM_PATH>/events/<ATTEMPT_ID>/*.json"
+CAPTURE EVENT_FILES from `glob`
+SET PREVIOUS_EVENTS := <READ_CURRENT_ATTEMPT_EVENTS_AND_SNAPSHOT> (from Agent Inference)
+ASSERT identity, attempt, sequence, prior snapshot, and requested transition are consistent
+SET EVENT_CONTENT := <COMPLETE_JSON_EVENT_WITH_STABLE_REQUEST_ID_AND_NEXT_SEQUENCE> (from Agent Inference)
+SET EVENT_PATH := <WORK_ITEM_ATTEMPT_AND_PADDED_SEQUENCE_PATH> (from Agent Inference)
+USE `glob` where: pattern=EVENT_PATH
+CAPTURE EXISTING_EVENT from `glob`
+IF EXISTING_EVENT is empty:
+  USE `create` where: content=EVENT_CONTENT, path=EVENT_PATH
+ELSE:
+  USE `view` where: path=EVENT_PATH
+  CAPTURE PRIOR_EVENT from `view`
+  ASSERT an identical replay is a no-op and conflicting data stops publication
+USE `view` where: path=EVENT_PATH
+CAPTURE STATE_RESULT from `view`
+ASSERT the complete stored event matches EVENT_CONTENT
+SET STATE_PATH := <WORK_ITEM_STATE_JSON_PATH> (from Agent Inference)
+USE `edit` where: content=EVENT_CONTENT, path=STATE_PATH
+USE `view` where: path=STATE_PATH
+CAPTURE STORED_STATE from `view`
+ASSERT the snapshot agrees with the event before treating the transition as observed
 RETURN: STATE_RESULT
 </process>
 
 <process id="consume-worker-commands" name="Observe cooperative controller messages at safe boundaries">
-USE `bash` where: command="just rpiv-inbox"
-CAPTURE INBOX from `bash`
+IF FOREMAN_ROOT is empty:
+  RETURN: WORKER_PAUSED
+USE `glob` where: pattern="<FOREMAN_ROOT>/.foreman/inbox/<WORKER_ID>/*.json"
+CAPTURE MESSAGE_FILES from `glob`
+FOREACH message IN MESSAGE_FILES:
+  USE `view` where: path=<MESSAGE_PATH>
+  CAPTURE INBOX_MESSAGE from `view`
+  ASSERT message identity, attempt, command, reason, and timestamp match the worker contract
 SET NEW_COMMANDS := <VALID_CURRENT_ATTEMPT_COMMANDS_NOT_ACKNOWLEDGED_IN_EVENT_HISTORY> (from "Agent Inference")
 FOREACH message IN NEW_COMMANDS:
   SET STATE_EVENT := "PROGRESS" (from "Agent Inference")
@@ -440,10 +464,13 @@ RETURN: WORKER_PAUSED
 
 <process id="resume-pipeline" name="Continue the existing attempt without skipping uncompleted stages">
 SET ISSUE_NUMBER := <NUMBER_FROM_EXISTING_WORKER_INPUT> (from Agent Inference)
-USE `bash` where: command=<RPIV_SNAPSHOT_RECIPE_WITH_NUMERIC_ISSUE>
-CAPTURE SAVED_STATE from `bash`
 USE `glob` where: pattern="project/work-items/<ISSUE_NUMBER>-*/**"
 CAPTURE SAVED_ARTIFACTS from `glob`
+SET STATE_PATH := <UNIQUE_EXISTING_WORK_ITEM_STATE_PATH> (from Agent Inference)
+USE `view` where: path=STATE_PATH
+CAPTURE SAVED_STATE from `view`
+SET SAVED_EVENTS := <READ_IMMUTABLE_EVENTS_FOR_THE_SAVED_ATTEMPT> (from Agent Inference)
+ASSERT snapshot matches the last complete valid event and no sequence or identity conflict exists
 ASSERT saved issue, worker, attempt, checkout, and branch match the current bootstrap
 ASSERT saved status is waiting, blocked, or needs-human and its reason has been explicitly resolved
 SET WORK_ITEM_PATH := <UNIQUE_EXISTING_WORK_ITEM_PATH> (from Agent Inference)

@@ -276,7 +276,7 @@ IF MANAGED_REQUEST:
   FOREACH result IN PRIOR_RESULT_FILES:
     USE `view` where: path=".foreman/issue-result.json"
     CAPTURE PRIOR_RESULT from `view`
-  USE `bash` where: command="just foreman-backlog"
+  USE `bash` where: command="gh issue list --state all --limit 100 --json number,title,body,url"
   CAPTURE EXISTING_ISSUES from `bash`
   SET REQUEST_ALREADY_DELIVERED := <REQUEST_CORRELATION_MATCHES_EXISTING_REVIEWED_ISSUE> (from Agent Inference)
   SET ISSUE_URL := <EXISTING_MATCHED_ISSUE_URL_IF_ANY> (from Agent Inference)
@@ -361,10 +361,11 @@ IF RUBBER_DUCK_OK is false AND REVISION_COUNT >= MAX_REVISIONS:
 </process>
 
 <process id="create-issue" name="Create the issue via GitHub CLI">
-SET CREATE_REQUEST := <JSON_WITH_TITLE_AND_REVIEWED_BODY> (from Agent Inference)
-SET CREATE_REQUEST_PATH := ".foreman/issue-create.json" (from Agent Inference)
-USE `create` where: content=CREATE_REQUEST, path=CREATE_REQUEST_PATH
-USE `bash` where: command="just issue-create .foreman/issue-create.json"
+SET ISSUE_TITLE_PATH := <UNIQUE_LOCAL_DRAFT_TITLE_PATH> (from Agent Inference)
+SET ISSUE_BODY_PATH := <UNIQUE_LOCAL_DRAFT_BODY_PATH> (from Agent Inference)
+USE `create` where: content=DRAFT_TITLE, path=ISSUE_TITLE_PATH
+USE `create` where: content=DRAFT_BODY, path=ISSUE_BODY_PATH
+USE `bash` where: command=<ISSUE_CREATE_RECIPE_WITH_QUOTED_TITLE_AND_BODY_PATHS>
 CAPTURE CREATE_OUTPUT from `bash`
 SET ISSUE_URL := <URL> (from "Agent Inference" using CREATE_OUTPUT)
 SET ISSUE_NUMBER := <NUMBER> (from "Agent Inference" using CREATE_OUTPUT)

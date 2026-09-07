@@ -5,10 +5,16 @@
 
 ## Engineering workflow
 
+This repository is a **template**, not a Foreman application. Start a new
+project with `bootstrap`, or use `onboard-repo` to discover an existing project's
+stack and commands. Those agents record the project's capabilities and can
+configure thin worker-operation recipes when explicitly requested. Foreman
+does not impose Python or another implementation language.
+
 **Foreman owns the mission; RPIV delivers one issue.** Give the `foreman` agent a
 PRD or product direction to build and maintain a dependency graph of GitHub
 issues, retain repository context, and schedule isolated RPIV workers within a
-configured capacity.
+configured capacity when that project has enabled worker execution.
 
 ```text
 Product direction -> Foreman -> issue dependency graph
@@ -23,7 +29,9 @@ Product direction -> Foreman -> issue dependency graph
 
 Foreman is optional: use `rpiv` directly for a single issue. Each worker exposes
 structured state/events; a delivered PR is not treated as merged integration.
-The template does not start workers automatically or enable `--yolo` by default.
+The template ships no scheduler runtime and does not start workers or enable
+`--yolo` automatically. Mission context can be maintained before execution is
+configured; standalone RPIV remains available.
 See [Foreman usage and operations](docs/foreman.md) for setup, graph format,
 permission modes, start/resume/pause, and worker communication.
 

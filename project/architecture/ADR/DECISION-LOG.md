@@ -58,3 +58,7 @@ Short, actionable statements derived from ADRs and core-components. More than on
 | 30 | Persist RPIV phase, status, identity, and ordered lifecycle events independently of Foreman | CORE-COMPONENT-260906-rpiv-observability | 2026-09-06 |
 | 31 | Preserve four-stage RPIV while exposing standalone and managed worker lifecycle state | CORE-COMPONENT-260806-rpiv-stage-contract | 2026-09-06 |
 | 32 | Correlate recoverable pauses and failure ownership with the existing worker attempt | CORE-COMPONENT-260906-rpiv-observability | 2026-09-06 |
+| 33 | Keep Foreman orchestration in APS rather than a bundled language-specific runtime | ADR-260906-foreman-control-plane | 2026-09-07 |
+| 34 | Configure project-specific capabilities and optional thin worker recipes during initialization | CORE-COMPONENT-260906-foreman-orchestration | 2026-09-07 |
+| 35 | Distinguish inherited template architecture from completed consumer project initialization | CORE-COMPONENT-260906-foreman-orchestration | 2026-09-07 |
+| 36 | Publish immutable RPIV event files and snapshots through host file tools | CORE-COMPONENT-260906-rpiv-observability | 2026-09-07 |

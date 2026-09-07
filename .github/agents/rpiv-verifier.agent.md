@@ -327,10 +327,11 @@ USE `view` where: path=PR_TEMPLATE_PATH
 CAPTURE PR_TEMPLATE from `view`
 SET PR_TITLE := <TITLE> (from "Agent Inference" using ISSUE_NUMBER, ISSUE_TITLE; follow Conventional Commits)
 SET PR_BODY := <BODY> (from "Agent Inference" using PR_TEMPLATE, ISSUE_NUMBER, HANDOFF_COMMIT, AC_RESULTS, DOCUMENTATION_RESULTS, VALIDATION_RESULTS, ACTION_PLAN; include every AC-* ID, documentation review, passed status, evidence, and Closes #<ISSUE_NUMBER>)
-SET PR_REQUEST_PATH := <WORK_ITEM_PR_REQUEST_PATH> (from Agent Inference)
-SET PR_REQUEST := <JSON_WITH_TITLE_AND_BODY> (from Agent Inference)
-USE `create` where: content=PR_REQUEST, path=PR_REQUEST_PATH
-USE `bash` where: command=<RPIV_CREATE_PR_RECIPE_WITH_QUOTED_REQUEST_PATH>
+SET PR_TITLE_PATH := <WORK_ITEM_LOCAL_PR_TITLE_PATH> (from Agent Inference)
+SET PR_BODY_PATH := <WORK_ITEM_LOCAL_PR_BODY_PATH> (from Agent Inference)
+USE `create` where: content=PR_TITLE, path=PR_TITLE_PATH
+USE `create` where: content=PR_BODY, path=PR_BODY_PATH
+USE `bash` where: command=<RPIV_CREATE_PR_RECIPE_WITH_QUOTED_TITLE_AND_BODY_PATHS>
 CAPTURE PR_RESULT from `bash`
 SET PR_URL := <URL> (from "Agent Inference" using PR_RESULT)
 </process>

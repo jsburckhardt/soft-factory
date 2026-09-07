@@ -3,11 +3,9 @@ CONTRIBUTING.md                                             — Human contributi
 LLM.txt                                                     — This file; repo map for AI agents
 README.md                                                   — Project overview
 .github/agents/foreman.agent.md                              — APS repository mission coordinator above RPIV
-.foreman/README.md                                          — Local strategic context, graph, registry, and inbox layout
-docs/foreman.md                                             — Foreman setup, configuration, lifecycle, and recovery
-scripts/foreman.py                                          — Validated graph/state/event data contracts
-tests/test_foreman.py                                       — Inert graph, lifecycle, persistence, and agent contract checks
-justfile                                                   — Operating commands, Foreman runtime, and validation entrypoints
+.foreman/README.md                                          — Consumer profile and local agent-owned context/graph data
+docs/foreman.md                                             — Project initialization, optional host operations, and APS Foreman workflow
+justfile                                                   — Starter validation and safe GitHub publication; consumers configure project commands
 .devcontainer/devcontainer.json                             — Dev container configuration
 .devcontainer/post-create.sh                                — One-time container setup for tmux config and GitHub CLI aliases
 .devcontainer/post-start.sh                                 — Per-start shared tmux session and dynamic environment setup
