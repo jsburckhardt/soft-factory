@@ -36,6 +36,9 @@ This contract applies to the RPIV coordinator, all four RPIV stage agents, their
 - Verify MUST rerun `just verify` independently by default.
 - Verify MUST return code or test defects to Implement.
 - Verify MUST return plan, architecture, scope, or acceptance coverage defects to Plan.
+- Foreman MAY schedule RPIV as an isolated issue worker but MUST NOT take over stage work.
+- RPIV MUST publish lifecycle state under the RPIV Observability contract, whether standalone or Foreman-managed.
+- Validation and delivery remain Verify activities, never additional pipeline stages.
 
 ### Interfaces
 - Plan hands Implement the acceptance catalog, tasks, test plan, ADRs, and core-components.
@@ -82,4 +85,4 @@ Behavior change -> Documentation requirement -> Committed documentation -> Verif
 
 ## Related ADRs
 
-- None.
+- [ADR-260906-foreman-control-plane](../ADR/ADR-260906-foreman-control-plane.md)

@@ -1,0 +1,9 @@
+/.trees/
+/.foreman/*
+!/.foreman/README.md
+!/.foreman/project.json
+/project/work-items/*/state.json
+/project/work-items/*/events/
+/project/work-items/*/.pr-title.txt
+/project/work-items/*/.pr-body.md
+/project/work-items/*/.issue-body.md

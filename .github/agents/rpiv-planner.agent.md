@@ -2,23 +2,21 @@
 name: rpiv-planner
 description: "Own the Plan stage of the RPIV pipeline — read the research brief, commit architectural decisions via ADRs and core-components, then produce the action plan, task breakdown, and test plan."
 tools:
-  - search/codebase
-  - search/fileSearch
-  - search/textSearch
-  - search/usages
-  - read/readFile
-  - read/problems
-  - edit/createDirectory
-  - edit/createFile
-  - edit/editFiles
-  - execute/runInTerminal
-  - todo
+  - glob
+  - grep
+  - view
+  - create
+  - edit
+  - bash
 user-invocable: true
 disable-model-invocation: false
-target: vscode
 ---
 
 <instructions>
+You MUST remain a leaf RPIV Plan stage even when Foreman manages the issue.
+You MUST preserve worker identity and report progress, blockers, and architecture/dependency findings to the RPIV coordinator.
+You MUST NOT edit Foreman's graph, schedule workers, or concurrently write coordinator-owned state/events.
+You MUST follow CORE-COMPONENT-260906-rpiv-observability; new mission prerequisites return upward without bypassing ADR rules.
 You MUST resolve exactly one project/work-items/<ISSUE_NUMBER>-*/research/00-research.md before any planning work.
 You MUST preserve the resolved work-item directory name for every Plan artifact.
 You MUST use the embedded ADR template in the ADR_TEMPLATE constant when creating any ADR.
@@ -412,8 +410,8 @@ RETURN: WORK_ITEM_PATH, CREATED_ADRS, CREATED_CORE_COMPONENTS, TASKS, TESTS
 
 <process id="load-context" name="Load research brief and existing artifacts">
 SET CURRENT_ISSUE_NUMBER := <ID> (from "Agent Inference")
-USE `search/fileSearch` where: pattern="project/work-items/<ISSUE_NUMBER>-*/research/00-research.md"
-CAPTURE RESEARCH_FILES from `search/fileSearch`
+USE `glob` where: pattern="project/work-items/<ISSUE_NUMBER>-*/research/00-research.md"
+CAPTURE RESEARCH_FILES from `glob`
 SET RESEARCH_FILE_COUNT := <COUNT> (from "Agent Inference" using RESEARCH_FILES)
 IF RESEARCH_FILE_COUNT != 1:
   RETURN: error="Exactly one work-item research brief must exist for issue #<ISSUE_NUMBER>."
@@ -423,20 +421,20 @@ SET PLAN_DIR := <PATH> (from "Agent Inference" using WORK_ITEM_PATH; append /pla
 SET ACTION_PLAN_PATH := <PATH> (from "Agent Inference" using PLAN_DIR; append /01-action-plan.md)
 SET TASK_BREAKDOWN_PATH := <PATH> (from "Agent Inference" using PLAN_DIR; append /02-task-breakdown.md)
 SET TEST_PLAN_PATH := <PATH> (from "Agent Inference" using PLAN_DIR; append /03-test-plan.md)
-USE `read/readFile` where: filePath=RESEARCH_PATH
-CAPTURE RESEARCH_BRIEF from `read/readFile`
+USE `view` where: path=RESEARCH_PATH
+CAPTURE RESEARCH_BRIEF from `view`
 SET ACCEPTANCE_CATALOG := <CATALOG> (from "Agent Inference" using RESEARCH_BRIEF; preserve issue order and assign AC-1, AC-2, and subsequent integers)
 TRY:
-  USE `read/readFile` where: filePath=DECISION_LOG_PATH
-  CAPTURE DECISION_LOG from `read/readFile`
+  USE `view` where: path=DECISION_LOG_PATH
+  CAPTURE DECISION_LOG from `view`
 RECOVER (err):
   SET DECISION_LOG := DECISION_LOG_SKELETON (from "Constant Lookup")
-USE `search/fileSearch` where: pattern="project/architecture/ADR/ADR-*.md"
-CAPTURE EXISTING_ADRS from `search/fileSearch`
-USE `search/fileSearch` where: pattern="project/architecture/core-components/CORE-COMPONENT-*.md"
-CAPTURE EXISTING_CORE_COMPONENTS from `search/fileSearch`
-USE `execute/runInTerminal` where: command=ARTIFACT_DATE_COMMAND
-CAPTURE ARTIFACT_DATE from `execute/runInTerminal`
+USE `glob` where: pattern="project/architecture/ADR/ADR-*.md"
+CAPTURE EXISTING_ADRS from `glob`
+USE `glob` where: pattern="project/architecture/core-components/CORE-COMPONENT-*.md"
+CAPTURE EXISTING_CORE_COMPONENTS from `glob`
+USE `bash` where: command=ARTIFACT_DATE_COMMAND
+CAPTURE ARTIFACT_DATE from `bash`
 </process>
 
 <process id="create-architecture-artifacts" name="Create ADRs and core-components from research brief">
@@ -445,24 +443,22 @@ SET ADR_ID := <ID> (from "Agent Inference" using ARTIFACT_DATE, ADR_SLUG; format
 SET ADR_CONTENT := <CONTENT> (from "Agent Inference" using RESEARCH_BRIEF, ADR_TEMPLATE, ADR_ID)
 IF ADR_CONTENT is not empty:
   SET ADR_FILE_PATH := <PATH> (from "Agent Inference" using ADR_DIR, ADR_ID; append .md)
-  USE `search/fileSearch` where: pattern=ADR_FILE_PATH
-  CAPTURE ADR_COLLISION from `search/fileSearch`
+  USE `glob` where: pattern=ADR_FILE_PATH
+  CAPTURE ADR_COLLISION from `glob`
   IF ADR_COLLISION is not empty:
     RETURN: error="The date-based ADR path already exists; choose a distinct descriptive slug."
-  USE `edit/createDirectory` where: dirPath=ADR_DIR
-  USE `edit/createFile` where: content=ADR_CONTENT, filePath=ADR_FILE_PATH
+  USE `create` where: content=ADR_CONTENT, path=ADR_FILE_PATH
   SET CREATED_ADRS := CREATED_ADRS + [ADR_FILE_PATH] (from "Agent Inference")
 SET CORE_COMPONENT_SLUG := <SLUG> (from "Agent Inference" using RESEARCH_BRIEF; produce a lowercase hyphenated cross-cutting description)
 SET CORE_COMPONENT_ID := <ID> (from "Agent Inference" using ARTIFACT_DATE, CORE_COMPONENT_SLUG; format CORE-COMPONENT-yymmdd-short-slug)
 SET CORE_COMPONENT_CONTENT := <CONTENT> (from "Agent Inference" using RESEARCH_BRIEF, CORE_COMPONENT_TEMPLATE, CORE_COMPONENT_ID)
 IF CORE_COMPONENT_CONTENT is not empty:
   SET CORE_COMPONENT_FILE_PATH := <PATH> (from "Agent Inference" using CORE_COMPONENT_DIR, CORE_COMPONENT_ID; append .md)
-  USE `search/fileSearch` where: pattern=CORE_COMPONENT_FILE_PATH
-  CAPTURE CORE_COMPONENT_COLLISION from `search/fileSearch`
+  USE `glob` where: pattern=CORE_COMPONENT_FILE_PATH
+  CAPTURE CORE_COMPONENT_COLLISION from `glob`
   IF CORE_COMPONENT_COLLISION is not empty:
     RETURN: error="The date-based core-component path already exists; choose a distinct descriptive slug."
-  USE `edit/createDirectory` where: dirPath=CORE_COMPONENT_DIR
-  USE `edit/createFile` where: content=CORE_COMPONENT_CONTENT, filePath=CORE_COMPONENT_FILE_PATH
+  USE `create` where: content=CORE_COMPONENT_CONTENT, path=CORE_COMPONENT_FILE_PATH
   SET CREATED_CORE_COMPONENTS := CREATED_CORE_COMPONENTS + [CORE_COMPONENT_FILE_PATH] (from "Agent Inference")
 SET CREATED_DECISIONS := <DECISIONS> (from "Agent Inference" using CREATED_ADRS, CREATED_CORE_COMPONENTS, DECISION_GUIDANCE)
 SET ARCHITECTURE_COMPLETE := true (from "Agent Inference")
@@ -470,17 +466,17 @@ SET ARCHITECTURE_COMPLETE := true (from "Agent Inference")
 
 <process id="update-decision-log" name="Update the decision log with new entries">
 TRY:
-  USE `read/readFile` where: filePath=DECISION_LOG_PATH
-  CAPTURE CURRENT_LOG from `read/readFile`
+  USE `view` where: path=DECISION_LOG_PATH
+  CAPTURE CURRENT_LOG from `view`
   SET DECISION_LOG_EXISTS := true (from "Agent Inference")
 RECOVER (err):
   SET CURRENT_LOG := DECISION_LOG_SKELETON (from "Constant Lookup")
   SET DECISION_LOG_EXISTS := false (from "Agent Inference")
 SET UPDATED_LOG := <LOG> (from "Agent Inference" using CURRENT_LOG, CREATED_ADRS, CREATED_CORE_COMPONENTS, CREATED_DECISIONS)
 IF DECISION_LOG_EXISTS is true:
-  USE `edit/editFiles` where: filePath=DECISION_LOG_PATH
+  USE `edit` where: path=DECISION_LOG_PATH
 ELSE:
-  USE `edit/createFile` where: content=UPDATED_LOG, filePath=DECISION_LOG_PATH
+  USE `create` where: content=UPDATED_LOG, path=DECISION_LOG_PATH
 </process>
 
 <process id="build-acceptance-coverage" name="Map every acceptance criterion to delivery proof">
@@ -492,12 +488,11 @@ IF COVERAGE_COMPLETE is false:
 
 <process id="create-action-plan" name="Create the action plan for the issue">
 SET PLAN_CONTENT := <CONTENT> (from "Agent Inference" using RESEARCH_BRIEF, CREATED_ADRS, CREATED_CORE_COMPONENTS, ACCEPTANCE_CATALOG, COVERAGE_MATRIX)
-USE `edit/createDirectory` where: dirPath=PLAN_DIR
 TRY:
-  USE `read/readFile` where: filePath=ACTION_PLAN_PATH
-  USE `edit/editFiles` where: content=PLAN_CONTENT, filePath=ACTION_PLAN_PATH
+  USE `view` where: path=ACTION_PLAN_PATH
+  USE `edit` where: content=PLAN_CONTENT, path=ACTION_PLAN_PATH
 RECOVER (err):
-  USE `edit/createFile` where: content=PLAN_CONTENT, filePath=ACTION_PLAN_PATH
+  USE `create` where: content=PLAN_CONTENT, path=ACTION_PLAN_PATH
 SET ACTION_PLAN := PLAN_CONTENT (from "Agent Inference")
 </process>
 
@@ -507,10 +502,10 @@ SET RELEVANT_CORE_COMPONENTS := <COMPONENTS> (from "Agent Inference" using ACTIO
 SET TASKS := <TASK_LIST> (from "Agent Inference" using ACTION_PLAN, ACCEPTANCE_CATALOG, COVERAGE_MATRIX, RELEVANT_ADRS, RELEVANT_CORE_COMPONENTS; include AC-* IDs, test coverage, expected evidence, and dependency order)
 SET BREAKDOWN_CONTENT := <CONTENT> (from "Agent Inference" using TASKS)
 TRY:
-  USE `read/readFile` where: filePath=TASK_BREAKDOWN_PATH
-  USE `edit/editFiles` where: content=BREAKDOWN_CONTENT, filePath=TASK_BREAKDOWN_PATH
+  USE `view` where: path=TASK_BREAKDOWN_PATH
+  USE `edit` where: content=BREAKDOWN_CONTENT, path=TASK_BREAKDOWN_PATH
 RECOVER (err):
-  USE `edit/createFile` where: content=BREAKDOWN_CONTENT, filePath=TASK_BREAKDOWN_PATH
+  USE `create` where: content=BREAKDOWN_CONTENT, path=TASK_BREAKDOWN_PATH
 SET BREAKDOWN_COMPLETE := true (from "Agent Inference")
 </process>
 
@@ -518,14 +513,16 @@ SET BREAKDOWN_COMPLETE := true (from "Agent Inference")
 SET TESTS := <TEST_LIST> (from "Agent Inference" using TASKS, ACCEPTANCE_CATALOG, COVERAGE_MATRIX, RELEVANT_ADRS, RELEVANT_CORE_COMPONENTS; include AC-* IDs and expected evidence)
 SET TEST_PLAN_CONTENT := <CONTENT> (from "Agent Inference" using TESTS)
 TRY:
-  USE `read/readFile` where: filePath=TEST_PLAN_PATH
-  USE `edit/editFiles` where: content=TEST_PLAN_CONTENT, filePath=TEST_PLAN_PATH
+  USE `view` where: path=TEST_PLAN_PATH
+  USE `edit` where: content=TEST_PLAN_CONTENT, path=TEST_PLAN_PATH
 RECOVER (err):
-  USE `edit/createFile` where: content=TEST_PLAN_CONTENT, filePath=TEST_PLAN_PATH
+  USE `create` where: content=TEST_PLAN_CONTENT, path=TEST_PLAN_PATH
 SET TEST_PLAN_COMPLETE := true (from "Agent Inference")
 </process>
 </processes>
 
 <input>
 USER_INPUT is a GitHub issue number and reference to its research brief to plan — including architecture decisions, task breakdown, and test plan.
+Optional managed context: WORKER_ID, ATTEMPT_ID, WORKTREE, FOREMAN_ROOT.
+Return progress, blockers, failure owner, and prerequisite findings with the normal Plan handoff.
 </input>

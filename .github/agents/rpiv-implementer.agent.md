@@ -2,25 +2,22 @@
 name: rpiv-implementer
 description: "Implement planned tasks in dependency order, maintain tests and application documentation, run validation, record evidence, and commit."
 tools:
-  - search/codebase
-  - search/fileSearch
-  - search/textSearch
-  - search/changes
-  - read/readFile
-  - read/problems
-  - edit/createDirectory
-  - edit/createFile
-  - edit/editFiles
-  - execute/runInTerminal
-  - execute/getTerminalOutput
-  - execute/testFailure
-  - todo
+  - glob
+  - grep
+  - view
+  - create
+  - edit
+  - bash
 user-invocable: true
 disable-model-invocation: false
-target: vscode
 ---
 
 <instructions>
+You MUST remain a leaf RPIV Implement stage in the assigned checkout.
+You MUST preserve worker identity and report progress, blockers, and new prerequisites to the RPIV coordinator.
+You MUST NOT edit Foreman's graph, another worktree, or coordinator-owned state/events.
+You MUST follow CORE-COMPONENT-260906-rpiv-observability and return architecture conflicts to Plan.
+You MUST exclude ignored runtime state/events from commits; their updates do not invalidate the clean-tree handoff.
 You MUST read the action plan before implementing.
 You MUST resolve exactly one project/work-items/<ISSUE_NUMBER>-*/plan/01-action-plan.md before loading Plan artifacts.
 You MUST preserve the resolved work-item directory name for implementation artifacts.
@@ -185,8 +182,8 @@ RETURN: format="IMPLEMENT_HANDOFF", ac_evidence=AC_EVIDENCE, branch_name=BRANCH_
 
 <process id="load-context" name="Load plan, architecture, and project validation commands">
 SET ISSUE_NUMBER := <NUMBER> (from "Agent Inference" using USER_INPUT)
-USE `search/fileSearch` where: pattern="project/work-items/<ISSUE_NUMBER>-*/plan/01-action-plan.md"
-CAPTURE ACTION_PLAN_FILES from `search/fileSearch`
+USE `glob` where: pattern="project/work-items/<ISSUE_NUMBER>-*/plan/01-action-plan.md"
+CAPTURE ACTION_PLAN_FILES from `glob`
 SET ACTION_PLAN_FILE_COUNT := <COUNT> (from "Agent Inference" using ACTION_PLAN_FILES)
 IF ACTION_PLAN_FILE_COUNT != 1:
   RETURN: format="IMPLEMENT_ERROR", details=ACTION_PLAN_FILES, error_message="Exactly one work-item action plan must exist", issue_number=ISSUE_NUMBER, return_stage="plan"
@@ -196,29 +193,29 @@ SET TASK_BREAKDOWN_PATH := <PATH> (from "Agent Inference" using WORK_ITEM_PATH; 
 SET TEST_PLAN_PATH := <PATH> (from "Agent Inference" using WORK_ITEM_PATH; append /plan/03-test-plan.md)
 SET IMPLEMENTATION_DIR := <PATH> (from "Agent Inference" using WORK_ITEM_PATH; append /implementation)
 SET IMPLEMENTATION_NOTES_PATH := <PATH> (from "Agent Inference" using IMPLEMENTATION_DIR; append /00-implementation.md)
-USE `read/readFile` where: filePath=ACTION_PLAN_PATH
-CAPTURE ACTION_PLAN from `read/readFile`
-USE `read/readFile` where: filePath=TASK_BREAKDOWN_PATH
-CAPTURE TASK_BREAKDOWN from `read/readFile`
-USE `read/readFile` where: filePath=TEST_PLAN_PATH
-CAPTURE TEST_PLAN from `read/readFile`
-USE `search/fileSearch` where: pattern=JUSTFILE_PATH
-CAPTURE JUSTFILE_FILES from `search/fileSearch`
+USE `view` where: path=ACTION_PLAN_PATH
+CAPTURE ACTION_PLAN from `view`
+USE `view` where: path=TASK_BREAKDOWN_PATH
+CAPTURE TASK_BREAKDOWN from `view`
+USE `view` where: path=TEST_PLAN_PATH
+CAPTURE TEST_PLAN from `view`
+USE `glob` where: pattern=JUSTFILE_PATH
+CAPTURE JUSTFILE_FILES from `glob`
 IF JUSTFILE_FILES is empty:
   RETURN: format="IMPLEMENT_ERROR", details="The root justfile is missing.", error_message="Project validation commands are unavailable", issue_number=ISSUE_NUMBER, return_stage="plan"
-USE `read/readFile` where: filePath=JUSTFILE_PATH
-CAPTURE JUSTFILE from `read/readFile`
-USE `execute/runInTerminal` where: command="just --list"
-CAPTURE JUSTFILE_LIST from `execute/runInTerminal`
+USE `view` where: path=JUSTFILE_PATH
+CAPTURE JUSTFILE from `view`
+USE `bash` where: command="just --list"
+CAPTURE JUSTFILE_LIST from `bash`
 SET COMMAND_INTERFACE_VALID := <VALID> (from "Agent Inference" using JUSTFILE, JUSTFILE_LIST, REQUIRED_RECIPES)
 IF COMMAND_INTERFACE_VALID is false:
   RETURN: format="IMPLEMENT_ERROR", details=JUSTFILE_LIST, error_message="The root justfile must expose verify-focused and verify", issue_number=ISSUE_NUMBER, return_stage="plan"
 SET TASKS := <ORDERED_TASKS> (from "Agent Inference" using TASK_BREAKDOWN; order by declared dependencies)
 SET ACCEPTANCE_CATALOG := <CATALOG> (from "Agent Inference" using ACTION_PLAN)
-USE `search/fileSearch` where: pattern="project/architecture/ADR/ADR-*.md"
-CAPTURE ALL_ADRS from `search/fileSearch`
-USE `search/fileSearch` where: pattern="project/architecture/core-components/CORE-COMPONENT-*.md"
-CAPTURE ALL_CORE_COMPONENTS from `search/fileSearch`
+USE `glob` where: pattern="project/architecture/ADR/ADR-*.md"
+CAPTURE ALL_ADRS from `glob`
+USE `glob` where: pattern="project/architecture/core-components/CORE-COMPONENT-*.md"
+CAPTURE ALL_CORE_COMPONENTS from `glob`
 SET RELEVANT_ADRS := <ADRS> (from "Agent Inference" using ACTION_PLAN, TASK_BREAKDOWN, ALL_ADRS)
 SET RELEVANT_CORE_COMPONENTS := <COMPONENTS> (from "Agent Inference" using ACTION_PLAN, TASK_BREAKDOWN, ALL_CORE_COMPONENTS)
 </process>
@@ -230,15 +227,14 @@ FOREACH task IN TASKS:
     RETURN: format="IMPLEMENT_ERROR", details=task, error_message="Task dependency order is invalid", issue_number=ISSUE_NUMBER, return_stage="plan"
   SET TASK_CHANGES := <CHANGES> (from "Agent Inference" using task, TEST_PLAN, RELEVANT_ADRS, RELEVANT_CORE_COMPONENTS)
   SET TEST_CHANGES := <TESTS> (from "Agent Inference" using task, TEST_PLAN, TASK_CHANGES)
-  USE `execute/runInTerminal` where: command="just verify-focused"
-  CAPTURE FOCUSED_OUTPUT from `execute/runInTerminal`
+  USE `bash` where: command="just verify-focused"
+  CAPTURE FOCUSED_OUTPUT from `bash`
   SET FOCUSED_PASSED := <PASSED> (from "Agent Inference" using FOCUSED_OUTPUT)
   IF FOCUSED_PASSED is false:
-    USE `execute/testFailure`
-    CAPTURE FAILURE_DETAILS from `execute/testFailure`
+    SET FAILURE_DETAILS := FOCUSED_OUTPUT (from Agent Inference)
     SET TASK_FIX := <FIX> (from "Agent Inference" using task, FAILURE_DETAILS, RELEVANT_ADRS, RELEVANT_CORE_COMPONENTS)
-    USE `execute/runInTerminal` where: command="just verify-focused"
-    CAPTURE FOCUSED_OUTPUT from `execute/runInTerminal`
+    USE `bash` where: command="just verify-focused"
+    CAPTURE FOCUSED_OUTPUT from `bash`
     SET FOCUSED_PASSED := <PASSED> (from "Agent Inference" using FOCUSED_OUTPUT)
   IF FOCUSED_PASSED is false:
     RETURN: format="IMPLEMENT_ERROR", details=FOCUSED_OUTPUT, error_message="Focused validation still fails", issue_number=ISSUE_NUMBER, return_stage="implement"
@@ -246,7 +242,7 @@ FOREACH task IN TASKS:
   SET TASK_EVIDENCE := <EVIDENCE> (from "Agent Inference" using task, TASK_CHANGES, TEST_CHANGES, FOCUSED_RESULTS; map evidence to every task AC-* ID)
   SET AC_EVIDENCE := AC_EVIDENCE + TASK_EVIDENCE (from "Agent Inference")
   SET TASK_BREAKDOWN := <UPDATED_BREAKDOWN> (from "Agent Inference" using TASK_BREAKDOWN, task; mark task complete)
-  USE `edit/editFiles` where: content=TASK_BREAKDOWN, filePath=TASK_BREAKDOWN_PATH
+  USE `edit` where: content=TASK_BREAKDOWN, path=TASK_BREAKDOWN_PATH
   SET COMPLETED_TASKS := COMPLETED_TASKS + [task.id] (from "Agent Inference")
 </process>
 
@@ -255,36 +251,34 @@ SET DOCUMENTATION_REQUIREMENTS := <REQUIREMENTS> (from "Agent Inference" using A
 IF DOCUMENTATION_REQUIREMENTS is empty:
   SET DOCUMENTATION_EVIDENCE := [{status: "not-required", rationale: <RATIONALE>}] (from "Agent Inference" using TASKS, ACTION_PLAN; provide a concrete no-impact rationale)
 ELSE:
-  USE `search/fileSearch` where: pattern=DOCUMENTATION_SEARCH_PATTERN
-  CAPTURE DOCUMENTATION_FILES from `search/fileSearch`
+  USE `glob` where: pattern=DOCUMENTATION_SEARCH_PATTERN
+  CAPTURE DOCUMENTATION_FILES from `glob`
   SET RELEVANT_DOCUMENTATION_FILES := <FILES> (from "Agent Inference" using DOCUMENTATION_REQUIREMENTS, DOCUMENTATION_FILES)
   FOREACH existingDocument IN RELEVANT_DOCUMENTATION_FILES:
-    USE `read/readFile` where: filePath=existingDocument
-    CAPTURE EXISTING_DOCUMENT_CONTENT from `read/readFile`
+    USE `view` where: path=existingDocument
+    CAPTURE EXISTING_DOCUMENT_CONTENT from `view`
     SET DOCUMENTATION_CONTENT := DOCUMENTATION_CONTENT + [{path: existingDocument, content: EXISTING_DOCUMENT_CONTENT}] (from "Agent Inference")
   SET DOCUMENTATION_UPDATES := <UPDATES> (from "Agent Inference" using DOCUMENTATION_REQUIREMENTS, DOCUMENTATION_CONTENT, TASKS, COMPLETED_TASKS; provide path and content for every required document)
   FOREACH document IN DOCUMENTATION_UPDATES:
     SET DOCUMENT_DIRECTORY := <DIR> (from "Agent Inference" using document.path)
-    USE `edit/createDirectory` where: dirPath=DOCUMENT_DIRECTORY
     TRY:
-      USE `read/readFile` where: filePath=document.path
-      USE `edit/editFiles` where: content=document.content, filePath=document.path
+      USE `view` where: path=document.path
+      USE `edit` where: content=document.content, path=document.path
     RECOVER (err):
-      USE `edit/createFile` where: content=document.content, filePath=document.path
+      USE `create` where: content=document.content, path=document.path
   SET DOCUMENTATION_CHANGES := <FILES> (from "Agent Inference" using DOCUMENTATION_UPDATES)
   SET DOCUMENTATION_EVIDENCE := <EVIDENCE> (from "Agent Inference" using DOCUMENTATION_REQUIREMENTS, DOCUMENTATION_CHANGES; map each requirement to its updated file and observable content)
 </process>
 
 <process id="run-full-validation" name="Run the complete project validation suite">
-USE `execute/runInTerminal` where: command="just verify"
-CAPTURE FULL_OUTPUT from `execute/runInTerminal`
+USE `bash` where: command="just verify"
+CAPTURE FULL_OUTPUT from `bash`
 SET FULL_PASSED := <PASSED> (from "Agent Inference" using FULL_OUTPUT)
 IF FULL_PASSED is false:
-  USE `execute/testFailure`
-  CAPTURE FAILURE_DETAILS from `execute/testFailure`
+  SET FAILURE_DETAILS := FULL_OUTPUT (from Agent Inference)
   SET FULL_FIX := <FIX> (from "Agent Inference" using FAILURE_DETAILS, TASKS, RELEVANT_ADRS, RELEVANT_CORE_COMPONENTS)
-  USE `execute/runInTerminal` where: command="just verify"
-  CAPTURE FULL_OUTPUT from `execute/runInTerminal`
+  USE `bash` where: command="just verify"
+  CAPTURE FULL_OUTPUT from `bash`
   SET FULL_PASSED := <PASSED> (from "Agent Inference" using FULL_OUTPUT)
 IF FULL_PASSED is false:
   RETURN: format="IMPLEMENT_ERROR", details=FULL_OUTPUT, error_message="Full validation still fails", issue_number=ISSUE_NUMBER, return_stage="implement"
@@ -296,32 +290,31 @@ SET EVIDENCE_COMPLETE := <COMPLETE> (from "Agent Inference" using ACCEPTANCE_CAT
 IF EVIDENCE_COMPLETE is false:
   RETURN: format="IMPLEMENT_ERROR", details=AC_EVIDENCE, error_message="Implementation evidence is incomplete", issue_number=ISSUE_NUMBER, return_stage="implement"
 SET NOTES_CONTENT := <CONTENT> (from "Agent Inference" using ISSUE_NUMBER, COMPLETED_TASKS, ACCEPTANCE_CATALOG, AC_EVIDENCE, DOCUMENTATION_EVIDENCE, FOCUSED_RESULTS, FULL_RESULTS; include every AC-* ID, documentation evidence or no-impact rationale, and avoid final acceptance claims)
-USE `edit/createDirectory` where: dirPath=IMPLEMENTATION_DIR
 TRY:
-  USE `read/readFile` where: filePath=IMPLEMENTATION_NOTES_PATH
-  USE `edit/editFiles` where: content=NOTES_CONTENT, filePath=IMPLEMENTATION_NOTES_PATH
+  USE `view` where: path=IMPLEMENTATION_NOTES_PATH
+  USE `edit` where: content=NOTES_CONTENT, path=IMPLEMENTATION_NOTES_PATH
 RECOVER (err):
-  USE `edit/createFile` where: content=NOTES_CONTENT, filePath=IMPLEMENTATION_NOTES_PATH
+  USE `create` where: content=NOTES_CONTENT, path=IMPLEMENTATION_NOTES_PATH
 </process>
 
 <process id="commit-implementation" name="Commit the completed implementation">
-USE `execute/runInTerminal` where: command="git status --porcelain"
-CAPTURE IMPLEMENTATION_STATUS from `execute/runInTerminal`
+USE `bash` where: command="git status --porcelain"
+CAPTURE IMPLEMENTATION_STATUS from `bash`
 IF IMPLEMENTATION_STATUS is empty:
   RETURN: format="IMPLEMENT_ERROR", details="No implementation changes are available to commit.", error_message="Implementation commit is missing", issue_number=ISSUE_NUMBER, return_stage="implement"
 SET COMMIT_GROUPS := <GROUPS> (from "Agent Inference" using IMPLEMENTATION_STATUS, TASKS, DOCUMENTATION_CHANGES; include application documentation, issue-related files, and logical atomic groups)
 FOREACH group IN COMMIT_GROUPS:
-  USE `execute/runInTerminal` where: command="git add <group.files>"
-  USE `execute/runInTerminal` where: command="git commit -m '<group.message>' -m '' -m '<CO_AUTHOR_TRAILER>'"
-USE `execute/runInTerminal` where: command="git rev-parse HEAD"
-CAPTURE COMMIT_SHA from `execute/runInTerminal`
+  USE `bash` where: command="git add <group.files>"
+  USE `bash` where: command="git commit -m '<group.message>' -m '' -m '<CO_AUTHOR_TRAILER>'"
+USE `bash` where: command="git rev-parse HEAD"
+CAPTURE COMMIT_SHA from `bash`
 </process>
 
 <process id="prepare-handoff" name="Prove the committed handoff is clean">
-USE `execute/runInTerminal` where: command="git branch --show-current"
-CAPTURE BRANCH_NAME from `execute/runInTerminal`
-USE `execute/runInTerminal` where: command="git status --porcelain"
-CAPTURE FINAL_STATUS from `execute/runInTerminal`
+USE `bash` where: command="git branch --show-current"
+CAPTURE BRANCH_NAME from `bash`
+USE `bash` where: command="git status --porcelain"
+CAPTURE FINAL_STATUS from `bash`
 SET CLEAN_TREE := <CLEAN> (from "Agent Inference" using FINAL_STATUS)
 IF CLEAN_TREE is false:
   RETURN: format="IMPLEMENT_ERROR", details=FINAL_STATUS, error_message="Working tree is not clean after implementation commits", issue_number=ISSUE_NUMBER, return_stage="implement"
@@ -330,4 +323,6 @@ IF CLEAN_TREE is false:
 
 <input>
 USER_INPUT contains the issue number and the Plan-to-Implement handoff with AC-* criteria, tasks, test plan, and relevant architecture.
+Optional managed context: WORKER_ID, ATTEMPT_ID, WORKTREE, FOREMAN_ROOT.
+Return progress, blockers, failure owner, and prerequisite findings with the normal Implement handoff.
 </input>
