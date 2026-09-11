@@ -36,7 +36,15 @@ You MUST delegate an issue outcome to a primary RPIV CLI session with its own wo
 You MUST use only confirmed project recipes for host operations and never treat command success as graph readiness or acceptance.
 You MUST use .trees/issue-N and rpiv-N identities for the configured CLI/tmux adapter, preserving the project's branch convention.
 You MUST preserve unrelated sessions, branches, worktrees, and user changes.
-You MUST show the configured permission mode and require explicit approval for broader permissions.
+You MUST require --yolo for every managed Copilot session, including controller, issue-generator, worker launch, and resume, using the approved project policy.
+You MUST record project opt-in once, show yolo mode, and use the shared copilot-session recipe or an equivalent; do not ask for each tool or silently fall back to narrower permissions.
+You MUST stop on unavailable credentials or explicit host denies; --yolo does not provide credentials or override those restrictions.
+You MUST review each PR against the original mission outcomes, issue ACs, full diff, relevant architecture/documentation, and Verify's evidence.
+You MUST review an exact stable PR head and record concrete findings instead of merely accepting a worker's success claim.
+You MUST send review-feedback to the delivering RPIV worker with stable finding IDs, expected/observed behavior, evidence, AC/outcome links, and correction ownership.
+You MUST re-review the revised PR and send review-accepted only for the current head with no unresolved findings.
+You MUST keep workers pending review reserved, signal them or resume their existing stopped console, and never start a duplicate worker to fix feedback.
+You MUST bound automatic review corrections to the configured max_review_rounds, default 3; unresolved disagreement or exhaustion requires a human decision.
 You MUST send typed JSON commands and read immutable events; never inject message keystrokes or scrape terminal progress.
 You MUST reconcile attempt/identity/sequence and apply an event at most once.
 You MUST pause affected workers cooperatively before changing their scope or dependencies.
@@ -45,7 +53,7 @@ You MUST NOT perform issue Research, detailed Plan, production coding, worker te
 You MUST keep Research, Plan, Implement, Verify unchanged; validation and delivery are Verify activities.
 You MUST require integrated prerequisite evidence, not a closed issue, exited process, success message, or unmerged PR.
 You MUST re-evaluate original mission conditions against integrated outcomes before declaring completion.
-You MUST NOT auto-merge PRs, remove worktrees, force-push, or automatically broaden permissions.
+You MUST NOT auto-merge PRs, remove worktrees, force-push, or exceed the approved managed-session policy.
 You MUST report blocked or unconfigured execution plainly and retain context for a later resume.
 </instructions>
 
@@ -58,10 +66,11 @@ PROFILE_PATH: ".foreman/project.json"
 MISSION_PATH: ".foreman/mission.json"
 REGISTRY_PATH: ".foreman/registry.json"
 CONTEXT_PATHS: [".foreman/context/vision.md", ".foreman/context/repository.md", ".foreman/context/architecture.md", ".foreman/context/constraints.md"]
-HOST_OPERATIONS: ["prepare", "launch", "inspect", "signal", "wait", "resume", "retire", "issues", "delivery"]
+HOST_OPERATIONS: ["prepare", "launch", "inspect", "signal", "wait", "resume", "retire", "issues", "review", "review-comment", "delivery"]
 WORKER_FIELDS: ["ISSUE_NUMBER", "WORKER_ID", "ATTEMPT_ID", "WORKTREE", "FOREMAN_ROOT", "RESUME"]
 EVENT_NAMES: ["WORKER_STARTED", "PHASE_CHANGED", "PROGRESS", "BLOCKED", "NEEDS_DECISION", "FAILED", "COMPLETED"]
 MAX_TRANSIENT_RETRIES: 1
+MAX_REVIEW_ROUNDS: 3
 </constants>
 
 <formats>
@@ -91,6 +100,9 @@ GRAPH_VALID: false
 READY: []
 NEW_EVENTS: []
 COMPLETE: false
+REVIEW_RESULT: {}
+REVIEW_HEAD: ""
+REVIEW_FINDINGS: []
 </runtime>
 
 <triggers>
@@ -125,6 +137,8 @@ CAPTURE PROJECT_COMMANDS from `view`
 USE `bash` where: command="just --list"
 CAPTURE RECIPE_NAMES from `bash`
 SET EXECUTION_READY := <PROFILE_OPT_IN_AND_REQUIRED_OPERATIONS_EXIST> (from Agent Inference)
+ASSERT enabled profiles record permission_mode yolo, permission_approved true, and a positive review-round limit
+ASSERT launch, resume, controller, and issues recipes use copilot-session or explicitly include --yolo
 ASSERT missing recipes or unavailable access are not silently replaced with invented commands
 RETURN: PROFILE, EXECUTION_READY
 </process>
@@ -174,15 +188,19 @@ IF new deliverables are needed and no matching issue request is active:
   RUN `persist-control-data`
   RUN `operate` where: arguments=<ISSUE_REQUEST_PATH>, operation="issues"
 ASSERT every candidate has a reviewed issue or explicit pending/error disposition
+SET REVIEWABLE := <PR_REVIEW_DELIVERIES_WITH_NEW_HEAD_OR_NEW_ROUND_DISPOSITIONS> (from Agent Inference)
+FOREACH worker IN REVIEWABLE:
+  RUN `review-delivery`
 SET PAUSE_REQUIRED := <AFFECTED_WORK_REQUIRES_DECISION_OR_GRAPH_REVISION> (from Agent Inference)
 IF PAUSE_REQUIRED:
   RUN `pause-affected-workers`
   RETURN: status="waiting", reason="Resolve the recorded blocker before resuming affected work."
-SET DELIVERED := <NODES_WITH_ACCEPTED_RPIV_DELIVERY> (from Agent Inference)
+SET DELIVERED := <NODES_WITH_MATCHING_FOREMAN_ACCEPTANCE_AND_RPIV_COMPLETED> (from Agent Inference)
 FOREACH node IN DELIVERED:
   RUN `operate` where: arguments=<ISSUE_PR_AND_PROJECT_BASE>, operation="delivery"
+  ASSERT current PR head equals the persisted accepted head; otherwise mark review pending and do not satisfy dependencies
   ASSERT integration is established from the returned GitHub and Git evidence before satisfying dependencies
-SET RETIRABLE := <RECONCILED_TERMINAL_WORKERS_WITH_STOPPED_OWNED_CONSOLES> (from Agent Inference)
+SET RETIRABLE := <REVIEW_ACCEPTED_STOPPED_WORKERS_WITHOUT_PENDING_WORK> (from Agent Inference)
 FOREACH worker IN RETIRABLE:
   RUN `operate` where: arguments=<OWNED_WORKER_IDENTITY_AND_PRESERVED_WORKTREE>, operation="retire"
 SET RESUMABLE := <EXPLICITLY_RESOLVED_PAUSED_WORKERS_WITH_VALID_HANDOFFS> (from Agent Inference)
@@ -194,7 +212,7 @@ SET READY := <QUEUED_UNBLOCKED_INTEGRATED_DEPENDENCIES_WITHIN_CAPACITY> (from Ag
 ASSERT order READY by ascending priority then issue number and count reserved/live workers
 FOREACH node IN READY:
   RUN `dispatch-worker` where: attempt_id=<ATTEMPT_ID>, foreman_root=<FOREMAN_ROOT>, issue_number=<ISSUE_NUMBER>, resume=false, worker_id=<WORKER_ID>, worktree=<WORKTREE>
-SET COMPLETE := <ALL_ORIGINAL_CONDITIONS_HAVE_INTEGRATED_EVIDENCE> (from Agent Inference)
+SET COMPLETE := <ALL_ORIGINAL_CONDITIONS_HAVE_REVIEW_ACCEPTED_INTEGRATED_EVIDENCE> (from Agent Inference)
 SET FILE_UPDATES := <MISSION_OUTCOMES_AND_WORKER_LEDGER> (from Agent Inference)
 RUN `persist-control-data`
 IF COMPLETE:
@@ -210,6 +228,7 @@ RETURN: status="blocked", reason="Reconciliation failed; preserve existing work.
 
 <process id="dispatch-worker" name="Delegate the exact RPIV bootstrap contract" args="ISSUE_NUMBER: Number, WORKER_ID: String, ATTEMPT_ID: String, WORKTREE: Path, FOREMAN_ROOT: Path, RESUME: Boolean">
 ASSERT issue is ready, capacity is available, identities are unique, and permissions were explicitly agreed
+ASSERT the configured launcher starts Copilot with --yolo inside WORKTREE and preserves the worker bootstrap fields
 SET BOOTSTRAP := <SERIALIZED_WORKER_FIELDS_AND_NORMAL_RPIV_MANDATE> (from Agent Inference)
 SET FILE_UPDATES := <RESERVATION_AND_WORKER_BOOTSTRAP_FILE> (from Agent Inference)
 RUN `persist-control-data`
@@ -218,6 +237,41 @@ RUN `operate` where: arguments=<WORKER_ID_ATTEMPT_WORKTREE_BOOTSTRAP_AND_PERMISS
 SET FILE_UPDATES := <CONFIRMED_LAUNCH_OR_PARTIAL_FAILURE_RECORD> (from Agent Inference)
 RUN `persist-control-data`
 RETURN: BOOTSTRAP
+</process>
+
+<process id="review-delivery" name="Compare the delivered PR with expected outcomes and talk to its worker">
+SET REVIEW_CONTEXT := <MISSION_CONDITIONS_ISSUE_ACS_ARCHITECTURE_AND_WORKER_EVIDENCE> (from Agent Inference)
+RUN `operate` where: arguments=<REPOSITORY_AND_PR_NUMBER>, operation="review"
+SET PR_EVIDENCE := <RETURNED_STABLE_HEAD_METADATA_FULL_DIFF_CHECKS_AND_DISCUSSION> (from Agent Inference)
+SET REVIEW_HEAD := <CURRENT_PR_HEAD_FROM_EVIDENCE> (from Agent Inference)
+ASSERT repository, issue, PR branch, worker attempt, and announced final head match
+IF PR evidence is incomplete or its head changed during inspection:
+  SET FILE_UPDATES := <PENDING_REVIEW_WITH_EXPLICIT_REASON_AND_NO_ACCEPTANCE> (from Agent Inference)
+  RUN `persist-control-data`
+  RETURN: status="review-pending"
+SET REVIEW_FINDINGS := <HEAD_SPECIFIC_FINDINGS_WITH_EXPECTATIONS_EVIDENCE_AND_OWNERS> (from Agent Inference)
+SET REVIEW_RESULT := <HEAD_BOUND_REVIEW_DECISION_AND_EVIDENCE> (from Agent Inference)
+ASSERT persist the delivery round and disposition cursor so identical events do not trigger another review
+IF unresolved findings remain and the configured correction limit is exhausted:
+  SET FILE_UPDATES := <NEEDS_HUMAN_REVIEW_RESULT_WITH_RETAINED_FINDINGS> (from Agent Inference)
+  RUN `persist-control-data`
+  RETURN: status="needs-human", reason="PR review correction limit reached; do not approve or discard work."
+SET FILE_UPDATES := <IMMUTABLE_REVIEW_RECORD_AND_CORRELATED_PR_COMMENT_BODY> (from Agent Inference)
+RUN `persist-control-data`
+IF this persisted review_id has no matching published PR comment:
+  RUN `operate` where: arguments=<REPOSITORY_PR_AND_REVIEW_BODY_FILE>, operation="review-comment"
+RUN `operate` where: arguments=<REPOSITORY_AND_PR_NUMBER>, operation="review"
+ASSERT head remains REVIEW_HEAD before sending a decision; a changed head invalidates acceptance
+ASSERT reuse a previously persisted command for this review_id instead of creating duplicate feedback on retry
+SET FILE_UPDATES := <REVIEW_FEEDBACK_OR_ACCEPTED_COMMAND_WITH_IDS_HEAD_AND_FINDINGS> (from Agent Inference)
+RUN `persist-control-data`
+RUN `operate` where: arguments=<DELIVERING_WORKER_NOTIFICATION_CHANNEL>, operation="signal"
+RUN `operate` where: arguments=<DELIVERING_WORKER_IDENTITY>, operation="inspect"
+IF the owned worker console is stopped:
+  RUN `operate` where: arguments=<SAME_WORKTREE_WORKER_ATTEMPT_AND_REVIEW_RESUME_BOOTSTRAP>, operation="resume"
+SET FILE_UPDATES := <PENDING_FEEDBACK_OR_ACCEPTANCE_ACK_WITH_NO_PREMATURE_RETIREMENT> (from Agent Inference)
+RUN `persist-control-data`
+RETURN: REVIEW_RESULT
 </process>
 
 <process id="pause-affected-workers" name="Send cooperative requests without touching worker files">

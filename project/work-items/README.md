@@ -37,7 +37,9 @@ project/work-items/42-improve-cache-invalidation/
 - Standalone and Foreman-managed RPIV use the same state/event contract; Research initializes it after path resolution
 - The coordinator is the lifecycle writer; stages return progress/blockers rather than racing to update state
 - Phase is exactly research, plan, implement, or verify; waiting/blocked/failed/replanning are statuses
-- Verify completion means a delivered PR, not merged integration or mission completion
+- Standalone completion means a verified delivered PR; managed RPIV waits in Verify for Foreman's head-specific review acceptance
+- Review findings return to Plan or Implement and update the same PR; no new stage, worker, or work-item directory is created
+- Review acceptance and RPIV completion do not mean merged integration or mission completion
 - Retain ignored state/events when resuming; the agents use host file tools, not a state CLI or language-specific runtime
 
 See [RPIV Observability](../architecture/core-components/CORE-COMPONENT-260906-rpiv-observability.md)

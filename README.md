@@ -29,9 +29,12 @@ Product direction -> Foreman -> issue dependency graph
 
 Foreman is optional: use `rpiv` directly for a single issue. Each worker exposes
 structured state/events; a delivered PR is not treated as merged integration.
-The template ships no scheduler runtime and does not start workers or enable
-`--yolo` automatically. Mission context can be maintained before execution is
-configured; standalone RPIV remains available.
+The template ships no scheduler runtime and does not start workers automatically.
+Enabling managed execution approves `--yolo` for the controller and all managed
+Copilot launches/resumes. Foreman reviews each delivered PR against expected
+outcomes, sends findings to its RPIV worker, and re-reviews the updated PR.
+Mission context can be maintained before execution is configured; standalone
+RPIV remains available with its own permission policy.
 See [Foreman usage and operations](docs/foreman.md) for setup, graph format,
 permission modes, start/resume/pause, and worker communication.
 

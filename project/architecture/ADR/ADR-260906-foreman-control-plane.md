@@ -31,6 +31,21 @@ isolated `.trees/issue-N` worktrees. RPIV is the primary coordinator in each
 worker CLI session; its four stages are leaf agents. Research -> Plan ->
 Implement -> Verify is unchanged.
 
+Foreman reviews each delivered PR against the original mission outcomes, issue
+criteria, architecture constraints, diff, and verification evidence. This is
+mission-level acceptance, not another RPIV stage. If the PR falls short,
+Foreman sends head-specific findings to its delivering RPIV worker. RPIV owns
+corrections, independent re-verification, and updating the same PR. Foreman
+re-reviews the new head before accepting delivery for integration.
+
+The explicitly approved managed-session permission policy is `--yolo`:
+controller, issue-generator, and RPIV CLI launches and resumptions use that
+flag. Project initialization records approval when enabling this mode; it is
+not requested again for every tool. Worker execution still requires project
+opt-in and configured operations. Standalone sessions keep their own permission
+policy. A thin shared launch recipe enforces the managed invocation without
+adding scheduling logic.
+
 The agent owns `.foreman/mission.json` and `.foreman/registry.json` as data.
 The consuming project's non-secret `.foreman/project.json` records configured
 commands and capabilities. RPIV writes a current state snapshot and immutable
@@ -69,9 +84,14 @@ another language.
 - Prompt-level reconciliation is not an automatic transactional storage engine.
 - Worker execution needs explicitly configured project recipes and permissions.
 - Interrupted or inconsistent data requires reconciliation, not guessed success.
+- `--yolo` grants broad tool, path, and URL permissions. Worktrees isolate Git
+  changes, not host access; only trusted repositories and environments should
+  be enabled. Credentials and explicit host deny rules still apply.
 
 ### Neutral
-- Foreman does not automatically merge PRs, delete worktrees, or bypass permissions.
+- Foreman does not automatically merge PRs or delete worktrees. Managed sessions
+  use the approved broad permission policy, not a guarantee of credentials or
+  exemption from host restrictions.
 - GitHub and Copilot access are required for the operations that use them, not
   for editing the template or recording local context.
 

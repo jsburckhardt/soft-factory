@@ -39,6 +39,11 @@ This contract applies to the RPIV coordinator, all four RPIV stage agents, their
 - Foreman MAY schedule RPIV as an isolated issue worker but MUST NOT take over stage work.
 - RPIV MUST publish lifecycle state under the RPIV Observability contract, whether standalone or Foreman-managed.
 - Validation and delivery remain Verify activities, never additional pipeline stages.
+- Foreman reviews managed PRs against expected mission/issue outcomes and sends
+  head-specific findings to RPIV without taking over issue execution.
+- Managed RPIV remains in Verify waiting for Foreman review; corrections return
+  to Plan or Implement and Verify updates the same PR before Foreman re-reviews.
+- Standalone RPIV still completes at verified PR delivery without a Foreman gate.
 
 ### Interfaces
 - Plan hands Implement the acceptance catalog, tasks, test plan, ADRs, and core-components.

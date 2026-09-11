@@ -5,7 +5,8 @@ README.md                                                   — Project overview
 .github/agents/foreman.agent.md                              — APS repository mission coordinator above RPIV
 .foreman/README.md                                          — Consumer profile and local agent-owned context/graph data
 docs/foreman.md                                             — Project initialization, optional host operations, and APS Foreman workflow
-justfile                                                   — Starter validation and safe GitHub publication; consumers configure project commands
+justfile                                                   — Thin yolo session launcher, PR inspection/publication, and starter validation
+tests/foreman-contract.sh                                   — Inert CLI fixtures for managed launch and PR primitives
 .devcontainer/devcontainer.json                             — Dev container configuration
 .devcontainer/post-create.sh                                — One-time container setup for tmux config and GitHub CLI aliases
 .devcontainer/post-start.sh                                 — Per-start shared tmux session and dynamic environment setup

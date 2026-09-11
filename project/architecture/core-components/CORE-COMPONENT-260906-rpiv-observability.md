@@ -42,8 +42,32 @@ observation and communication boundary.
 - Normal phase order is Research -> Plan -> Implement -> Verify. Corrections
   may return to Plan with `replanning`, or from Verify to Implement; record the
   reason and rerun downstream stages.
-- `COMPLETED` requires Verify's accepted commit and PR URL. It means delivered
-  for review, not merged integration or mission completion.
+- Standalone `COMPLETED` requires Verify's accepted commit and PR URL. Managed
+  delivery first publishes `PROGRESS` in `verify/waiting` with
+  `evidence.activity: "pr-review"`, PR identity, verified implementation commit,
+  final pushed `head_sha`, and finding dispositions. Managed `COMPLETED` also
+  requires `review-accepted` for that exact current head. Neither means merged
+  integration or mission completion.
+- `review-feedback` and `review-accepted` are consumed only at this managed
+  Verify boundary. Validate PR/repository/worker/attempt/head/round and stable
+  review IDs, and ignore identical acknowledged replays. A stale or conflicting
+  message is explicitly reported without applying it.
+- Acknowledge feedback with `PROGRESS` evidence carrying command/review IDs and
+  the accepted correction round before dispatching fixes. Persist the payload
+  reference, finding IDs, chosen owner, and last completed correction stage so
+  interruption after acknowledgement cannot lose the outstanding work.
+- Every correction phase/handoff preserves that pending review context.
+  Re-delivery marks the correction round complete and clears pending execution
+  while retaining finding dispositions; the prior acknowledged feedback must
+  not start another fix cycle against the new head.
+- Code/test/documentation findings return to Implement; coverage/scope/
+  architecture findings return to Plan, then Implement and Verify. This is a
+  correction within RPIV, not a fifth stage. New scope needs agreed issue/graph
+  revision instead of silently expanding the worker's mandate.
+- Resuming a review-waiting worker first reloads pending review state and inbox.
+  Without a valid decision it remains waiting and does not recreate the PR.
+  The coordinator can return a waiting result for a bounded CLI process;
+  Foreman must signal a live process or resume its owned stopped console.
 - Exceptional evidence includes `category` and `owner`: transient -> foreman,
   validation -> implement, dependency -> foreman, decomposition -> foreman,
   architecture -> plan, human -> user.
@@ -84,9 +108,47 @@ output. The coordinator uses file reads to resume or inspect its history.
 
 Managed commands live in `<FOREMAN_ROOT>/.foreman/inbox/<WORKER_ID>/`.
 Commands contain ID, issue, worker, attempt, command (`pause`, `resume`, `cancel`,
-`refresh`), reason, and timestamp. The coordinator reads them at safe boundaries,
+`refresh`, `review-feedback`, `review-accepted`), reason, and timestamp. Review
+commands also contain the fields below. The coordinator reads them at safe boundaries,
 rejects malformed identities, and acknowledges IDs in `PROGRESS` evidence.
 Standalone workers do not poll a Foreman inbox.
+
+```json
+{
+  "id": "command-21-review-1",
+  "issue": 21,
+  "worker": "rpiv-21",
+  "attempt": "unique-execution-id",
+  "command": "review-feedback",
+  "reason": "Membership removal does not meet the agreed outcome",
+  "created_at": "2026-09-11T02:00:00Z",
+  "review_id": "review-21-1",
+  "round": 1,
+  "pr_number": 45,
+  "pr_url": "https://github.com/example/service/pull/45",
+  "head_sha": "0123456789abcdef0123456789abcdef01234567",
+  "decision": "changes-requested",
+  "findings": [
+    {
+      "id": "F-1",
+      "ac_ids": ["AC-2"],
+      "outcome_ids": ["OUT-1"],
+      "expected": "Removing a member revokes access",
+      "observed": "The existing membership check still permits access",
+      "evidence": ["PR diff: membership handler", "Missing revocation evidence"],
+      "return_stage": "implement"
+    }
+  ]
+}
+```
+
+`review-accepted` uses `decision: "accepted"` and an empty unresolved `findings`
+list for the current head. `round` is the feedback iteration (0 for acceptance
+without corrections); feedback increments it once, acceptance echoes the last
+round. `review_id` and command IDs are unique and persisted. Feedback for a
+round already processed cannot cause a duplicate fix cycle. Original finding
+IDs remain stable across rounds, with fixed/disputed evidence on the next
+delivery.
 
 ### Expectations
 
@@ -105,7 +167,8 @@ persistence implementation without making it a template prerequisite.
 ```text
 research/running -> plan/running -> implement/running -> verify/running
 verify/running -> plan/replanning -> implement/running -> verify/running
-verify/done + PR URL -> Foreman delivered node -> integration evidence
+verify/waiting + PR/head -> Foreman feedback -> implement -> verify/waiting
+verify/waiting + matching review-accepted -> verify/done -> integration evidence
 ```
 
 ## Integration Guidelines

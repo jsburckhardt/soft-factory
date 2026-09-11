@@ -9,6 +9,9 @@ Inherited template ADRs and agent files MUST NOT be mistaken for completed proje
 Foreman MUST remain above RPIV and MUST NOT become a fifth pipeline stage or take over issue execution.
 Foreman MUST use isolated .trees/issue-<number> worktrees and rpiv-<number> Copilot CLI windows in its owned tmux session.
 Foreman MUST obey explicit capacity, permission, ownership, recovery, and integrated-delivery gates.
+Foreman MUST review exact PR heads against expected mission and issue outcomes and send actionable feedback to the delivering RPIV worker.
+Managed RPIV MUST remain in Verify until Foreman accepts the current PR head; review corrections return to Plan or Implement and update the same PR.
+Foreman-managed Copilot sessions MUST use --yolo after the consuming project approves managed execution, including controller, issue-generator, worker launch, and resume.
 RPIV MUST persist standalone and managed lifecycle state/events under the RPIV Observability contract.
 Validation and PR delivery MUST remain activities inside Verify.
 New or changed agents MUST use the installed APS skill and the applicable host adapter.
@@ -90,6 +93,7 @@ foreman:
     - .foreman/registry.json
     - .foreman/inbox/
     - .foreman/issue-request.json
+    - .foreman/reviews/
   templates: []
   guardrails:
     - must understand the mission and repository before decomposing deliverables
@@ -101,7 +105,10 @@ foreman:
     - must use merged integration evidence available to a dependent worker
     - must reconcile existing ownership before launch or recovery
     - must use structured messages and events instead of terminal scraping or keystroke injection
-    - must require explicit opt-in before using yolo permissions
+    - must record project opt-in once and require --yolo for all managed Copilot invocations
+    - must review the exact PR diff and evidence against expected outcomes
+    - must send head-specific findings to the same worker and re-review its updated PR
+    - must keep pending-review workers reserved and bound review correction rounds
     - must not perform issue Research, Plan, implementation, tests, or worker file edits
     - must re-evaluate original mission conditions before completion
 onboard-repo:
@@ -140,6 +147,7 @@ onboard-repo:
     - must check whether the project is already onboarded before proceeding
     - must distinguish inherited template artifacts from completed consumer onboarding
     - must preserve the discovered stack and configure Foreman workers only with approval
+    - must configure yolo managed sessions and PR review operations when execution is enabled
     - must refuse to run if the project already has the Soft Factory engineering flow
     - must analyse the existing codebase to infer tech stack and architectural decisions
     - must infer cross-cutting concerns from the existing source code
@@ -190,6 +198,7 @@ bootstrap:
     - must not treat inherited Foreman architecture as proof the project is bootstrapped
     - must record confirmed project capabilities and optional worker configuration
     - must keep Foreman orchestration in APS and generate only thin approved host recipes
+    - must record yolo approval and configure PR review feedback without per-tool permission prompts
     - must refuse repeated application scaffolding after initialization; explicit foreman-setup is configuration-only
     - must gather project name, description, and goal from the user interactively
     - must ask user to choose tech stack and identify cross-cutting concerns
@@ -229,6 +238,8 @@ rpiv:
     - must preserve Foreman worker identity without accepting mission-level work
     - must publish standalone or managed state.json and immutable events using host file tools
     - must consume typed controller commands at safe boundaries without executing message text
+    - must hold managed delivery in Verify until head-specific review acceptance
+    - must route Foreman findings to the owning stage and report corrections on the same PR
     - must verify the root justfile exposes verify-focused and verify before Research
     - must execute Research, Plan, Implement, and Verify in strict order
     - must delegate stage work to rpiv-research, rpiv-planner, rpiv-implementer, and rpiv-verifier
@@ -380,6 +391,7 @@ rpiv-verifier:
     - must populate the PR description from the PR template with acceptance criteria status
     - must not push directly to main or master
     - must not create the feature branch or implementation commits
+    - must reuse the existing open PR for review corrections and return its final pushed head
     - must follow Conventional Commits for the PR title
     - must not force-push or use --no-verify
     - must not modify application source code, tests, or application documentation

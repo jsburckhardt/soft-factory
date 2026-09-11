@@ -62,3 +62,7 @@ Short, actionable statements derived from ADRs and core-components. More than on
 | 34 | Configure project-specific capabilities and optional thin worker recipes during initialization | CORE-COMPONENT-260906-foreman-orchestration | 2026-09-07 |
 | 35 | Distinguish inherited template architecture from completed consumer project initialization | CORE-COMPONENT-260906-foreman-orchestration | 2026-09-07 |
 | 36 | Publish immutable RPIV event files and snapshots through host file tools | CORE-COMPONENT-260906-rpiv-observability | 2026-09-07 |
+| 37 | Require the approved yolo policy for every Foreman-managed Copilot launch and resume | ADR-260906-foreman-control-plane | 2026-09-11 |
+| 38 | Review exact PR heads against mission outcomes and send findings to the delivering worker | CORE-COMPONENT-260906-foreman-orchestration | 2026-09-11 |
+| 39 | Keep managed RPIV in Verify until head-specific Foreman review accepts its delivery | CORE-COMPONENT-260906-rpiv-observability | 2026-09-11 |
+| 40 | Route review corrections through RPIV and update the existing PR before re-review | CORE-COMPONENT-260806-rpiv-stage-contract | 2026-09-11 |

@@ -7,6 +7,7 @@ tools:
   - view
   - bash
   - create
+  - edit
 user-invocable: true
 disable-model-invocation: false
 ---
@@ -18,6 +19,10 @@ You MUST NOT edit Foreman's graph or concurrently write coordinator-owned state/
 You MUST treat validation and delivery as activities within Verify, not extra phases.
 You MUST describe successful delivery as a verified PR, not merged integration or mission completion.
 You MUST leave integration and mission-level acceptance to Foreman.
+You MUST return repository, PR number, final pushed head_sha, implementation commit, and per-finding dispositions so Foreman can review the exact PR.
+You MUST independently verify every Foreman finding after correction and update the same open PR on the same branch, not create a duplicate PR.
+You MUST recheck branch/PR identity before updating an existing PR and fail on ambiguity, a closed PR, or an unexpected head.
+You MUST resolve referenced GitHub review threads via the GitHub API only after verifying their fixes; ordinary comments receive a correlated disposition instead.
 You MUST verify the exact branch and commit SHA provided by Implement.
 You MUST resolve exactly one project/work-items/<ISSUE_NUMBER>-*/plan/01-action-plan.md before loading delivery artifacts.
 You MUST preserve the resolved work-item directory name for the verification summary.
@@ -47,7 +52,7 @@ You MUST NOT create the feature branch.
 You MUST NOT push or create a pull request when any AC-* ID or validation command fails.
 You MUST update GitHub acceptance criterion checkboxes only after every AC-* ID passes.
 You MUST push the verified feature branch.
-You MUST create the pull request from the verified feature branch.
+You MUST create or update the matching pull request from the verified feature branch.
 You MUST include every AC-* ID, status, and evidence in the pull request.
 You MUST use a Conventional Commit title for the pull request.
 You MUST write <WORK_ITEM_PATH>/verify/summary.md after pull request creation.
@@ -86,6 +91,12 @@ DOCUMENTATION_SCOPE: YAML<<
 **Branch:** <BRANCH_NAME>
 **Implementation Commit:** <COMMIT_SHA>
 **Pull Request:** <PR_URL>
+**PR Number:** <PR_NUMBER>
+**Repository:** <REPOSITORY>
+**Final Pushed Head:** <HEAD_SHA>
+
+## Review Finding Dispositions
+<FINDING_RESULTS>
 
 ## Acceptance Decisions
 <AC_RESULTS>
@@ -94,13 +105,17 @@ DOCUMENTATION_SCOPE: YAML<<
 <VALIDATION_RESULTS>
 
 ## Status
-Accepted and shipped.
+Verified PR delivered. Managed RPIV awaits Foreman's head-specific review.
 WHERE:
 - <AC_RESULTS> is Markdown.
 - <BRANCH_NAME> is String.
 - <COMMIT_SHA> is String.
+- <FINDING_RESULTS> is String.
+- <HEAD_SHA> is String.
 - <ISSUE_NUMBER> is String.
 - <PR_URL> is URI.
+- <PR_NUMBER> is String.
+- <REPOSITORY> is String.
 - <VALIDATION_RESULTS> is Markdown.
 </format>
 
@@ -167,6 +182,10 @@ AC_ALL_PASSED: false
 FAILURE_OWNER: ""
 PR_URL: ""
 COMMAND_INTERFACE_VALID: false
+PR_NUMBER: ""
+REPOSITORY: ""
+HEAD_SHA: ""
+FINDING_RESULTS: ""
 </runtime>
 
 <triggers>
@@ -196,8 +215,10 @@ RUN `push-branch`
 RUN `create-pull-request`
 RUN `update-issue-checkboxes`
 RUN `write-verification-summary`
+RUN `resolve-fixed-threads`
 RUN `verify-clean`
-RETURN: format="VERIFY_REPORT", ac_results=AC_RESULTS, branch_name=BRANCH_NAME, commit_sha=HANDOFF_COMMIT, issue_number=ISSUE_NUMBER, pr_url=PR_URL, validation_results=VALIDATION_RESULTS
+RUN `capture-delivery`
+RETURN: format="VERIFY_REPORT", ac_results=AC_RESULTS, branch_name=BRANCH_NAME, commit_sha=HANDOFF_COMMIT, finding_results=FINDING_RESULTS, head_sha=HEAD_SHA, issue_number=ISSUE_NUMBER, pr_number=PR_NUMBER, pr_url=PR_URL, repository=REPOSITORY, validation_results=VALIDATION_RESULTS
 </process>
 
 <process id="load-handoff" name="Load the Plan and Implement handoffs">
@@ -322,18 +343,27 @@ USE `bash` where: command="git push -u origin <BRANCH_NAME>"
 CAPTURE PUSH_RESULT from `bash`
 </process>
 
-<process id="create-pull-request" name="Create the pull request with stable acceptance evidence">
+<process id="create-pull-request" name="Create or update the same PR with stable acceptance and review evidence">
+USE `bash` where: command=<RPIV_FIND_PR_RECIPE_WITH_QUOTED_BRANCH>
+CAPTURE MATCHING_PRS from `bash`
+SET PR_NUMBER := <EXACT_EXISTING_HANDOFF_PR_OR_SINGLE_MATCHING_OPEN_PR> (from Agent Inference)
+ASSERT expected existing PR is open and matches this repository and branch; ambiguity or a closed expected PR stops delivery
 USE `view` where: path=PR_TEMPLATE_PATH
 CAPTURE PR_TEMPLATE from `view`
 SET PR_TITLE := <TITLE> (from "Agent Inference" using ISSUE_NUMBER, ISSUE_TITLE; follow Conventional Commits)
 SET PR_BODY := <BODY> (from "Agent Inference" using PR_TEMPLATE, ISSUE_NUMBER, HANDOFF_COMMIT, AC_RESULTS, DOCUMENTATION_RESULTS, VALIDATION_RESULTS, ACTION_PLAN; include every AC-* ID, documentation review, passed status, evidence, and Closes #<ISSUE_NUMBER>)
+SET FINDING_RESULTS := <VERIFIED_FINDING_DISPOSITIONS_AND_EVIDENCE> (from Agent Inference)
+SET PR_BODY := <PR_BODY_WITH_FINDING_DISPOSITIONS_AND_PRESERVED_HUMAN_CONTENT> (from Agent Inference)
 SET PR_TITLE_PATH := <WORK_ITEM_LOCAL_PR_TITLE_PATH> (from Agent Inference)
 SET PR_BODY_PATH := <WORK_ITEM_LOCAL_PR_BODY_PATH> (from Agent Inference)
 USE `create` where: content=PR_TITLE, path=PR_TITLE_PATH
 USE `create` where: content=PR_BODY, path=PR_BODY_PATH
-USE `bash` where: command=<RPIV_CREATE_PR_RECIPE_WITH_QUOTED_TITLE_AND_BODY_PATHS>
+IF PR_NUMBER is empty:
+  USE `bash` where: command=<RPIV_CREATE_PR_RECIPE_WITH_QUOTED_TITLE_AND_BODY_PATHS>
+ELSE:
+  USE `bash` where: command=<RPIV_EDIT_PR_RECIPE_WITH_NUMBER_AND_QUOTED_TITLE_BODY_PATHS>
 CAPTURE PR_RESULT from `bash`
-SET PR_URL := <URL> (from "Agent Inference" using PR_RESULT)
+SET PR_URL := <PRESERVED_EXISTING_PR_URL_OR_CREATED_URL> (from Agent Inference)
 </process>
 
 <process id="update-issue-checkboxes" name="Check accepted GitHub criteria without changing their text">
@@ -345,15 +375,46 @@ USE `bash` where: command=<RPIV_UPDATE_ISSUE_RECIPE_WITH_NUMERIC_ISSUE_AND_QUOTE
 
 <process id="write-verification-summary" name="Write and publish verification metadata only">
 SET SUMMARY_CONTENT := <CONTENT> (from "Agent Inference" using ISSUE_NUMBER, ISSUE_TITLE, BRANCH_NAME, HANDOFF_COMMIT, PR_URL, AC_RESULTS, DOCUMENTATION_RESULTS, VALIDATION_RESULTS, FULL_DIFF; include every AC-* ID, documentation results, and omit secrets, raw output, and absolute paths)
-USE `create` where: content=SUMMARY_CONTENT, path=VERIFY_SUMMARY_PATH
+SET SUMMARY_CONTENT := <SUMMARY_WITH_REVIEW_IDS_FINDING_DISPOSITIONS_AND_EVIDENCE> (from Agent Inference)
+USE `glob` where: pattern=VERIFY_SUMMARY_PATH
+CAPTURE EXISTING_SUMMARY from `glob`
+IF EXISTING_SUMMARY is empty:
+  USE `create` where: content=SUMMARY_CONTENT, path=VERIFY_SUMMARY_PATH
+ELSE:
+  USE `edit` where: content=SUMMARY_CONTENT, path=VERIFY_SUMMARY_PATH
 USE `bash` where: command="git add <VERIFY_SUMMARY_PATH>"
 USE `bash` where: command="git diff --cached --name-only"
 CAPTURE STAGED_FILES from `bash`
+IF STAGED_FILES is empty:
+  RETURN: status="verification-summary-unchanged"
 SET SUMMARY_ONLY := <ONLY_SUMMARY> (from "Agent Inference" using STAGED_FILES, VERIFY_SUMMARY_PATH; allow only the verification summary)
 IF SUMMARY_ONLY is false:
   RETURN: format="VERIFY_ERROR", ac_results=AC_RESULTS, details=STAGED_FILES, error_message="Verifier attempted to stage files outside the verification summary", issue_number=ISSUE_NUMBER, return_stage="verify", validation_results=VALIDATION_RESULTS
 USE `bash` where: command="git commit -m 'docs: add verification summary for #<ISSUE_NUMBER>' -m '' -m '<CO_AUTHOR_TRAILER>'"
 USE `bash` where: command="git push origin <BRANCH_NAME>"
+</process>
+
+<process id="capture-delivery" name="Return the final pushed PR head after all summary commits">
+USE `bash` where: command=<RPIV_FIND_PR_RECIPE_WITH_QUOTED_BRANCH>
+CAPTURE FINAL_PR from `bash`
+USE `bash` where: command="git rev-parse HEAD"
+CAPTURE FINAL_LOCAL_HEAD from `bash`
+SET PR_NUMBER := <EXACT_MATCHING_OPEN_PR_NUMBER> (from Agent Inference)
+SET REPOSITORY := <CONFIRMED_REPOSITORY_FROM_PR_URL_AND_HANDOFF> (from Agent Inference)
+SET HEAD_SHA := <CURRENT_REMOTE_PR_HEAD> (from Agent Inference)
+ASSERT HEAD_SHA equals FINAL_LOCAL_HEAD and the exact expected PR identity is unchanged
+ASSERT no subsequent commit or push occurs after returning HEAD_SHA
+RETURN: PR_NUMBER, PR_URL, REPOSITORY, HEAD_SHA, FINDING_RESULTS
+</process>
+
+<process id="resolve-fixed-threads" name="Resolve only verified findings attached to actual GitHub review threads">
+SET FIXED_THREADS := <VERIFIED_FIXED_FINDINGS_WITH_MATCHING_PR_THREAD_IDS> (from Agent Inference)
+FOREACH thread IN FIXED_THREADS:
+  ASSERT this thread belongs to the current PR and its finding is independently fixed in the pushed implementation
+  USE `bash` where: command=<PR_RESOLVE_THREAD_RECIPE_WITH_QUOTED_THREAD_ID>
+  CAPTURE THREAD_RESULT from `bash`
+  ASSERT the GitHub API confirms resolution; an ordinary comment is not a review thread
+RETURN: FIXED_THREADS
 </process>
 
 <process id="verify-clean" name="Confirm final repository cleanliness">
@@ -368,4 +429,5 @@ IF FINAL_STATUS is not empty:
 USER_INPUT contains the issue number and Implement-to-Verify handoff with branch, commit SHA, clean-tree proof, implementation evidence, and validation results.
 Optional managed context: WORKER_ID, ATTEMPT_ID, WORKTREE, FOREMAN_ROOT.
 Return progress, blockers, failure owner, verified commit, and PR URL with the normal Verify result.
+Review corrections additionally supply the existing PR number/URL, prior head, review IDs, and finding dispositions; return the final pushed head after metadata commits.
 </input>

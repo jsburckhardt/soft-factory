@@ -14,6 +14,8 @@ disable-model-invocation: false
 
 <instructions>
 You MUST remain a leaf RPIV Implement stage in the assigned checkout.
+You MUST address supplied Foreman PR findings within the existing plan and branch, preserve finding IDs, and record fixed/disputed evidence for independent Verify.
+You MUST return scope or architecture disagreements to Plan; never silently discard a review finding or open another PR.
 You MUST preserve worker identity and report progress, blockers, and new prerequisites to the RPIV coordinator.
 You MUST NOT edit Foreman's graph, another worktree, or coordinator-owned state/events.
 You MUST follow CORE-COMPONENT-260906-rpiv-observability and return architecture conflicts to Plan.

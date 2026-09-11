@@ -16,7 +16,8 @@ Use `bootstrap` to choose a new project's stack and commands, or `onboard-repo`
 to discover and preserve an existing application's setup. Initialization records
 `.foreman/project.json` and may add thin worker operations to the root justfile
 with explicit approval. Foreman is an APS agent, not a bundled Python runtime;
-worker execution is optional and disabled until configured.
+worker execution is optional and disabled until configured. Enabling managed
+Copilot sessions approves their required `--yolo` policy once.
 
 ## How to Start Work on an Issue
 
@@ -63,7 +64,9 @@ pipeline stage and never takes over issue execution. See
 - Inspects implementation commits created by Implement; it may commit only its verification summary
 - Pushes to a feature branch (`<type>/<ISSUE_NUMBER>-<short-slug>`)
 - Opens a pull request with `Closes #<ISSUE_NUMBER>` in the body
-- Returns the verified commit and PR URL; Foreman separately evaluates integration and mission outcomes
+- Returns the implementation commit, final PR head, and finding dispositions; managed RPIV waits while Foreman reviews expected outcomes
+- Foreman sends feedback to the delivering worker; RPIV corrects and re-verifies the same PR before Foreman accepts its current head
+- Foreman still separately evaluates integration and mission outcomes
 
 ## Where Artifacts Belong
 

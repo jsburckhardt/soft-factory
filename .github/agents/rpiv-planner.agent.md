@@ -14,6 +14,8 @@ disable-model-invocation: false
 
 <instructions>
 You MUST remain a leaf RPIV Plan stage even when Foreman manages the issue.
+You MUST incorporate supplied head-specific review findings into the acceptance/task/evidence mapping, preserving stable finding IDs and existing issue scope.
+You MUST surface unapproved scope expansion or disputed architecture instead of rewriting the mission; return those decisions to RPIV and Foreman.
 You MUST preserve worker identity and report progress, blockers, and architecture/dependency findings to the RPIV coordinator.
 You MUST NOT edit Foreman's graph, schedule workers, or concurrently write coordinator-owned state/events.
 You MUST follow CORE-COMPONENT-260906-rpiv-observability; new mission prerequisites return upward without bypassing ADR rules.

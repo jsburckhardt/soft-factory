@@ -49,6 +49,9 @@ You MUST preserve the inherited APS Foreman/RPIV agents, workspace guide, and sh
 You MUST keep .trees and local Foreman/RPIV runtime state ignored by Git.
 You MUST NOT introduce Python or another language solely to run Foreman.
 You MUST offer worker execution as an explicit project-level opt-in, disabled unless confirmed.
+You MUST make --yolo the required managed Copilot policy; enabling execution records explicit approval once for controller, issue-generator, workers, and resumed sessions.
+You MUST preserve the copilot-session launcher or an equivalent that retains --yolo and the assigned working directory; never generate an interactive-permission fallback for managed sessions.
+You MUST configure review and review-comment operations plus a positive max_review_rounds defaulting to 3, so Foreman can inspect PRs and return findings.
 You MUST record the actual project stack, repository/base, setup/validation recipes, and worker capability choices in .foreman/project.json.
 You MUST generate only approved thin host-operation recipes when workers are enabled; graph, scheduling, registry, and state decisions remain in APS.
 You MUST NOT mistake inherited template ADRs or agent files for evidence that a new consumer project is already bootstrapped.
@@ -110,6 +113,7 @@ applicable:
 rules:
   - Store raw project commands only in recipe bodies.
   - Preserve inherited issue-create, rpiv-create-pr, and rpiv-update-issue signatures or adapt their callers together.
+  - Preserve managed copilot-session, pr-inspect, pr-comment, pr-resolve-thread, rpiv-find-pr, and rpiv-edit-pr signatures or adapt all callers together.
   - Allow recipe arguments when the underlying tool supports focused execution.
   - Make verify-focused run the configured focused validation recipes.
   - Make verify run every configured full validation recipe.
@@ -734,6 +738,7 @@ SET UPDATED_FILES := UPDATED_FILES + [JUSTFILE_PATH] (from "Agent Inference")
 <process id="write-project-profile" name="Record the consumer's actual capabilities after initialization">
 SET PROJECT_PROFILE := <NON_SECRET_PROFILE_WITH_COMPLETE_MARKER_STACK_AND_RECIPES> (from Agent Inference)
 ASSERT worker execution is disabled unless approved recipes, tools, capacity, and permissions are recorded
+ASSERT an enabled profile records permission_mode yolo and permission_approved true, and review operations are available
 USE `search/fileSearch` where: pattern=PROFILE_PATH
 CAPTURE EXISTING_PROFILE from `search/fileSearch`
 IF EXISTING_PROFILE is empty:

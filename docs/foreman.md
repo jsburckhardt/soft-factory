@@ -7,7 +7,7 @@ contracts; each consuming project supplies its actual tools and commands.
 
 | Owner | Responsibility |
 |-------|----------------|
-| Foreman APS agent | Context, mission, decomposition, graph, scheduling, recovery, outcomes |
+| Foreman APS agent | Context, mission, graph, scheduling, PR review/feedback, recovery, outcomes |
 | RPIV agents | Deliver one issue through Research -> Plan -> Implement -> Verify |
 | Project `justfile` | Thin, explicitly configured operating commands |
 | JSON/Markdown files | Persistent data read and written through agent file tools |
@@ -29,7 +29,9 @@ language dependency. The installed APS framework remains revision 1.2.2.
    template's starter whitespace commands.
 4. **Choose whether to enable Foreman workers.** The default is disabled.
    Enabling them requires approval of the host adapter, thin operation recipes,
-   capacity, repository/base branch, and permission mode.
+   capacity, repository/base branch, PR review operations, and the required
+   managed `--yolo` permission policy. Approval is recorded once, not requested
+   again for every worker tool call.
 5. **Record capabilities.** Write the non-secret `.foreman/project.json` profile
    and completed-initialization marker after setup succeeds. Keep product
    architecture decisions in the usual global ADR/core-component documents.
@@ -68,7 +70,9 @@ configuration shipped pre-enabled by this template:
     "enabled": false,
     "adapter": "copilot-cli-tmux",
     "max_workers": 4,
-    "permission_mode": "configured",
+    "permission_mode": "yolo",
+    "permission_approved": false,
+    "max_review_rounds": 3,
     "session": "foreman",
     "worktree_root": ".trees",
     "operations": {}
@@ -81,6 +85,9 @@ entry records its recipe, ordered argument names, and expected output.
 Configuration contains data, not raw shell fragments or credentials.
 Missing configuration means worker execution is unavailable; Foreman may still
 understand the mission and retain its context.
+When the user approves managed execution, initialization records
+`permission_approved: true` alongside `enabled: true` and the configured recipes.
+It must not infer that approval merely from copying this example.
 
 ## Thin host operations, not another scheduler
 
@@ -98,6 +105,8 @@ are assumed by the agent.
 | `resume` | Continue an explicitly paused, matching attempt without overwriting work |
 | `retire` | Close an owned, stopped console; do not remove its worktree or branch |
 | `issues` | Run a primary issue-generator session and collect its correlated results |
+| `review` | Read a stable PR head, full diff, discussion, and check evidence for Foreman to assess |
+| `review-comment` | Publish Foreman's correlated review findings as a PR comment |
 | `delivery` | Obtain GitHub PR and Git ancestry evidence for the configured repository/base |
 
 Recipes must quote input data, surface errors, protect existing resources, and
@@ -118,11 +127,25 @@ Use the project's branch naming convention rather than an imposed application
 branch name. The dedicated `foreman` session does not commandeer the
 devcontainer's existing shared `soft-factory` session/socket.
 
-Normal configured CLI permissions remain in force. `--yolo` is never inferred
-from a request to deliver a feature; it requires explicit approval and an
-observable launch mode. The profile maps a bounded worker process and its
-inputs; RPIV is a primary coordinator and its stages are leaf workers, avoiding
-undocumented nested delegation.
+All Foreman-managed Copilot sessions use **`--yolo`**, including the controller,
+issue-generator, RPIV workers, and resumed sessions. The shared thin launcher
+reads a bootstrap file as data, changes to the supplied directory, and invokes
+Copilot with that flag:
+
+```text
+just copilot-session rpiv .trees/issue-21 .foreman/workers/rpiv-21/bootstrap.txt
+```
+
+Configured tmux launch/resume recipes call this launcher (or an equivalent with
+the same behavior) after checking ownership and worktree identity. The controller
+uses its root checkout and interactive mode; issue-generator/RPIV use bounded
+programmatic mode. RPIV remains a primary coordinator with four leaf stages.
+
+`--yolo` broadly permits tools, paths, and URLs; worktrees are not security
+sandboxes. Enable managed execution only in a trusted environment. Authentication,
+explicit host denies, and organizational restrictions still apply; failures there
+must be surfaced, not treated as a reason to bypass restrictions. Standalone
+Copilot/RPIV invocations are not forced into this policy.
 
 ## Persistent context and graph
 
@@ -182,8 +205,9 @@ current checkout and the same state/event protocol without a Foreman profile.
 `.foreman/inbox/rpiv-N/`, bound to issue/worker/attempt. The optional transport
 signal is only a wakeup hint. `receive(event)` reads event files and advances
 the agent's persisted cursor only after checking identity and sequence.
-Commands are `pause`, `resume`, `cancel`, and `refresh`; workers acknowledge IDs
-in `PROGRESS` evidence at safe stage boundaries. Messages are never shell input.
+Commands are `pause`, `resume`, `cancel`, `refresh`, `review-feedback`, and
+`review-accepted`; workers acknowledge IDs in `PROGRESS` evidence at safe stage
+boundaries. Messages are never shell input.
 
 Immutable events preserve history, but this is not an automatic transactional
 storage engine. A malformed event, interrupted snapshot update, or identity
@@ -192,9 +216,67 @@ files are not silently converted or discarded.
 
 ## Delivery, recovery, and completion
 
-RPIV completion means Verify delivered an accepted PR. Foreman independently
-requires merged/integrated prerequisite evidence available in the dependent
-worker's base. Neither an open PR nor a process exit satisfies that gate.
+Foreman is responsible for checking that the delivered PR meets what was
+requested. It does not just trust a worker saying "done":
+
+1. Verify delivers or updates the PR, returning its final pushed head SHA
+   (including any verification-summary commit). Managed RPIV publishes
+   `verify/waiting` with `activity: pr-review` and keeps its reservation.
+2. Foreman reads the mission/issue expectations, exact PR diff, relevant
+   documentation/architecture, checks, and Verify's evidence. A changed head or
+   missing evidence keeps review pending.
+3. If there are gaps, Foreman records a review in
+   `.foreman/reviews/<issue>/<review-id>.json`, posts a correlated PR comment,
+   and sends `review-feedback` to the delivering worker. Findings identify
+   expected/observed behavior, stable IDs, AC/outcome links, evidence, and the
+   responsible RPIV stage.
+4. The same worker acknowledges the message and corrects the issue in its
+   existing branch/worktree. Code/tests/docs go to Implement; coverage/scope/
+   architecture go to Plan. Verify independently checks the correction and
+   updates the **same PR**, returning the new head and finding dispositions.
+5. Foreman reviews the new head. Only a current, satisfactory head receives
+   `review-accepted`. Managed RPIV then publishes `COMPLETED`. Any subsequent
+   commit invalidates that acceptance.
+
+This remains coordination above RPIV, not a fifth issue stage. Foreman reviews
+the submitted code and evidence but does not run the worker's tests, implement
+fixes, or write into its worktree. If a bounded CLI process has exited while
+waiting, the configured resume operation reopens the same worker/attempt; it
+must not create another reservation. Review acknowledgements retain the pending
+payload and correction progress so an interruption cannot drop accepted feedback.
+
+Automatic feedback corrections are limited by `max_review_rounds` (default 3).
+Disagreements or exhaustion escalate with the unresolved findings intact, never
+with an automatic approval. Foreman comments rather than relying on GitHub
+allowing formal self-approval. Verify resolves actual GitHub review threads via
+the API only after confirming the relevant fixes.
+
+The supplied `pr-inspect` and `pr-comment` recipes are thin evidence/publication
+primitives. Configure them as the profile's review operations; acceptance remains
+the APS agent's decision. `rpiv-find-pr` and `rpiv-edit-pr` let Verify reuse the
+existing delivery instead of creating duplicate PRs.
+
+The corresponding operation mappings use these exact argument orders:
+
+```json
+{
+  "review": {
+    "recipe": "pr-inspect",
+    "arguments": ["repository", "pr"],
+    "output": "Stable-head PR metadata, diff, discussion, and checks"
+  },
+  "review-comment": {
+    "recipe": "pr-comment",
+    "arguments": ["repository", "pr", "body_file"],
+    "output": "Published comment URL"
+  }
+}
+```
+
+Review acceptance is not integration: Foreman still requires merged/integrated
+prerequisite evidence available in the dependent worker's base. Neither an open
+PR nor a process exit satisfies that gate. Standalone RPIV still completes at
+verified PR delivery without waiting for a Foreman reviewer.
 
 Worker findings can cause new reviewed nodes, graph revisions, or cooperative
 pauses. Scope and architecture corrections return to Plan; code/documentation
@@ -211,9 +293,14 @@ The profile is committed, non-secret project configuration. Context, mission,
 registry, inbox, and work-item runtime files are local and Git-ignored.
 Application docs and human-readable RPIV artifacts remain tracked.
 
-The starter justfile contains generic validation entrypoints and small safe
-GitHub publication wrappers. Project initialization replaces starter validation
+The starter justfile contains generic validation entrypoints, thin GitHub
+review/publication wrappers, and the managed `--yolo` session launcher. Project initialization replaces starter validation
 with actual stack-specific commands and adds worker primitives only on opt-in.
 If stronger persistence or another transport later becomes necessary, adopt it
 in the consuming project's architecture rather than impose it on every template
 consumer.
+
+The template's `tests/foreman-contract.sh` exercises the thin launcher and PR
+primitives with inert CLI substitutes, including required `--yolo`, the exact
+working directory, quoted bootstrap data, same-PR editing, and changed-head
+rejection. It does not run an AI fleet or prove autonomous review quality.
