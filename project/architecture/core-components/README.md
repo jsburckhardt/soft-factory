@@ -2,6 +2,9 @@
 
 This directory contains all active core-component definitions for the project.
 
+- [Foreman Orchestration](CORE-COMPONENT-260906-foreman-orchestration.md): context, graph, capacity, isolation, recovery, and integration.
+- [RPIV Observability](CORE-COMPONENT-260906-rpiv-observability.md): standalone/managed lifecycle state and worker communication.
+
 ## Creating a New Core-Component
 
 1. Copy the template `CORE-COMPONENT-260101-template.md` in this directory

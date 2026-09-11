@@ -8,6 +8,8 @@ When an agent runs the pipeline for GitHub Issue `#42` titled "Improve cache inv
 
 ```
 project/work-items/42-improve-cache-invalidation/
+  state.json               ← Current RPIV phase/status/identity (local, ignored)
+  events/<attempt>/*.json   ← Immutable lifecycle event files (local, ignored)
   research/
     00-research.md          ← Research brief (scope classification, findings)
   plan/
@@ -32,6 +34,16 @@ project/work-items/42-improve-cache-invalidation/
 - ADRs and core-components are **global** and live under `project/architecture/`, never inside a work-item folder
 - Templates are defined in the agent specifications, not duplicated here
 - Implementation notes record changed application documentation or an explicit no-impact rationale
+- Standalone and Foreman-managed RPIV use the same state/event contract; Research initializes it after path resolution
+- The coordinator is the lifecycle writer; stages return progress/blockers rather than racing to update state
+- Phase is exactly research, plan, implement, or verify; waiting/blocked/failed/replanning are statuses
+- Standalone completion means a verified delivered PR; managed RPIV waits in Verify for Foreman's head-specific review acceptance
+- Review findings return to Plan or Implement and update the same PR; no new stage, worker, or work-item directory is created
+- Review acceptance and RPIV completion do not mean merged integration or mission completion
+- Retain ignored state/events when resuming; the agents use host file tools, not a state CLI or language-specific runtime
+
+See [RPIV Observability](../architecture/core-components/CORE-COMPONENT-260906-rpiv-observability.md)
+and [Foreman operations](../../docs/foreman.md).
 
 ## Acceptance Criteria Format
 

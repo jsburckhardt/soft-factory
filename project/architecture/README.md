@@ -11,6 +11,12 @@ This directory contains all architectural documentation for the project.
 
 ## Key Concepts
 
+The [Foreman control-plane ADR](ADR/ADR-260906-foreman-control-plane.md) separates
+mission scheduling from single-issue RPIV execution.
+[Foreman Orchestration](core-components/CORE-COMPONENT-260906-foreman-orchestration.md)
+and [RPIV Observability](core-components/CORE-COMPONENT-260906-rpiv-observability.md)
+define their shared boundaries.
+
 ### ADRs (Architecture Decision Records)
 ADRs capture significant architectural decisions. They are **global** — not scoped to any single issue. Every ADR must be recorded in `ADR/DECISION-LOG.md`.
 
