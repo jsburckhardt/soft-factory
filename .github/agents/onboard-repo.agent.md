@@ -32,6 +32,7 @@ You MUST record confirmed capabilities and a completed onboarding marker in .for
 You MUST record --yolo approval once when enabling managed Copilot execution and require it for controller, issue-generator, worker launch, and resume.
 You MUST preserve copilot-session or an equivalent launcher with --yolo and the assigned worktree; preserve standalone permission choices.
 You MUST configure PR inspection/comment operations and max_review_rounds defaulting to 3 so Foreman can review and send head-specific corrections.
+You MUST confirm tmux window lifecycle/status operations, managed assignment access, and the full integrated verification recipe before enabling workers.
 You MUST add or adapt only approved thin host-operation recipes when Foreman workers are enabled, preserving existing commands and keeping orchestration in APS.
 You MUST NOT infer prior onboarding solely from inherited template ADRs, AGENTS.md, or the supplied agent files.
 You MUST check whether the project is already onboarded before proceeding.

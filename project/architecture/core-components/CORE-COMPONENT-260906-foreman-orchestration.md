@@ -38,9 +38,18 @@ boundary to isolated single-issue RPIV workers.
 - Reuse relevant GitHub issues. New nodes MUST pass through issue-generator and
   its rubber-duck review. Preserve request/candidate correlations across partial
   creation failures instead of retrying blindly.
+- A worker may propose a discovered dependency in its typed result. Foreman
+  records and evaluates the proposal, reuses an existing issue or requests a
+  reviewed new issue, and pauses affected work before revising the graph.
+  Rejected proposals carry a reason; no worker rewrites graph dependencies.
 - Each node MUST identify an independently deliverable issue, its mission
   outcomes, dependencies, blockers, priority, and status. Optional parent links
   describe hierarchy and MUST NOT imply delivery dependencies.
+- Before dispatch, Foreman MUST write a bounded JSON assignment for the issue
+  and validate it against the issue and graph. It identifies the objective,
+  issue acceptance criteria, dependencies, read/write/forbidden scope, context,
+  and expected outputs. It describes WHAT to deliver, not HOW. Missing scope
+  or contradictory boundaries block dispatch; the worker does not edit it.
 - Before scheduling, Foreman MUST reject duplicate/missing references, cycles,
   invalid capacity, inconsistent worker identities, and unsubstantiated
   integration. It MUST reason over the recorded graph explicitly, not treat a
@@ -50,6 +59,10 @@ boundary to isolated single-issue RPIV workers.
   Count every reserved or still-live worker, including blocked/waiting workers.
 - The single active Foreman controller MUST persist a reservation before asking
   the host to create resources. Reconcile partial launches before retrying.
+- Foreman owns node transitions: queued -> ready -> reserved -> running ->
+  review-pending -> integrated, with blocked, failed, and cancelled exceptions.
+  "Ready" is derived from current graph evidence, never a worker-written state.
+  A worker completion is not an integrated node or a completed mission.
 - For the enabled CLI/tmux adapter, use `.trees/issue-N`, worker/window `rpiv-N`,
   and a branch following the consuming project's convention. Reserve window
   zero of the owned `foreman` session for the controller. Preserve unrelated
@@ -89,6 +102,14 @@ boundary to isolated single-issue RPIV workers.
 - Pause/resume/cancel are agent decisions and typed messages, not forced edits
   to a worker's files. Wait for a safe-boundary acknowledgement before changing
   active scope or prerequisites.
+- Status queries use the graph and observation cursor first; ask a live worker
+  for status only if necessary. Detect a missing owned tmux window while the
+  registry claims it is live; record the discrepancy and reconcile before
+  retrying. Never infer success from terminal history or a vanished window.
+- Run the configured integration verification over the integrated base only
+  after every required node has integrated. Record its command, base commit,
+  result, and top-level condition evidence; failed or unavailable integration
+  verification keeps the mission incomplete.
 - A Foreman-accepted PR does not satisfy a dependency until its integration is
   confirmed and available in the dependent worker's base. A process exit, issue
   closure, prose claim, or unmerged PR is insufficient.
@@ -113,8 +134,46 @@ conditions, graph, pause state, and revisions. `.foreman/registry.json` records
 reserved issue, worker, attempt, branch, worktree, console, and launch outcome.
 These local files are maintained through agent file tools, not a runtime API.
 
+`.foreman/contracts/issue-N-revision-R.json` is the immutable-for-an-attempt assignment
+referenced by the registry and passed by absolute path in the worker bootstrap.
+On a revised assignment, pause and acknowledge the affected worker, increment
+the graph revision, then write a new version; never silently replace an active
+worker's scope. For example:
+
+```json
+{
+  "version": 1,
+  "revision": 2,
+  "issue": 21,
+  "worker": "rpiv-21",
+  "attempt": "unique-execution-id",
+  "worktree": "/repo/.trees/issue-21",
+  "title": "Refund API",
+  "objective": "Deliver the issue's refund API outcome",
+  "acceptance_criteria": [{"id": "AC-1", "text": "A refund can be created"}],
+  "dependencies": [18],
+  "scope": {"read": ["src/payments/**"], "write": ["src/payments/refunds/**", "tests/payments/refunds/**", "project/work-items/21-*/**"], "forbidden": ["src/auth/**"]},
+  "context": {"specs": ["docs/payments.md"], "decisions": [], "contracts": []},
+  "expected_outputs": ["implementation", "tests", "verification evidence"]
+}
+```
+
+Paths are repository-relative globs; `forbidden` takes precedence over `write`.
+The write scope must include the issue's RPIV artifact directory and any
+global ADR/core-component files a Plan decision explicitly authorizes; adding
+an unexpected global architecture artifact requires a paused scope revision.
+Foreman compares the delivered PR's changed paths against the assignment and
+escalates unexpected changes rather than silently accepting them. GitHub issue
+criteria remain authoritative; an assignment cannot weaken or replace them.
+Derive stable AC-1, AC-2, etc. in issue order before dispatch (ignoring whether
+the issue checkbox is checked); RPIV Plan uses those same IDs.
+The `revision`, `issue`, `worker`, `attempt`, and absolute `worktree` fields
+must agree with the filename, reservation, and bootstrap. Changing the
+assignment requires a new revision and a reconciled worker attempt; a worker
+cannot silently switch contracts during resume.
+
 The host adapter exposes primitive operations: `prepare`, `launch`, `inspect`,
-`signal`, `wait`, `resume`, `retire`, `issues`, `review`, `review-comment`, and
+`status`, `list`, `signal`, `wait`, `resume`, `retire`, `issues`, `review`, `review-comment`, and
 `delivery`. `review` returns stable-head PR metadata, diff, discussions, and check
 results, not an acceptance decision. `review-comment` publishes the agent's
 correlated review body. Its recipe
@@ -127,6 +186,21 @@ signatures and outputs are recorded in the profile. Launch receives
 optionally signals the configured transport. `receive(event)` reads immutable
 RPIV events, compares identity/attempt/sequence with its persisted cursor, and
 applies each event at most once. Messages are data, never shell input.
+
+Typed command names `status`, `cancel`, `resume`, `clarify`, and `update` express
+STATUS, STOP, CONTINUE, CLARIFY, and UPDATE respectively. Existing `pause`,
+`refresh`, and PR review commands remain valid. `clarify` contains a question;
+`update` contains information, not executable instructions. Workers answer
+with `PROGRESS` (status), `NEEDS_DECISION` (question), `BLOCKED`, `FAILED`, or
+`COMPLETED`, including a correlated command ID where applicable. Foreman
+validates replies before moving the graph.
+
+An enabled tmux adapter may provide `launch`, `inspect`, `signal`, `retire`, and
+`list` with the root justfile's thin `tmux-worker-*` recipes. No CLI keystroke
+injection or terminal scraping is needed for the protocol: `signal` wakes a
+reader, and the files carry the payload. Foreman can request cooperative
+cancellation and retire a stopped window; it must not kill a running worker
+as a substitute for its acknowledgement. The controller owns window 0.
 
 Enabled CLI profiles use `workers.permission_mode: "yolo"`,
 `workers.permission_approved: true`, and a positive `workers.max_review_rounds`.

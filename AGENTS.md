@@ -10,6 +10,10 @@ Foreman MUST remain above RPIV and MUST NOT become a fifth pipeline stage or tak
 Foreman MUST use isolated .trees/issue-<number> worktrees and rpiv-<number> Copilot CLI windows in its owned tmux session.
 Foreman MUST obey explicit capacity, permission, ownership, recovery, and integrated-delivery gates.
 Foreman MUST review exact PR heads against expected mission and issue outcomes and send actionable feedback to the delivering RPIV worker.
+Foreman MUST pass an immutable versioned assignment covering issue criteria, graph dependencies, context, and read/write/forbidden scope to each managed RPIV worker.
+Foreman MUST validate typed worker results and delivered paths against the assignment and exact PR diff; workers MUST NOT mutate the global graph.
+Foreman MUST run configured full verification on the integrated base and prove original mission conditions before declaring completion.
+Foreman MUST use typed file commands and immutable RPIV events for communication; tmux signals are wakeup hints, never injected message text.
 Managed RPIV MUST remain in Verify until Foreman accepts the current PR head; review corrections return to Plan or Implement and update the same PR.
 Foreman-managed Copilot sessions MUST use --yolo after the consuming project approves managed execution, including controller, issue-generator, worker launch, and resume.
 RPIV MUST persist standalone and managed lifecycle state/events under the RPIV Observability contract.
@@ -105,6 +109,8 @@ foreman:
     - must use merged integration evidence available to a dependent worker
     - must reconcile existing ownership before launch or recovery
     - must use structured messages and events instead of terminal scraping or keystroke injection
+    - must give each worker a versioned bounded assignment and validate results against its criteria and scope
+    - must answer status from the graph, reconcile missing owned windows, and run full integrated verification
     - must record project opt-in once and require --yolo for all managed Copilot invocations
     - must review the exact PR diff and evidence against expected outcomes
     - must send head-specific findings to the same worker and re-review its updated PR
@@ -148,6 +154,7 @@ onboard-repo:
     - must distinguish inherited template artifacts from completed consumer onboarding
     - must preserve the discovered stack and configure Foreman workers only with approval
     - must configure yolo managed sessions and PR review operations when execution is enabled
+    - must confirm tmux lifecycle, bounded assignment access, and integrated verification before enabling workers
     - must refuse to run if the project already has the Soft Factory engineering flow
     - must analyse the existing codebase to infer tech stack and architectural decisions
     - must infer cross-cutting concerns from the existing source code
@@ -199,6 +206,7 @@ bootstrap:
     - must record confirmed project capabilities and optional worker configuration
     - must keep Foreman orchestration in APS and generate only thin approved host recipes
     - must record yolo approval and configure PR review feedback without per-tool permission prompts
+    - must confirm tmux lifecycle, bounded assignment access, and integrated verification before enabling workers
     - must refuse repeated application scaffolding after initialization; explicit foreman-setup is configuration-only
     - must gather project name, description, and goal from the user interactively
     - must ask user to choose tech stack and identify cross-cutting concerns
@@ -237,6 +245,7 @@ rpiv:
     - must run as a primary CLI coordinator with four leaf stage agents
     - must preserve Foreman worker identity without accepting mission-level work
     - must publish standalone or managed state.json and immutable events using host file tools
+    - must validate a managed assignment and report typed worker results without modifying Foreman's graph
     - must consume typed controller commands at safe boundaries without executing message text
     - must hold managed delivery in Verify until head-specific review acceptance
     - must route Foreman findings to the owning stage and report corrections on the same PR

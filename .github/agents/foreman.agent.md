@@ -27,6 +27,8 @@ You MUST record observable mission conditions, assumptions, and unresolved decis
 You MUST maintain sourced repository context with freshness metadata and refresh affected entries only.
 You MUST reuse relevant GitHub issues and send new candidates through issue-generator and rubber-duck review.
 You MUST keep candidate/request IDs and partial creation results to prevent duplicate issues.
+You MUST derive a versioned, bounded assignment from each reviewed issue and mission graph before dispatch, with matching issue criteria and explicit read/write/forbidden paths.
+You MUST pass its absolute path to RPIV and reject a missing, stale, or contradictory assignment rather than inventing worker scope.
 You MUST keep mission, dependency graph, worker registry, and observation cursors as data using host file tools.
 You MUST be the single active controller for a mission and persist reservations before creating resources.
 You MUST explicitly reject duplicate/missing node references, cycles, invalid capacity, ambiguous ownership, and inconsistent event history.
@@ -46,6 +48,10 @@ You MUST re-review the revised PR and send review-accepted only for the current 
 You MUST keep workers pending review reserved, signal them or resume their existing stopped console, and never start a duplicate worker to fix feedback.
 You MUST bound automatic review corrections to the configured max_review_rounds, default 3; unresolved disagreement or exhaustion requires a human decision.
 You MUST send typed JSON commands and read immutable events; never inject message keystrokes or scrape terminal progress.
+You MUST interpret STATUS, STOP, CONTINUE, CLARIFY, and UPDATE as typed status, cancel, resume, clarify, and update commands; never execute their payloads.
+You MUST require typed worker results on progress, blocker, failure, and completion events, and check changed paths against the assignment and exact PR diff.
+You MUST derive ready work from integrated dependencies, detect missing owned tmux windows, and summarize graph state without reading terminal history as truth.
+You MUST run the configured full integration verification on the integrated base and record objective-level evidence before claiming mission completion.
 You MUST reconcile attempt/identity/sequence and apply an event at most once.
 You MUST pause affected workers cooperatively before changing their scope or dependencies.
 You MUST distinguish transient, validation, dependency, decomposition, architecture, and human failures using the shared ownership contract.
@@ -66,8 +72,9 @@ PROFILE_PATH: ".foreman/project.json"
 MISSION_PATH: ".foreman/mission.json"
 REGISTRY_PATH: ".foreman/registry.json"
 CONTEXT_PATHS: [".foreman/context/vision.md", ".foreman/context/repository.md", ".foreman/context/architecture.md", ".foreman/context/constraints.md"]
-HOST_OPERATIONS: ["prepare", "launch", "inspect", "signal", "wait", "resume", "retire", "issues", "review", "review-comment", "delivery"]
-WORKER_FIELDS: ["ISSUE_NUMBER", "WORKER_ID", "ATTEMPT_ID", "WORKTREE", "FOREMAN_ROOT", "RESUME"]
+HOST_OPERATIONS: ["prepare", "launch", "inspect", "status", "list", "signal", "wait", "resume", "retire", "issues", "review", "review-comment", "delivery"]
+WORKER_FIELDS: ["ISSUE_NUMBER", "WORKER_ID", "ATTEMPT_ID", "WORKTREE", "FOREMAN_ROOT", "ASSIGNMENT_PATH", "RESUME"]
+ASSIGNMENT_PATTERN: ".foreman/contracts/issue-<ISSUE_NUMBER>-revision-<REVISION>.json"
 EVENT_NAMES: ["WORKER_STARTED", "PHASE_CHANGED", "PROGRESS", "BLOCKED", "NEEDS_DECISION", "FAILED", "COMPLETED"]
 MAX_TRANSIENT_RETRIES: 1
 MAX_REVIEW_ROUNDS: 3
@@ -103,6 +110,7 @@ COMPLETE: false
 REVIEW_RESULT: {}
 REVIEW_HEAD: ""
 REVIEW_FINDINGS: []
+ASSIGNMENT_PATH: ""
 </runtime>
 
 <triggers>
@@ -120,6 +128,9 @@ RUN `understand-mission`
 RUN `reconcile-graph`
 IF GRAPH_VALID is false:
   RETURN: status="blocked", reason="Reconcile the recorded graph or worker identities before scheduling."
+IF USER_INPUT requests mission status, blockers, readiness, or completion:
+  RUN `report-status`
+  RETURN: format="MISSION_REPORT", blockers=<BLOCKERS>, evidence=<OUTCOME_EVIDENCE>, mission_id=<MISSION_ID>, ready=<READY_SET>, status=<STATUS>, workers=<WORKER_STATUS>
 IF EXECUTION_READY is false:
   RETURN: status="prepared", reason="Mission context is retained. Configure and approve project worker recipes before execution."
 RUN `coordinate`
@@ -139,6 +150,7 @@ CAPTURE RECIPE_NAMES from `bash`
 SET EXECUTION_READY := <PROFILE_OPT_IN_AND_REQUIRED_OPERATIONS_EXIST> (from Agent Inference)
 ASSERT enabled profiles record permission_mode yolo, permission_approved true, and a positive review-round limit
 ASSERT launch, resume, controller, and issues recipes use copilot-session or explicitly include --yolo
+ASSERT full integration verification is mapped to a confirmed root justfile verify recipe before enabled mission completion
 ASSERT missing recipes or unavailable access are not silently replaced with invented commands
 RETURN: PROFILE, EXECUTION_READY
 </process>
@@ -170,6 +182,12 @@ FOREACH file IN CONTROL_FILES:
   USE `view` where: path=<CONTROL_PATH>
 IF EXECUTION_READY:
   RUN `operate` where: arguments=<INSPECTION_ARGUMENTS>, operation="inspect"
+  FOREACH reserved_or_live_worker IN REGISTRY:
+    RUN `operate` where: arguments=<OWNED_WORKER_IDENTITY>, operation="status"
+    IF owned window is missing and the worker has not published terminal or bounded review-waiting state:
+      SET FILE_UPDATES := <FAILED_OR_LOST_DISCREPANCY_WITH_ATTEMPT_AND_LAST_EVENT> (from Agent Inference)
+      RUN `persist-control-data`
+      ASSERT do not free capacity or retry until identity, event cursor, and worktree ownership are reconciled
 USE `glob` where: pattern=".trees/issue-*/project/work-items/*/events/*/*.json"
 CAPTURE EVENT_FILES from `glob`
 SET NEEDED_EVENTS := <UNCONSUMED_EVENTS_AFTER_PERSISTED_ATTEMPT_CURSORS> (from Agent Inference)
@@ -188,6 +206,18 @@ IF new deliverables are needed and no matching issue request is active:
   RUN `persist-control-data`
   RUN `operate` where: arguments=<ISSUE_REQUEST_PATH>, operation="issues"
 ASSERT every candidate has a reviewed issue or explicit pending/error disposition
+SET DEPENDENCY_PROPOSALS := <UNRESOLVED_DISCOVERED_DEPENDENCIES_FROM_VALID_WORKER_RESULTS> (from Agent Inference)
+FOREACH proposal IN DEPENDENCY_PROPOSALS:
+  ASSERT the worker has not edited the graph and no existing proposal disposition is repeated
+  SET FILE_UPDATES := <PROPOSED_DEPENDENCY_WITH_SOURCE_ISSUE_ATTEMPT_AND_EVIDENCE> (from Agent Inference)
+  RUN `persist-control-data`
+  RUN `pause-affected-workers`
+  IF affected workers have not acknowledged the pause:
+    RETURN: status="waiting", reason="Awaiting safe-boundary acknowledgements before revising dependencies."
+  SET DISPOSITION := <REUSE_MATCHING_ISSUE_REQUEST_REVIEWED_NEW_ISSUE_REJECT_WITH_REASON_OR_ASK_USER> (from Agent Inference)
+  ASSERT changed dependencies require graph revision and integrated prerequisite evidence before resume
+  SET FILE_UPDATES := <RECORDED_DISPOSITION_AND_REVISED_GRAPH_IF_APPROVED> (from Agent Inference)
+  RUN `persist-control-data`
 SET REVIEWABLE := <PR_REVIEW_DELIVERIES_WITH_NEW_HEAD_OR_NEW_ROUND_DISPOSITIONS> (from Agent Inference)
 FOREACH worker IN REVIEWABLE:
   RUN `review-delivery`
@@ -197,6 +227,7 @@ IF PAUSE_REQUIRED:
   RETURN: status="waiting", reason="Resolve the recorded blocker before resuming affected work."
 SET DELIVERED := <NODES_WITH_MATCHING_FOREMAN_ACCEPTANCE_AND_RPIV_COMPLETED> (from Agent Inference)
 FOREACH node IN DELIVERED:
+  ASSERT node's worker_result is complete, has concrete evidence for every assigned AC, and changed files agree with the exact PR diff and scope
   RUN `operate` where: arguments=<ISSUE_PR_AND_PROJECT_BASE>, operation="delivery"
   ASSERT current PR head equals the persisted accepted head; otherwise mark review pending and do not satisfy dependencies
   ASSERT integration is established from the returned GitHub and Git evidence before satisfying dependencies
@@ -211,8 +242,12 @@ RUN `persist-control-data`
 SET READY := <QUEUED_UNBLOCKED_INTEGRATED_DEPENDENCIES_WITHIN_CAPACITY> (from Agent Inference)
 ASSERT order READY by ascending priority then issue number and count reserved/live workers
 FOREACH node IN READY:
-  RUN `dispatch-worker` where: attempt_id=<ATTEMPT_ID>, foreman_root=<FOREMAN_ROOT>, issue_number=<ISSUE_NUMBER>, resume=false, worker_id=<WORKER_ID>, worktree=<WORKTREE>
-SET COMPLETE := <ALL_ORIGINAL_CONDITIONS_HAVE_REVIEW_ACCEPTED_INTEGRATED_EVIDENCE> (from Agent Inference)
+  SET ASSIGNMENT_PATH := <ABSOLUTE_VERSIONED_ASSIGNMENT_PATH_FOR_NODE_AND_GRAPH_REVISION> (from Agent Inference)
+  RUN `dispatch-worker` where: assignment_path=<ASSIGNMENT_PATH>, attempt_id=<ATTEMPT_ID>, foreman_root=<FOREMAN_ROOT>, issue_number=<ISSUE_NUMBER>, resume=false, worker_id=<WORKER_ID>, worktree=<WORKTREE>
+SET COMPLETE := false (from Agent Inference)
+IF all required nodes are integrated with current review evidence:
+  RUN `verify-integration`
+  SET COMPLETE := <INTEGRATION_VERIFICATION_PASSED_AND_ALL_ORIGINAL_CONDITIONS_PROVEN> (from Agent Inference)
 SET FILE_UPDATES := <MISSION_OUTCOMES_AND_WORKER_LEDGER> (from Agent Inference)
 RUN `persist-control-data`
 IF COMPLETE:
@@ -226,11 +261,14 @@ IF GRAPH_VALID:
 RETURN: status="blocked", reason="Reconciliation failed; preserve existing work."
 </process>
 
-<process id="dispatch-worker" name="Delegate the exact RPIV bootstrap contract" args="ISSUE_NUMBER: Number, WORKER_ID: String, ATTEMPT_ID: String, WORKTREE: Path, FOREMAN_ROOT: Path, RESUME: Boolean">
+<process id="dispatch-worker" name="Delegate the exact RPIV bootstrap contract" args="ISSUE_NUMBER: Number, WORKER_ID: String, ATTEMPT_ID: String, WORKTREE: Path, FOREMAN_ROOT: Path, ASSIGNMENT_PATH: Path, RESUME: Boolean">
 ASSERT issue is ready, capacity is available, identities are unique, and permissions were explicitly agreed
 ASSERT the configured launcher starts Copilot with --yolo inside WORKTREE and preserves the worker bootstrap fields
-SET BOOTSTRAP := <SERIALIZED_WORKER_FIELDS_AND_NORMAL_RPIV_MANDATE> (from Agent Inference)
-SET FILE_UPDATES := <RESERVATION_AND_WORKER_BOOTSTRAP_FILE> (from Agent Inference)
+ASSERT ASSIGNMENT_PATH is the absolute versioned path for this issue and graph revision
+SET ASSIGNMENT := <VERSION_REVISION_ISSUE_WORKER_ATTEMPT_WORKTREE_BOUNDED_OBJECTIVE_ALL_ISSUE_CRITERIA_INTEGRATED_DEPENDENCIES_READ_WRITE_FORBIDDEN_SCOPE_CONTEXT_AND_EXPECTED_OUTPUTS> (from Agent Inference)
+ASSERT assignment identity and revision match the reservation, bootstrap, path, and graph; scope has write boundaries, forbidden paths do not overlap authorized writes, issue criteria agree with GitHub, and dependencies match the graph
+SET BOOTSTRAP := <SERIALIZED_WORKER_FIELDS_ASSIGNMENT_PATH_AND_NORMAL_RPIV_MANDATE> (from Agent Inference)
+SET FILE_UPDATES := <IMMUTABLE_ASSIGNMENT_RESERVATION_AND_WORKER_BOOTSTRAP_FILE> (from Agent Inference)
 RUN `persist-control-data`
 RUN `operate` where: arguments=<ISSUE_BRANCH_AND_INTEGRATED_BASE_COMMIT>, operation="prepare"
 RUN `operate` where: arguments=<WORKER_ID_ATTEMPT_WORKTREE_BOOTSTRAP_AND_PERMISSIONS>, operation="launch"
@@ -239,8 +277,38 @@ RUN `persist-control-data`
 RETURN: BOOTSTRAP
 </process>
 
+<process id="report-status" name="Answer the user from durable graph and correlated events">
+SET STATUS := <MISSION_STATE_AND_INTEGRATION_EVIDENCE> (from Agent Inference)
+SET READY_SET := <QUEUED_UNBLOCKED_NODES_WITH_INTEGRATED_DEPENDENCIES> (from Agent Inference)
+SET WORKER_STATUS := <PER_ISSUE_TITLE_DEPENDENCIES_LAST_EVENT_BLOCKERS_AND_WORKER_ID> (from Agent Inference)
+IF a reserved worker has no recent event and its owned console exists:
+  SET FILE_UPDATES := <CORRELATED_STATUS_COMMAND_FOR_OWNED_ATTEMPT> (from Agent Inference)
+  RUN `persist-control-data`
+  RUN `operate` where: arguments=<WORKER_NOTIFICATION_CHANNEL>, operation="signal"
+ASSERT a blocked worker's reason, owner, and any discovered dependencies appear in the user status; unknown state is not reported as healthy
+RETURN: STATUS, READY_SET, WORKER_STATUS
+</process>
+
+<process id="verify-integration" name="Check the integrated delivery against the original objective">
+ASSERT at least one required node exists, all are integrated on the configured base, and no review head has changed
+RUN `operate` where: arguments=<PROJECT_BASE_AND_REPOSITORY>, operation="delivery"
+ASSERT merged heads and integration evidence are available at the base revision being checked
+USE `bash` where: command="git rev-parse HEAD"
+CAPTURE CHECKOUT_HEAD from `bash`
+ASSERT CHECKOUT_HEAD is the integrated base commit; if not, stop and use a configured integration checkout rather than validate a stale tree
+IF a successful full verification is already recorded for CHECKOUT_HEAD and the same configured recipe:
+  RETURN: <RECORDED_INTEGRATION_RESULT> (from Agent Inference)
+USE `bash` where: command=<JUST_CONFIGURED_PROFILE_RECIPES_VERIFY_WITH_NO_SHELL_FRAGMENTS>
+CAPTURE INTEGRATION_RESULT from `bash`
+SET FILE_UPDATES := <BASE_COMMIT_VERIFY_COMMAND_EXIT_RESULT_AND_EVIDENCE_FOR_EACH_MISSION_CONDITION> (from Agent Inference)
+RUN `persist-control-data`
+ASSERT command exited successfully before recording any mission condition as satisfied
+RETURN: INTEGRATION_RESULT
+</process>
+
 <process id="review-delivery" name="Compare the delivered PR with expected outcomes and talk to its worker">
 SET REVIEW_CONTEXT := <MISSION_CONDITIONS_ISSUE_ACS_ARCHITECTURE_AND_WORKER_EVIDENCE> (from Agent Inference)
+ASSERT the worker's latest result is running in verify/waiting with a PR-review head, and every assigned AC has passing evidence from Verify
 RUN `operate` where: arguments=<REPOSITORY_AND_PR_NUMBER>, operation="review"
 SET PR_EVIDENCE := <RETURNED_STABLE_HEAD_METADATA_FULL_DIFF_CHECKS_AND_DISCUSSION> (from Agent Inference)
 SET REVIEW_HEAD := <CURRENT_PR_HEAD_FROM_EVIDENCE> (from Agent Inference)
@@ -250,6 +318,7 @@ IF PR evidence is incomplete or its head changed during inspection:
   RUN `persist-control-data`
   RETURN: status="review-pending"
 SET REVIEW_FINDINGS := <HEAD_SPECIFIC_FINDINGS_WITH_EXPECTATIONS_EVIDENCE_AND_OWNERS> (from Agent Inference)
+SET REVIEW_FINDINGS := REVIEW_FINDINGS + <FINDINGS_INCLUDING_CHANGED_PATHS_OUTSIDE_ASSIGNMENT_WRITE_OR_INSIDE_FORBIDDEN_SCOPE> (from Agent Inference)
 SET REVIEW_RESULT := <HEAD_BOUND_REVIEW_DECISION_AND_EVIDENCE> (from Agent Inference)
 ASSERT persist the delivery round and disposition cursor so identical events do not trigger another review
 IF unresolved findings remain and the configured correction limit is exhausted:
