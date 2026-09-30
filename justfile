@@ -70,7 +70,15 @@ tmux-worker-launch issue worktree bootstrap_file:
     set -euo pipefail
     [[ "$1" =~ ^[1-9][0-9]*$ ]] || { echo "Invalid issue number" >&2; exit 1; }
     worktree="$(realpath -e -- "$2")"
-    [[ "$worktree" == */.trees/issue-"$1" ]] || { echo "Worktree does not match issue identity" >&2; exit 1; }
+    root="$(realpath -e -- "$(git rev-parse --show-toplevel)")"
+    [[ "$(realpath -e -- "$PWD")" == "$root" && "$worktree" == "$root/.trees/issue-$1" ]] ||
+        { echo "Worktree is outside the owning repository or does not match the issue" >&2; exit 1; }
+    [[ "$(realpath -e -- "$(git -C "$worktree" rev-parse --show-toplevel)")" == "$worktree" ]] ||
+        { echo "Worker checkout is not a Git worktree" >&2; exit 1; }
+    root_common="$(realpath -e -- "$(git rev-parse --git-common-dir)")"
+    worker_common="$(cd -- "$worktree" && realpath -e -- "$(git rev-parse --git-common-dir)")"
+    [[ "$root_common" == "$worker_common" ]] ||
+        { echo "Worker checkout belongs to another repository" >&2; exit 1; }
     test -r "$3" || { echo "Worker bootstrap is not readable" >&2; exit 1; }
     tmux has-session -t '=foreman' || { echo "Foreman session is missing" >&2; exit 1; }
     tmux list-windows -t '=foreman' -F '#{window_name}' | grep -Fxq -- foreman ||
@@ -117,6 +125,26 @@ tmux-worker-retire issue:
     test "$(tmux list-panes -t "foreman:rpiv-$1" -F '#{pane_dead}')" = 1 ||
         { echo "Worker is still running; request cooperative cancellation first" >&2; exit 1; }
     tmux kill-window -t "foreman:rpiv-$1"
+
+# Refresh only an owned, clean checkout already on the configured base branch.
+# This fast-forwards a local branch after integration; it never merges a PR.
+[positional-arguments]
+integration-sync remote base_branch:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    [[ "$1" =~ ^[a-zA-Z0-9._-]+$ ]] || { echo "Invalid remote name" >&2; exit 1; }
+    git check-ref-format --branch "$2" >/dev/null ||
+        { echo "Invalid base branch" >&2; exit 1; }
+    [[ "$(realpath -e -- "$PWD")" == "$(realpath -e -- "$(git rev-parse --show-toplevel)")" ]] ||
+        { echo "Run from the owned base checkout root" >&2; exit 1; }
+    [[ "$(git branch --show-current)" == "$2" ]] ||
+        { echo "Checkout is not on the configured base branch" >&2; exit 1; }
+    [[ -z "$(git status --porcelain)" ]] ||
+        { echo "Base checkout is not clean" >&2; exit 1; }
+    git remote get-url "$1" >/dev/null
+    git fetch -- "$1" "refs/heads/$2:refs/remotes/$1/$2"
+    git merge --ff-only "$1/$2"
+    git rev-parse HEAD
 
 # Read evidence only; Foreman, not this recipe, decides review acceptance.
 [positional-arguments]

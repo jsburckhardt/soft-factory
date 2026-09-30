@@ -109,6 +109,7 @@ are assumed by the agent.
 | `review` | Read a stable PR head, full diff, discussion, and check evidence for Foreman to assess |
 | `review-comment` | Publish Foreman's correlated review findings as a PR comment |
 | `delivery` | Obtain GitHub PR and Git ancestry evidence for the configured repository/base |
+| `integration-checkout` | Refresh only an owned, clean base checkout after merged-delivery evidence; return its revision |
 
 Recipes must quote input data, surface errors, protect existing resources, and
 avoid implicit permission escalation. They must not parse the mission graph,
@@ -145,7 +146,8 @@ programmatic mode. RPIV remains a primary coordinator with four leaf stages.
 The starter root justfile provides optional, thin `tmux-foreman-launch`,
 `tmux-worker-launch`, `tmux-worker-list`, `tmux-worker-inspect`,
 `tmux-worker-status`, `tmux-worker-signal`, and `tmux-worker-retire` host
-primitives. They do not enable workers or create a project profile. An enabled
+primitives, plus `integration-sync` for an owned base checkout. They do not
+enable workers or create a project profile. An enabled
 project explicitly maps them after verifying `tmux`, `copilot`, `just`, its
 branch/worktree preparation recipe, and managed permissions. The controller
 launcher creates session `foreman` with window `foreman`; worker launch requires
@@ -159,13 +161,22 @@ The managed RPIV launcher grants access to the controller root with
 `--add-dir` so a worker inside `.trees/issue-N` can read its assignment and
 inbox; this does not override explicit host or organization restrictions.
 
+The host rejects a lookalike `.trees/issue-N` path outside the current
+controller repository or from a different Git common directory, not just
+paths with an unexpected suffix.
+
 An explicitly enabled project can map `launch` to `tmux-worker-launch`
 (`issue`, `worktree`, `bootstrap_file`), `inspect`/`status`/`list` to
 `tmux-worker-inspect`/`tmux-worker-status`/`tmux-worker-list`, `signal` to
 `tmux-worker-signal` (`issue`), and `retire` to `tmux-worker-retire` (`issue`).
 It must additionally configure `prepare`, `wait`, `resume`, `issues`, `review`,
-`review-comment`, and `delivery` for its actual host. `resume` must check the
-saved attempt/checkout and use the same `copilot-session` launcher; it must not
+`review-comment`, `delivery`, and `integration-checkout` for its actual host.
+The example `integration-sync` accepts (`remote`, `base_branch`) and
+fast-forwards only a clean checkout already on that branch; it does not merge
+a pull request. Foreman compares the returned HEAD to fresh merged-delivery
+evidence before running the configured full verification. A dirty or wrong
+checkout blocks completion. `resume` must check the saved attempt/checkout
+and use the same `copilot-session` launcher; it must not
 call `tmux-worker-launch` against an already-owned window. Never map a
 template command as proof that a consuming project's authentication, base
 branch, or tools are configured.
@@ -204,8 +215,12 @@ and forbidden repository-relative paths, relevant specs/decisions/contracts,
 and expected outputs. It is bounded WHAT, not an implementation plan.
 The issue's ACs remain authoritative; a stale or contradictory contract blocks
 launch. A scope revision requires a cooperative pause and a new version, not
-an in-place edit. Foreman checks delivered changed files against its write
-scope and forbidden paths before accepting the exact PR head.
+an in-place edit. Foreman records the assignment's SHA-256 digest in the
+registry; RPIV rechecks it, the reservation, and the GitHub issue on launch
+and resume. It also compares graph dependencies for that issue so a stale
+assignment cannot resume after the mission changes. Foreman checks delivered
+changed files against its write scope and forbidden paths before accepting
+the exact PR head.
 
 New deliverables pass through issue-generator and rubber-duck review.
 `.foreman/issue-request.json` carries request/mission IDs and candidate IDs,
@@ -253,8 +268,11 @@ via `FAILED`, and completed bounded delivery via `COMPLETED`. These events
 carry a structured `evidence.worker_result` with issue ID, status, summary,
 changed files, per-AC evidence, blockers, discovered dependencies, risks, and
 notes. The [observability contract](../project/architecture/core-components/CORE-COMPONENT-260906-rpiv-observability.md)
-defines the shape. Foreman evaluates discovered dependencies and alone edits
-the graph; worker completion does not mean a merged PR or mission completion.
+defines the typed schema and status/event combinations; Foreman validates it
+before consuming the event. A clarification answer is `PROGRESS`, while an
+unanswered question is `NEEDS_DECISION` with a human owner. Foreman evaluates
+discovered dependencies and alone edits the graph; worker completion does
+not mean a merged PR or mission completion.
 Messages are never shell input.
 
 For status questions Foreman reports the graph's per-issue title, dependency,
@@ -340,8 +358,10 @@ restart; dependency and human decisions do not trigger blind retries.
 
 After all relevant work is integrated, Foreman re-evaluates each original
 mission condition **and runs the configured full `verify` recipe on the
-integrated base**. It records the base commit, verification exit/result, and
-condition-level evidence in the mission. Failure, an unavailable recipe, or
+integrated base**. It first runs the configured ownership-checked
+`integration-checkout` primitive, then compares HEAD to merged-delivery
+evidence. It records the base commit, verification exit/result, and condition-level
+evidence in the mission. Failure, an unavailable recipe, or
 inconclusive outcome evidence keeps the mission incomplete. It does not
 auto-merge PRs or remove worktrees.
 

@@ -5,13 +5,17 @@ root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 cd -- "$root"
 fixture="$(mktemp -d)"
 cleanup() {
-    rm -f -- "$fixture/bin/copilot" "$fixture/bin/gh" "$fixture/bin/tmux" \
+    rm -f -- "$fixture/bin/copilot" "$fixture/bin/gh" "$fixture/bin/tmux" "$fixture/bin/git" \
         "$fixture/bootstrap.txt" "$fixture/actual" "$fixture/expected" \
-        "$fixture/head-count" "$fixture/tmux-log"
-    rmdir -- "$fixture/bin" "$fixture/work tree" "$fixture/.trees/issue-21" "$fixture/.trees" "$fixture"
+        "$fixture/head-count" "$fixture/tmux-log" "$fixture/git-log"
+    rmdir -- "$fixture/bin" "$fixture/work tree" "$fixture/gitroot/.git" \
+        "$fixture/gitroot/.trees/issue-21" "$fixture/gitroot/.trees" \
+        "$fixture/gitroot" "$fixture/foreign/.trees/issue-21" \
+        "$fixture/foreign/.trees" "$fixture/foreign" "$fixture"
 }
 trap cleanup EXIT
-mkdir -p -- "$fixture/bin" "$fixture/work tree" "$fixture/.trees/issue-21"
+mkdir -p -- "$fixture/bin" "$fixture/work tree" "$fixture/gitroot/.git" \
+    "$fixture/gitroot/.trees/issue-21" "$fixture/foreign/.trees/issue-21"
 export FOREMAN_FIXTURE="$fixture"
 export PATH="$fixture/bin:$PATH"
 cat > "$fixture/bin/copilot" <<'STUB'
@@ -109,52 +113,123 @@ if just rpiv-edit-pr '45; unexpected' "$fixture/bootstrap.txt" "$fixture/bootstr
     echo "Invalid PR identifier was accepted" >&2; exit 1
 fi
 
-just tmux-foreman-launch "$fixture/bootstrap.txt"
+cat > "$fixture/bin/git" <<'STUB'
+#!/usr/bin/env bash
+set -euo pipefail
+if [[ "$1" == -C ]]; then
+    [[ "$2" == "$FOREMAN_FIXTURE/gitroot/.trees/issue-21" ]] || exit 1
+    shift 2
+    case "$*" in
+        'rev-parse --show-toplevel') printf '%s\n' "$FOREMAN_FIXTURE/gitroot/.trees/issue-21" ;;
+        *) exit 1 ;;
+    esac
+else
+    case "$*" in
+        'rev-parse --show-toplevel') printf '%s\n' "$FOREMAN_FIXTURE/gitroot" ;;
+        'rev-parse --git-common-dir')
+            if [[ "${GIT_FOREIGN_COMMON:-false}" == true && "$PWD" == "$FOREMAN_FIXTURE/gitroot/.trees/issue-21" ]]; then
+                printf '%s\n' "$FOREMAN_FIXTURE/foreign"
+            else
+                printf '%s\n' "$FOREMAN_FIXTURE/gitroot/.git"
+            fi ;;
+        'check-ref-format --branch main') printf '%s\n' main ;;
+        'branch --show-current') printf '%s\n' "${GIT_BRANCH:-main}" ;;
+        'status --porcelain')
+            if [[ "${GIT_DIRTY:-false}" == true ]]; then printf '%s\n' ' M file'; fi ;;
+        'remote get-url origin') printf '%s\n' 'https://example.test/repo' ;;
+        'fetch -- origin refs/heads/main:refs/remotes/origin/main')
+            [[ "${GIT_FETCH_FAIL:-false}" == false ]] || exit 1
+            printf '%s\n' "$*" >> "$FOREMAN_FIXTURE/git-log" ;;
+        'merge --ff-only origin/main')
+            printf '%s\n' "$*" >> "$FOREMAN_FIXTURE/git-log" ;;
+        'rev-parse HEAD') printf '%s\n' aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa ;;
+        *) echo "Unexpected git operation: $*" >&2; exit 1 ;;
+    esac
+fi
+STUB
+chmod +x "$fixture/bin/git"
+host_just() {
+    just --justfile "$root/justfile" --working-directory "$fixture/gitroot" "$@"
+}
+
+host_just tmux-foreman-launch "$fixture/bootstrap.txt"
 grep -Fq 'new-session -d -s foreman -n foreman' "$fixture/tmux-log"
 grep -Fq 'set-option -t =foreman base-index 0' "$fixture/tmux-log"
 grep -Fq 'set-option -w -t foreman:foreman remain-on-exit on' "$fixture/tmux-log"
 grep -Fq 'respawn-window -k -t foreman:foreman' "$fixture/tmux-log"
-TMUX_BASE_INDEX=1 just tmux-foreman-launch "$fixture/bootstrap.txt"
+TMUX_BASE_INDEX=1 host_just tmux-foreman-launch "$fixture/bootstrap.txt"
 grep -Fq 'move-window -s foreman:foreman -t foreman:0' "$fixture/tmux-log"
-if TMUX_SESSION=true just tmux-foreman-launch "$fixture/bootstrap.txt" >/dev/null 2>&1; then
+if TMUX_SESSION=true host_just tmux-foreman-launch "$fixture/bootstrap.txt" >/dev/null 2>&1; then
     echo "Duplicate controller session was accepted" >&2; exit 1
 fi
-TMUX_SESSION=true just tmux-worker-launch 21 "$fixture/.trees/issue-21" "$fixture/bootstrap.txt"
+TMUX_SESSION=true host_just tmux-worker-launch 21 "$fixture/gitroot/.trees/issue-21" "$fixture/bootstrap.txt"
 grep -Fq 'new-window -d -t foreman: -n rpiv-21' "$fixture/tmux-log"
 grep -Fq 'set-option -w -t foreman:rpiv-21 remain-on-exit on' "$fixture/tmux-log"
 grep -Fq 'respawn-window -k -t foreman:rpiv-21' "$fixture/tmux-log"
 grep -Fq 'copilot-session rpiv' "$fixture/tmux-log"
-if just tmux-worker-launch 21 "$fixture/.trees/issue-21" "$fixture/bootstrap.txt" >/dev/null 2>&1; then
+if host_just tmux-worker-launch 21 "$fixture/gitroot/.trees/issue-21" "$fixture/bootstrap.txt" >/dev/null 2>&1; then
     echo "Worker launched without the owned controller session" >&2; exit 1
 fi
-if TMUX_SESSION=true TMUX_DUPLICATE=true just tmux-worker-launch 21 "$fixture/.trees/issue-21" "$fixture/bootstrap.txt" >/dev/null 2>&1; then
+if TMUX_SESSION=true TMUX_DUPLICATE=true host_just tmux-worker-launch 21 "$fixture/gitroot/.trees/issue-21" "$fixture/bootstrap.txt" >/dev/null 2>&1; then
     echo "Duplicate worker window was accepted" >&2; exit 1
 fi
-if TMUX_SESSION=true just tmux-worker-launch 22 "$fixture/.trees/issue-21" "$fixture/bootstrap.txt" >/dev/null 2>&1; then
+if TMUX_SESSION=true host_just tmux-worker-launch 22 "$fixture/gitroot/.trees/issue-21" "$fixture/bootstrap.txt" >/dev/null 2>&1; then
     echo "Mismatched worktree was accepted" >&2; exit 1
 fi
-just tmux-worker-list >/dev/null
-just tmux-worker-inspect 21 >/dev/null
-just tmux-worker-status 21 >/dev/null
-just tmux-worker-signal 21
+if TMUX_SESSION=true host_just tmux-worker-launch 21 "$fixture/foreign/.trees/issue-21" "$fixture/bootstrap.txt" >/dev/null 2>&1; then
+    echo "Foreign repository with matching suffix was accepted" >&2; exit 1
+fi
+if TMUX_SESSION=true GIT_FOREIGN_COMMON=true host_just tmux-worker-launch 21 "$fixture/gitroot/.trees/issue-21" "$fixture/bootstrap.txt" >/dev/null 2>&1; then
+    echo "Unrelated Git worktree was accepted" >&2; exit 1
+fi
+host_just tmux-worker-list >/dev/null
+host_just tmux-worker-inspect 21 >/dev/null
+host_just tmux-worker-status 21 >/dev/null
+host_just tmux-worker-signal 21
 grep -Fq 'wait-for -S foreman-rpiv-21' "$fixture/tmux-log"
-if just tmux-worker-retire 21 >/dev/null 2>&1; then
+if host_just tmux-worker-retire 21 >/dev/null 2>&1; then
     echo "Running worker was retired" >&2; exit 1
 fi
-TMUX_PANE_DEAD=1 just tmux-worker-retire 21
+TMUX_PANE_DEAD=1 host_just tmux-worker-retire 21
 grep -Fq 'kill-window -t foreman:rpiv-21' "$fixture/tmux-log"
-if just tmux-worker-signal '21; unexpected' >/dev/null 2>&1; then
+if host_just tmux-worker-signal '21; unexpected' >/dev/null 2>&1; then
     echo "Invalid worker identifier was accepted" >&2; exit 1
 fi
+host_just integration-sync origin main >/dev/null
+grep -Fq 'fetch -- origin refs/heads/main:refs/remotes/origin/main' "$fixture/git-log"
+grep -Fq 'merge --ff-only origin/main' "$fixture/git-log"
+if GIT_DIRTY=true host_just integration-sync origin main >/dev/null 2>&1; then
+    echo "Dirty integration checkout was accepted" >&2; exit 1
+fi
+if GIT_BRANCH=feature host_just integration-sync origin main >/dev/null 2>&1; then
+    echo "Integration verification was allowed on a feature branch" >&2; exit 1
+fi
+if GIT_FETCH_FAIL=true host_just integration-sync origin main >/dev/null 2>&1; then
+    echo "Failed base synchronization was treated as success" >&2; exit 1
+fi
+if host_just integration-sync 'origin;unexpected' main >/dev/null 2>&1; then
+    echo "Invalid integration remote was accepted" >&2; exit 1
+fi
+
+for agent in .github/agents/foreman.agent.md .github/agents/rpiv.agent.md; do
+    grep -oEh '<[A-Z][A-Z0-9_]+>' "$agent" |
+        awk 'length($0)>66 {print "Overlong APS placeholder: " $0 > "/dev/stderr"; bad=1} END {exit bad}'
+    awk '/^[[:space:]]*SET / && ($2 !~ /^[A-Z][A-Z0-9_]*$/ || length($2)>24) {
+        print "Invalid APS SET target at " FNR ": " $2 > "/dev/stderr"; bad=1
+    } END {exit bad}' "$agent"
+done
 
 grep -Fq 'RUN `review-delivery`' .github/agents/foreman.agent.md
 grep -Fq 'operation="review-comment"' .github/agents/foreman.agent.md
 grep -Fq 'RUN `await-review`' .github/agents/rpiv.agent.md
 grep -Fq 'head_sha' project/architecture/core-components/CORE-COMPONENT-260906-rpiv-observability.md
 grep -Fq 'ASSIGNMENT_PATH' .github/agents/rpiv.agent.md
+test "$(grep -Fc 'RUN `validate-assignment`' .github/agents/rpiv.agent.md)" -eq 2
+grep -Fq 'operation="integration-checkout"' .github/agents/foreman.agent.md
 grep -Fq '"worker": "rpiv-21"' project/architecture/core-components/CORE-COMPONENT-260906-foreman-orchestration.md
 grep -Fq '"attempt": "unique-execution-id"' project/architecture/core-components/CORE-COMPONENT-260906-foreman-orchestration.md
 grep -Fq 'evidence.worker_result' project/architecture/core-components/CORE-COMPONENT-260906-rpiv-observability.md
+grep -Fq '"assignment_sha256":' project/architecture/core-components/CORE-COMPONENT-260906-rpiv-observability.md
 grep -Fq 'RUN `verify-integration`' .github/agents/foreman.agent.md
 grep -Fq 'rpiv-edit-pr' .github/agents/rpiv-verifier.agent.md || \
     grep -Fq 'RPIV_EDIT_PR_RECIPE' .github/agents/rpiv-verifier.agent.md

@@ -136,6 +136,9 @@ These local files are maintained through agent file tools, not a runtime API.
 
 `.foreman/contracts/issue-N-revision-R.json` is the immutable-for-an-attempt assignment
 referenced by the registry and passed by absolute path in the worker bootstrap.
+Foreman records its SHA-256 digest in the reservation; RPIV checks the digest
+and issue criteria on launch and resume. A file with the same path/revision
+and different contents is an error, not an updated assignment.
 On a revised assignment, pause and acknowledge the affected worker, increment
 the graph revision, then write a new version; never silently replace an active
 worker's scope. For example:
@@ -173,13 +176,15 @@ assignment requires a new revision and a reconciled worker attempt; a worker
 cannot silently switch contracts during resume.
 
 The host adapter exposes primitive operations: `prepare`, `launch`, `inspect`,
-`status`, `list`, `signal`, `wait`, `resume`, `retire`, `issues`, `review`, `review-comment`, and
-`delivery`. `review` returns stable-head PR metadata, diff, discussions, and check
-results, not an acceptance decision. `review-comment` publishes the agent's
+`status`, `list`, `signal`, `wait`, `resume`, `retire`, `issues`, `review`, `review-comment`,
+`delivery`, and `integration-checkout`. `review` returns stable-head PR metadata,
+diff, discussions, and check results, not an acceptance decision. `review-comment` publishes the agent's
 correlated review body. Its recipe
 signatures and outputs are recorded in the profile. Launch receives
-`ISSUE_NUMBER`, `WORKER_ID`, `ATTEMPT_ID`, `WORKTREE`, `FOREMAN_ROOT`, and optional
-`RESUME` as the exact RPIV bootstrap fields.
+`ISSUE_NUMBER`, `WORKER_ID`, `ATTEMPT_ID`, `WORKTREE`, `FOREMAN_ROOT`,
+`ASSIGNMENT_PATH`, and optional `RESUME` as the exact RPIV bootstrap fields.
+The assignment path identifies the recorded digest; it does not grant workers
+permission to alter their scope.
 
 `send(worker, message)` creates a uniquely identified JSON command in
 `.foreman/inbox/rpiv-N/<command-id>.json`, bound to issue/worker/attempt, then
@@ -195,12 +200,18 @@ with `PROGRESS` (status), `NEEDS_DECISION` (question), `BLOCKED`, `FAILED`, or
 `COMPLETED`, including a correlated command ID where applicable. Foreman
 validates replies before moving the graph.
 
-An enabled tmux adapter may provide `launch`, `inspect`, `signal`, `retire`, and
-`list` with the root justfile's thin `tmux-worker-*` recipes. No CLI keystroke
-injection or terminal scraping is needed for the protocol: `signal` wakes a
+An enabled tmux adapter may provide `launch`, `inspect`, `status`, `signal`,
+`retire`, and `list` with the root justfile's thin `tmux-worker-*` recipes.
+No CLI keystroke injection or terminal scraping is needed for the protocol:
+`signal` wakes a
 reader, and the files carry the payload. Foreman can request cooperative
 cancellation and retire a stopped window; it must not kill a running worker
 as a substitute for its acknowledgement. The controller owns window 0.
+The project maps `integration-checkout` to an ownership-checked operation
+on its configured base checkout. It confirms the current branch and clean
+tree, refreshes only that checkout after integration is proven, and returns
+the exact revision for full verification. A fast-forward of the already merged
+base is not an instruction to merge a PR.
 
 Enabled CLI profiles use `workers.permission_mode: "yolo"`,
 `workers.permission_approved: true`, and a positive `workers.max_review_rounds`.

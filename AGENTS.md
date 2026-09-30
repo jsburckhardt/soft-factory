@@ -13,6 +13,7 @@ Foreman MUST review exact PR heads against expected mission and issue outcomes a
 Foreman MUST pass an immutable versioned assignment covering issue criteria, graph dependencies, context, and read/write/forbidden scope to each managed RPIV worker.
 Foreman MUST validate typed worker results and delivered paths against the assignment and exact PR diff; workers MUST NOT mutate the global graph.
 Foreman MUST run configured full verification on the integrated base and prove original mission conditions before declaring completion.
+Foreman MUST synchronize an owned clean checkout to the integrated base before running full verification.
 Foreman MUST use typed file commands and immutable RPIV events for communication; tmux signals are wakeup hints, never injected message text.
 Managed RPIV MUST remain in Verify until Foreman accepts the current PR head; review corrections return to Plan or Implement and update the same PR.
 Foreman-managed Copilot sessions MUST use --yolo after the consuming project approves managed execution, including controller, issue-generator, worker launch, and resume.
@@ -111,6 +112,7 @@ foreman:
     - must use structured messages and events instead of terminal scraping or keystroke injection
     - must give each worker a versioned bounded assignment and validate results against its criteria and scope
     - must answer status from the graph, reconcile missing owned windows, and run full integrated verification
+    - must verify the integrated base in an owned clean checkout
     - must record project opt-in once and require --yolo for all managed Copilot invocations
     - must review the exact PR diff and evidence against expected outcomes
     - must send head-specific findings to the same worker and re-review its updated PR

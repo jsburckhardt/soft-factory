@@ -68,4 +68,4 @@ Short, actionable statements derived from ADRs and core-components. More than on
 | 40 | Route review corrections through RPIV and update the existing PR before re-review | CORE-COMPONENT-260806-rpiv-stage-contract | 2026-09-11 |
 | 41 | Pass versioned bounded issue assignments to managed RPIV workers and check delivered paths | CORE-COMPONENT-260906-foreman-orchestration | 2026-09-30 |
 | 42 | Return typed worker results inside correlated lifecycle events without mutating Foreman's graph | CORE-COMPONENT-260906-rpiv-observability | 2026-09-30 |
-| 43 | Verify integrated mission outcomes using the configured full project verification | CORE-COMPONENT-260906-foreman-orchestration | 2026-09-30 |
+| 43 | Refresh only an owned integrated base checkout before configured full mission verification | CORE-COMPONENT-260906-foreman-orchestration | 2026-09-30 |

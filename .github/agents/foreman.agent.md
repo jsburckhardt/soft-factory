@@ -52,6 +52,8 @@ You MUST interpret STATUS, STOP, CONTINUE, CLARIFY, and UPDATE as typed status, 
 You MUST require typed worker results on progress, blocker, failure, and completion events, and check changed paths against the assignment and exact PR diff.
 You MUST derive ready work from integrated dependencies, detect missing owned tmux windows, and summarize graph state without reading terminal history as truth.
 You MUST run the configured full integration verification on the integrated base and record objective-level evidence before claiming mission completion.
+You MUST synchronize only an owned clean base checkout after confirming integration and before full verification.
+You MUST validate every received worker result against the RPIV Observability schema before advancing the event cursor or accepting a PR.
 You MUST reconcile attempt/identity/sequence and apply an event at most once.
 You MUST pause affected workers cooperatively before changing their scope or dependencies.
 You MUST distinguish transient, validation, dependency, decomposition, architecture, and human failures using the shared ownership contract.
@@ -72,7 +74,7 @@ PROFILE_PATH: ".foreman/project.json"
 MISSION_PATH: ".foreman/mission.json"
 REGISTRY_PATH: ".foreman/registry.json"
 CONTEXT_PATHS: [".foreman/context/vision.md", ".foreman/context/repository.md", ".foreman/context/architecture.md", ".foreman/context/constraints.md"]
-HOST_OPERATIONS: ["prepare", "launch", "inspect", "status", "list", "signal", "wait", "resume", "retire", "issues", "review", "review-comment", "delivery"]
+HOST_OPERATIONS: ["prepare", "launch", "inspect", "status", "list", "signal", "wait", "resume", "retire", "issues", "review", "review-comment", "delivery", "integration-checkout"]
 WORKER_FIELDS: ["ISSUE_NUMBER", "WORKER_ID", "ATTEMPT_ID", "WORKTREE", "FOREMAN_ROOT", "ASSIGNMENT_PATH", "RESUME"]
 ASSIGNMENT_PATTERN: ".foreman/contracts/issue-<ISSUE_NUMBER>-revision-<REVISION>.json"
 EVENT_NAMES: ["WORKER_STARTED", "PHASE_CHANGED", "PROGRESS", "BLOCKED", "NEEDS_DECISION", "FAILED", "COMPLETED"]
@@ -182,17 +184,24 @@ FOREACH file IN CONTROL_FILES:
   USE `view` where: path=<CONTROL_PATH>
 IF EXECUTION_READY:
   RUN `operate` where: arguments=<INSPECTION_ARGUMENTS>, operation="inspect"
-  FOREACH reserved_or_live_worker IN REGISTRY:
-    RUN `operate` where: arguments=<OWNED_WORKER_IDENTITY>, operation="status"
-    IF owned window is missing and the worker has not published terminal or bounded review-waiting state:
-      SET FILE_UPDATES := <FAILED_OR_LOST_DISCREPANCY_WITH_ATTEMPT_AND_LAST_EVENT> (from Agent Inference)
-      RUN `persist-control-data`
-      ASSERT do not free capacity or retry until identity, event cursor, and worktree ownership are reconciled
 USE `glob` where: pattern=".trees/issue-*/project/work-items/*/events/*/*.json"
 CAPTURE EVENT_FILES from `glob`
 SET NEEDED_EVENTS := <UNCONSUMED_EVENTS_AFTER_PERSISTED_ATTEMPT_CURSORS> (from Agent Inference)
 FOREACH event IN NEEDED_EVENTS:
   USE `view` where: path=<EVENT_PATH>
+  IF event belongs to a managed attempt:
+    ASSERT its assignment revision and digest match the reserved file, issue, worker, attempt, and graph revision
+  IF event is PROGRESS, BLOCKED, FAILED, NEEDS_DECISION, or COMPLETED:
+    ASSERT evidence.worker_result matches the RPIV Observability schema, event status, issue, worker attempt, and assignment criteria
+  ASSERT no invalid event advances an observation cursor or node status
+IF EXECUTION_READY:
+  SET ACTIVE_WORKERS := <RESERVED_AND_LIVE_REGISTRY_ENTRIES> (from Agent Inference)
+  FOREACH worker IN ACTIVE_WORKERS:
+    RUN `operate` where: arguments=<OWNED_WORKER_IDENTITY>, operation="status"
+    IF owned window is missing and the worker has not published terminal or bounded review-waiting state:
+      SET FILE_UPDATES := <LOST_WORKER_DISCREPANCY> (from Agent Inference)
+      RUN `persist-control-data`
+      ASSERT do not free capacity or retry until identity, event cursor, and worktree ownership are reconciled
 SET GRAPH_VALID := <REFERENCES_DAG_IDENTITIES_SEQUENCES_AND_EVIDENCE_AGREE> (from Agent Inference)
 SET FILE_UPDATES := <RECONCILED_GRAPH_REGISTRY_AND_OBSERVATION_CURSORS> (from Agent Inference)
 RUN `persist-control-data`
@@ -214,7 +223,7 @@ FOREACH proposal IN DEPENDENCY_PROPOSALS:
   RUN `pause-affected-workers`
   IF affected workers have not acknowledged the pause:
     RETURN: status="waiting", reason="Awaiting safe-boundary acknowledgements before revising dependencies."
-  SET DISPOSITION := <REUSE_MATCHING_ISSUE_REQUEST_REVIEWED_NEW_ISSUE_REJECT_WITH_REASON_OR_ASK_USER> (from Agent Inference)
+  SET DISPOSITION := <DEPENDENCY_DISPOSITION> (from Agent Inference)
   ASSERT changed dependencies require graph revision and integrated prerequisite evidence before resume
   SET FILE_UPDATES := <RECORDED_DISPOSITION_AND_REVISED_GRAPH_IF_APPROVED> (from Agent Inference)
   RUN `persist-control-data`
@@ -247,7 +256,7 @@ FOREACH node IN READY:
 SET COMPLETE := false (from Agent Inference)
 IF all required nodes are integrated with current review evidence:
   RUN `verify-integration`
-  SET COMPLETE := <INTEGRATION_VERIFICATION_PASSED_AND_ALL_ORIGINAL_CONDITIONS_PROVEN> (from Agent Inference)
+  SET COMPLETE := <INTEGRATED_MISSION_PROVEN> (from Agent Inference)
 SET FILE_UPDATES := <MISSION_OUTCOMES_AND_WORKER_LEDGER> (from Agent Inference)
 RUN `persist-control-data`
 IF COMPLETE:
@@ -265,10 +274,17 @@ RETURN: status="blocked", reason="Reconciliation failed; preserve existing work.
 ASSERT issue is ready, capacity is available, identities are unique, and permissions were explicitly agreed
 ASSERT the configured launcher starts Copilot with --yolo inside WORKTREE and preserves the worker bootstrap fields
 ASSERT ASSIGNMENT_PATH is the absolute versioned path for this issue and graph revision
-SET ASSIGNMENT := <VERSION_REVISION_ISSUE_WORKER_ATTEMPT_WORKTREE_BOUNDED_OBJECTIVE_ALL_ISSUE_CRITERIA_INTEGRATED_DEPENDENCIES_READ_WRITE_FORBIDDEN_SCOPE_CONTEXT_AND_EXPECTED_OUTPUTS> (from Agent Inference)
+SET ASSIGNMENT := <BOUNDED_ASSIGNMENT> (from Agent Inference)
 ASSERT assignment identity and revision match the reservation, bootstrap, path, and graph; scope has write boundaries, forbidden paths do not overlap authorized writes, issue criteria agree with GitHub, and dependencies match the graph
+ASSERT assignment includes version, issue, worker, attempt, worktree, all criteria, dependencies, objective, context, read/write/forbidden scope, and expected outputs
+SET FILE_UPDATES := <IMMUTABLE_ASSIGNMENT_FILE> (from Agent Inference)
+RUN `persist-control-data`
+USE `bash` where: command=<SHA256_DIGEST_COMMAND>
+CAPTURE ASSIGNMENT_DIGEST from `bash`
+ASSERT digest command reads only the shell-quoted ASSIGNMENT_PATH and extracts the SHA-256 hex value
+ASSERT digest is exactly 64 lowercase hex characters from the quoted assignment file
 SET BOOTSTRAP := <SERIALIZED_WORKER_FIELDS_ASSIGNMENT_PATH_AND_NORMAL_RPIV_MANDATE> (from Agent Inference)
-SET FILE_UPDATES := <IMMUTABLE_ASSIGNMENT_RESERVATION_AND_WORKER_BOOTSTRAP_FILE> (from Agent Inference)
+SET FILE_UPDATES := <RESERVATION_WITH_DIGEST_AND_BOOTSTRAP> (from Agent Inference)
 RUN `persist-control-data`
 RUN `operate` where: arguments=<ISSUE_BRANCH_AND_INTEGRATED_BASE_COMMIT>, operation="prepare"
 RUN `operate` where: arguments=<WORKER_ID_ATTEMPT_WORKTREE_BOOTSTRAP_AND_PERMISSIONS>, operation="launch"
@@ -293,14 +309,16 @@ RETURN: STATUS, READY_SET, WORKER_STATUS
 ASSERT at least one required node exists, all are integrated on the configured base, and no review head has changed
 RUN `operate` where: arguments=<PROJECT_BASE_AND_REPOSITORY>, operation="delivery"
 ASSERT merged heads and integration evidence are available at the base revision being checked
+RUN `operate` where: arguments=<CONFIGURED_REMOTE_AND_BASE_BRANCH>, operation="integration-checkout"
 USE `bash` where: command="git rev-parse HEAD"
 CAPTURE CHECKOUT_HEAD from `bash`
-ASSERT CHECKOUT_HEAD is the integrated base commit; if not, stop and use a configured integration checkout rather than validate a stale tree
+ASSERT CHECKOUT_HEAD is the integrated base commit from delivery; a changed base requires fresh delivery evidence before verification
 IF a successful full verification is already recorded for CHECKOUT_HEAD and the same configured recipe:
-  RETURN: <RECORDED_INTEGRATION_RESULT> (from Agent Inference)
+  SET INTEGRATION_RESULT := <RECORDED_INTEGRATION_RESULT> (from Agent Inference)
+  RETURN: INTEGRATION_RESULT
 USE `bash` where: command=<JUST_CONFIGURED_PROFILE_RECIPES_VERIFY_WITH_NO_SHELL_FRAGMENTS>
 CAPTURE INTEGRATION_RESULT from `bash`
-SET FILE_UPDATES := <BASE_COMMIT_VERIFY_COMMAND_EXIT_RESULT_AND_EVIDENCE_FOR_EACH_MISSION_CONDITION> (from Agent Inference)
+SET FILE_UPDATES := <INTEGRATION_EVIDENCE> (from Agent Inference)
 RUN `persist-control-data`
 ASSERT command exited successfully before recording any mission condition as satisfied
 RETURN: INTEGRATION_RESULT
@@ -317,8 +335,8 @@ IF PR evidence is incomplete or its head changed during inspection:
   SET FILE_UPDATES := <PENDING_REVIEW_WITH_EXPLICIT_REASON_AND_NO_ACCEPTANCE> (from Agent Inference)
   RUN `persist-control-data`
   RETURN: status="review-pending"
-SET REVIEW_FINDINGS := <HEAD_SPECIFIC_FINDINGS_WITH_EXPECTATIONS_EVIDENCE_AND_OWNERS> (from Agent Inference)
-SET REVIEW_FINDINGS := REVIEW_FINDINGS + <FINDINGS_INCLUDING_CHANGED_PATHS_OUTSIDE_ASSIGNMENT_WRITE_OR_INSIDE_FORBIDDEN_SCOPE> (from Agent Inference)
+SET REVIEW_FINDINGS := <HEAD_AND_SCOPE_FINDINGS> (from Agent Inference)
+ASSERT findings cover expected outcomes, missing AC evidence, and paths outside assignment write scope or inside forbidden scope
 SET REVIEW_RESULT := <HEAD_BOUND_REVIEW_DECISION_AND_EVIDENCE> (from Agent Inference)
 ASSERT persist the delivery round and disposition cursor so identical events do not trigger another review
 IF unresolved findings remain and the configured correction limit is exhausted:
@@ -360,7 +378,12 @@ FOREACH file IN FILE_UPDATES:
   IF EXISTING_FILE is empty:
     USE `create` where: content=<SERIALIZED_DATA>, path=<DESTINATION_PATH>
   ELSE:
-    USE `edit` where: content=<UPDATED_DATA_PRESERVING_PRIOR_RECORDS>, path=<DESTINATION_PATH>
+    IF file is the immutable versioned assignment:
+      USE `view` where: path=<DESTINATION_PATH>
+      CAPTURE PRIOR_ASSIGNMENT from `view`
+      ASSERT the existing bytes equal SERIALIZED_DATA; never overwrite an active assignment
+    ELSE:
+      USE `edit` where: content=<UPDATED_DATA_PRESERVING_PRIOR_RECORDS>, path=<DESTINATION_PATH>
   USE `view` where: path=<DESTINATION_PATH>
   CAPTURE STORED_DATA from `view`
   ASSERT stored data matches the intended update before relying on it

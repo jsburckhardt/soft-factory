@@ -52,7 +52,7 @@ You MUST offer worker execution as an explicit project-level opt-in, disabled un
 You MUST make --yolo the required managed Copilot policy; enabling execution records explicit approval once for controller, issue-generator, workers, and resumed sessions.
 You MUST preserve the copilot-session launcher or an equivalent that retains --yolo and the assigned working directory; never generate an interactive-permission fallback for managed sessions.
 You MUST configure review and review-comment operations plus a positive max_review_rounds defaulting to 3, so Foreman can inspect PRs and return findings.
-You MUST configure enabled workers with confirmed tmux window lifecycle/status operations, versioned assignment access, and a full integration verification recipe; do not enable execution with missing capabilities.
+You MUST configure enabled workers with confirmed tmux lifecycle/status, assignment access, an owned integration checkout operation, and full verification.
 You MUST record the actual project stack, repository/base, setup/validation recipes, and worker capability choices in .foreman/project.json.
 You MUST generate only approved thin host-operation recipes when workers are enabled; graph, scheduling, registry, and state decisions remain in APS.
 You MUST NOT mistake inherited template ADRs or agent files for evidence that a new consumer project is already bootstrapped.
