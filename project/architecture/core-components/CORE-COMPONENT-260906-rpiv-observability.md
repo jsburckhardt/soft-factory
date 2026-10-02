@@ -29,6 +29,10 @@ observation and communication boundary.
   `replanning`, or `done`. Validation/delivery remain Verify activities.
 - Each event identifies version, issue, worker, attempt, sequence, UTC timestamp,
   branch, worktree, request ID, event name, phase/status, reason, and evidence.
+- Managed events also carry `assignment_revision` and `assignment_sha256` and must match the
+  bootstrap assignment's issue, criteria, and authorized worktree. Research
+  resolves the canonical work-item directory as usual; the assignment does
+  not replace the GitHub issue, work-item path, or four stage handoffs.
 - Event names are `WORKER_STARTED`, `PHASE_CHANGED`, `PROGRESS`, `BLOCKED`,
   `NEEDS_DECISION`, `FAILED`, and `COMPLETED`.
 - Store events as `events/<attempt>/<zero-padded-sequence>.json`. The file content
@@ -74,14 +78,108 @@ observation and communication boundary.
 - Same-attempt continuation requires an explicit resolution and revalidated
   saved handoffs. Terminal attempts are immutable; an authorized restart uses
   a new unique attempt ID and retains earlier event directories.
+- Every status, blocked, failed, or completed event carries a typed worker
+  result in `evidence.worker_result`. Missing or invalid result fields are a
+  protocol error, never evidence of success. Workers report observed facts;
+  they never edit Foreman's mission or registry.
 - Runtime files are Git-ignored. Human-readable Research/Plan/Implement/Verify
   artifacts remain tracked and clean-tree handoffs remain meaningful.
 
 ### Interfaces
 
 Managed bootstrap fields are `ISSUE_NUMBER`, `WORKER_ID`, `ATTEMPT_ID`,
-`WORKTREE`, `FOREMAN_ROOT`, and optional `RESUME`. Standalone RPIV derives the
+`WORKTREE`, `FOREMAN_ROOT`, `ASSIGNMENT_PATH`, and optional `RESUME`. Standalone RPIV derives the
 issue and checkout, creates a unique attempt, and has no Foreman root.
+The assignment is a versioned JSON file in Foreman's root; RPIV reads it
+before starting and rejects issue/worker/attempt/checkout/revision mismatches or a contract
+that omits the issue's acceptance criteria. It does not rewrite the assignment.
+
+The worker-result object is embedded in immutable event evidence so the
+event cursor provides one authoritative ordered communication channel:
+
+```json
+{
+  "work_item": 21,
+  "status": "complete",
+  "summary": "Refund API accepted for bounded delivery",
+  "changed_files": ["src/payments/refunds/api.ts"],
+  "acceptance_evidence": {
+    "AC-1": {"status": "passed", "evidence": ["just verify"]}
+  },
+  "blockers": [],
+  "discovered_dependencies": [],
+  "risks": [],
+  "notes": []
+}
+```
+
+`evidence.worker_result` conforms to this JSON Schema. Neither a worker nor
+Foreman may treat mere field presence as type validation:
+
+```json
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["work_item", "status", "summary", "changed_files", "acceptance_evidence", "blockers", "discovered_dependencies", "risks", "notes"],
+  "additionalProperties": false,
+  "properties": {
+    "work_item": {"type": "integer", "minimum": 1},
+    "status": {"enum": ["running", "blocked", "failed", "complete"]},
+    "summary": {"type": "string", "minLength": 1},
+    "changed_files": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+    "acceptance_evidence": {
+      "type": "object",
+      "patternProperties": {
+        "^AC-[1-9][0-9]*$": {
+          "type": "object",
+          "required": ["status", "evidence"],
+          "additionalProperties": false,
+          "properties": {
+            "status": {"enum": ["pending", "failed", "passed"]},
+            "evidence": {"type": "array", "items": {"type": "string", "minLength": 1}}
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "blockers": {"type": "array", "items": {"type": "string", "minLength": 1}},
+    "discovered_dependencies": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["description"],
+        "additionalProperties": false,
+        "properties": {
+          "description": {"type": "string", "minLength": 1},
+          "suggested_id": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "risks": {"type": "array", "items": {"type": "string", "minLength": 1}},
+    "notes": {"type": "array", "items": {"type": "string", "minLength": 1}}
+  }
+}
+```
+
+For nonterminal events, `changed_files` and `acceptance_evidence` may be empty
+or partial. `blockers`, `risks`, and `notes` are descriptive strings;
+`discovered_dependencies` contains proposals, not commands or graph edits.
+A blocker or failure also records
+its reason and owner in the event. The final changed-file list includes tracked
+RPIV artifacts and application changes, and is checked against the full PR
+diff rather than asserted by a terminal message alone.
+Statuses are `running`, `blocked`, `failed`, and `complete`, corresponding
+to `PROGRESS`, `BLOCKED`, `FAILED`, and `COMPLETED` events. A managed
+`verify/waiting` PR-review `PROGRESS` event also reports `status: running`;
+it is not `complete`. Every AC in the assignment must appear in a completed
+result with passing, concrete evidence, and Foreman independently checks it
+against the PR and Verify handoff. Blocked/failed results explain their
+reason and owner in event evidence. A `NEEDS_DECISION` question uses
+`status: blocked` with a human owner; an answered clarification is a running
+`PROGRESS` event. The event's issue/worker/attempt must match its reservation,
+and the `work_item` equals the event issue. Foreman validates the schema,
+event-to-result status pairing, and correlation before advancing its cursor.
+No event means no inferred completion.
 
 ```json
 {
@@ -93,6 +191,8 @@ issue and checkout, creates a unique attempt, and has no Foreman root.
   "updated_at": "2026-09-06T12:00:00Z",
   "branch": "feat/123-organizations",
   "worktree": "/repo/.trees/issue-123",
+  "assignment_revision": 2,
+  "assignment_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
   "request_id": "implement-entry-1",
   "event": "PHASE_CHANGED",
   "phase": "implement",
@@ -107,11 +207,18 @@ independently; order is determined by validated attempt/sequence, not terminal
 output. The coordinator uses file reads to resume or inspect its history.
 
 Managed commands live in `<FOREMAN_ROOT>/.foreman/inbox/<WORKER_ID>/`.
-Commands contain ID, issue, worker, attempt, command (`pause`, `resume`, `cancel`,
-`refresh`, `review-feedback`, `review-accepted`), reason, and timestamp. Review
+Commands contain ID, issue, worker, attempt, command (`status`, `pause`,
+`resume`, `cancel`, `clarify`, `update`, `refresh`, `review-feedback`,
+`review-accepted`), reason, and timestamp. `clarify` carries `question`,
+`update` carries `information`; neither is executable code. Review
 commands also contain the fields below. The coordinator reads them at safe boundaries,
 rejects malformed identities, and acknowledges IDs in `PROGRESS` evidence.
 Standalone workers do not poll a Foreman inbox.
+For an unanswered `clarify`, `NEEDS_DECISION` acknowledges the ID and records
+the human owner; it is not simultaneously reported as running. On managed
+resume, RPIV re-reads the GitHub issue and Foreman's registry and compares the
+assignment bytes' SHA-256 digest to the digest reserved at dispatch. A changed
+issue, reservation, or same-revision contract fails the handoff explicitly.
 
 ```json
 {

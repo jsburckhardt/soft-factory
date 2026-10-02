@@ -24,6 +24,11 @@ You MUST read AGENTS.md before starting.
 You MUST read project/architecture/core-components/CORE-COMPONENT-260906-rpiv-observability.md before starting.
 You MUST run as the primary coordinator in a standalone or Foreman-managed Copilot CLI session, not as a nested worker that delegates again.
 You MUST accept ISSUE_NUMBER, WORKER_ID, ATTEMPT_ID, WORKTREE, and FOREMAN_ROOT from the managed bootstrap without changing issue scope.
+You MUST accept ASSIGNMENT_PATH in managed mode, validate its version, issue, criteria, checkout, and read/write/forbidden scope before Research, and never edit it.
+You MUST compare the assignment digest with Foreman's reserved digest and recheck the GitHub issue and registry on every managed resume.
+You MUST deliver only the assigned bounded issue outcome; report discovered dependencies to Foreman rather than modifying its graph.
+You MUST return typed worker results within progress, blocked, failed, and completed event evidence, including changed files and per-AC verification evidence at completion.
+You MUST consume typed status, clarify, update, cancel, and resume commands at safe boundaries and acknowledge each command ID; never execute the contents as shell input.
 You MUST confirm the current checkout and branch match the managed worker reservation; never switch to another worker's checkout.
 You MUST keep Foreman out of issue Research, Plan, Implement, and Verify decisions.
 You MUST publish state.json and immutable events/<attempt>/<sequence>.json files through host file tools after Research resolves the work item, including standalone runs.
@@ -177,6 +182,12 @@ PR_URL: ""
 WORKER_ID: ""
 ATTEMPT_ID: ""
 FOREMAN_ROOT: ""
+ASSIGNMENT_PATH: ""
+ASSIGNMENT: {}
+ASSIGNMENT_DIGEST: ""
+RESERVED_STATE: {}
+MISSION_GRAPH: {}
+WORKER_RESULT: {}
 WORKER_PAUSED: false
 STATE_EVENT: ""
 STATE_STATUS: ""
@@ -251,6 +262,8 @@ SET ISSUE_NUMBER := <NUMBER> (from "Agent Inference" using USER_INPUT)
 SET WORKER_ID := <BOOTSTRAP_ID_OR_STANDALONE_ISSUE_ID> (from Agent Inference)
 SET ATTEMPT_ID := <BOOTSTRAP_ATTEMPT_OR_NEW_UNIQUE_STANDALONE_ATTEMPT> (from Agent Inference)
 SET FOREMAN_ROOT := <BOOTSTRAP_CONTROLLER_ROOT_OR_EMPTY_FOR_STANDALONE> (from Agent Inference)
+IF FOREMAN_ROOT is not empty:
+  SET ASSIGNMENT_PATH := <BOOTSTRAP_ABSOLUTE_VERSIONED_ASSIGNMENT_PATH> (from Agent Inference)
 USE `glob` where: pattern=JUSTFILE_PATH
 CAPTURE JUSTFILE_FILES from `glob`
 IF JUSTFILE_FILES is empty:
@@ -267,6 +280,7 @@ IF PIPELINE_STATUS = "error":
   RETURN
 USE `bash` where: command="gh issue view <ISSUE_NUMBER> --json title,body,labels"
 CAPTURE ISSUE_JSON from `bash`
+RUN `validate-assignment`
 SET TASK_DESCRIPTION := <DESCRIPTION> (from "Agent Inference" using ISSUE_JSON)
 SET SHORT_SLUG := <SLUG> (from "Agent Inference" using ISSUE_JSON)
 USE `glob` where: pattern="project/work-items/<ISSUE_NUMBER>-*/**"
@@ -297,6 +311,29 @@ ELSE:
     SET PIPELINE_STATUS := "running" (from "Agent Inference")
 </process>
 
+<process id="validate-assignment" name="Reject stale or conflicting managed issue scope">
+IF FOREMAN_ROOT is empty:
+  RETURN: status="standalone"
+USE `view` where: path=ASSIGNMENT_PATH
+CAPTURE ASSIGNMENT from `view`
+USE `view` where: path="<FOREMAN_ROOT>/.foreman/registry.json"
+CAPTURE RESERVED_STATE from `view`
+USE `view` where: path="<FOREMAN_ROOT>/.foreman/mission.json"
+CAPTURE MISSION_GRAPH from `view`
+USE `bash` where: command=<SHA256_DIGEST_COMMAND>
+CAPTURE ASSIGNMENT_DIGEST from `bash`
+ASSERT digest command reads only the shell-quoted ASSIGNMENT_PATH and extracts the SHA-256 hex value
+ASSERT ASSIGNMENT_DIGEST is a 64-character hex digest, not an empty or failed shell result
+IF ISSUE_JSON is empty:
+  USE `bash` where: command="gh issue view <ISSUE_NUMBER> --json title,body,labels"
+  CAPTURE ISSUE_JSON from `bash`
+ASSERT assignment version, revision, issue, worker, attempt, worktree, and path agree with bootstrap and reserved registry entry
+ASSERT assignment digest equals the registry's reserved assignment digest; a same-revision edit is a conflict
+ASSERT every GitHub issue acceptance criterion matches the assigned AC ID and text in issue order
+ASSERT scope contains valid read, write, and forbidden paths and dependencies match this issue's current mission graph node
+RETURN: ASSIGNMENT, ASSIGNMENT_DIGEST, RESERVED_STATE, ISSUE_JSON
+</process>
+
 <process id="prepare-feature-branch" name="Create the issue feature branch before Research">
 SET CURRENT_STAGE := "branch" (from "Agent Inference")
 USE `bash` where: command="git branch --show-current"
@@ -316,7 +353,7 @@ ELSE:
 
 <process id="dispatch-research" name="Dispatch Research">
 SET CURRENT_STAGE := "research" (from "Agent Inference")
-SET RESEARCH_PROMPT := <PROMPT> (from "Agent Inference" using ISSUE_NUMBER, ISSUE_JSON, BRANCH_NAME, WORK_ITEM_PATH; require research-only findings and the exact work-item path)
+SET RESEARCH_PROMPT := <PROMPT> (from "Agent Inference" using ISSUE_NUMBER, ISSUE_JSON, BRANCH_NAME, WORK_ITEM_PATH, ASSIGNMENT, ASSIGNMENT_DIGEST; require research-only findings, the exact work-item path, and managed scope and assignment digest when applicable)
 USE `task` where: agent_type="rpiv-research", description="Research one issue", name="research", prompt=RESEARCH_PROMPT
 CAPTURE RESEARCH_RESULT from `task`
 SET RESEARCH_PATH := <PATH> (from "Agent Inference" using WORK_ITEM_PATH; append /research/00-research.md)
@@ -334,7 +371,7 @@ IF WORKER_PAUSED:
   RETURN: status="waiting"
 SET CURRENT_STAGE := "plan" (from "Agent Inference")
 RUN `publish-phase`
-SET PLAN_PROMPT := <PROMPT> (from "Agent Inference" using ISSUE_NUMBER, ISSUE_JSON, WORK_ITEM_PATH, RESEARCH_BRIEF, VERIFY_RESULT)
+SET PLAN_PROMPT := <PROMPT> (from "Agent Inference" using ISSUE_NUMBER, ISSUE_JSON, WORK_ITEM_PATH, RESEARCH_BRIEF, VERIFY_RESULT, ASSIGNMENT)
 SET PLAN_PROMPT := <PLAN_PROMPT_WITH_REVIEW_FINDINGS_AND_MANAGED_IDENTITY> (from Agent Inference)
 USE `task` where: agent_type="rpiv-planner", description="Plan one issue", name="plan", prompt=PLAN_PROMPT
 CAPTURE PLAN_RESULT from `task`
@@ -360,12 +397,12 @@ IF WORKER_PAUSED:
   RETURN: status="waiting"
 SET CURRENT_STAGE := "implement" (from "Agent Inference")
 RUN `publish-phase`
-SET IMPLEMENT_PROMPT := <PROMPT> (from "Agent Inference" using ISSUE_NUMBER, WORK_ITEM_PATH, BRANCH_NAME, PLAN_HANDOFF, VERIFY_RESULT)
+SET IMPLEMENT_PROMPT := <PROMPT> (from "Agent Inference" using ISSUE_NUMBER, WORK_ITEM_PATH, BRANCH_NAME, PLAN_HANDOFF, VERIFY_RESULT, ASSIGNMENT)
 SET IMPLEMENT_PROMPT := <IMPLEMENT_PROMPT_WITH_REVIEW_FINDINGS_AND_MANAGED_IDENTITY> (from Agent Inference)
 USE `task` where: agent_type="rpiv-implementer", description="Implement one issue", name="implement", prompt=IMPLEMENT_PROMPT
 CAPTURE IMPLEMENT_RESULT from `task`
-SET IMPLEMENTATION_NOTES_PATH := <PATH> (from "Agent Inference" using WORK_ITEM_PATH; append /implementation/00-implementation.md)
-USE `view` where: path=IMPLEMENTATION_NOTES_PATH
+SET IMPL_NOTES_PATH := <PATH> (from "Agent Inference" using WORK_ITEM_PATH; append /implementation/00-implementation.md)
+USE `view` where: path=IMPL_NOTES_PATH
 CAPTURE IMPLEMENTATION_EVIDENCE from `view`
 USE `bash` where: command="git branch --show-current"
 CAPTURE HANDOFF_BRANCH from `bash`
@@ -386,7 +423,7 @@ IF WORKER_PAUSED:
   RETURN: status="waiting"
 SET CURRENT_STAGE := "verify" (from "Agent Inference")
 RUN `publish-phase`
-SET VERIFY_PROMPT := <PROMPT> (from "Agent Inference" using ISSUE_NUMBER, WORK_ITEM_PATH, PLAN_HANDOFF, IMPLEMENT_HANDOFF)
+SET VERIFY_PROMPT := <PROMPT> (from "Agent Inference" using ISSUE_NUMBER, WORK_ITEM_PATH, PLAN_HANDOFF, IMPLEMENT_HANDOFF, ASSIGNMENT)
 SET VERIFY_PROMPT := <VERIFY_PROMPT_WITH_EXISTING_PR_IDENTITY_AND_FINDING_DISPOSITIONS> (from Agent Inference)
 USE `task` where: agent_type="rpiv-verifier", description="Verify one issue", name="verify", prompt=VERIFY_PROMPT
 CAPTURE VERIFY_RESULT from `task`
@@ -417,6 +454,8 @@ SET REVIEW_PENDING := false (from Agent Inference)
 SET STATE_EVENT := "COMPLETED" (from Agent Inference)
 SET STATE_STATUS := "done" (from Agent Inference)
 SET STATE_EVIDENCE := <VERIFIED_COMMIT_PR_HEAD_AND_OPTIONAL_FOREMAN_ACCEPTANCE_ID> (from Agent Inference)
+SET STATE_EVIDENCE := <COMPLETION_EVIDENCE> (from Agent Inference)
+ASSERT STATE_EVIDENCE preserves verified commit, final PR head, and the matching Foreman acceptance ID when managed
 RUN `publish-state`
 </process>
 
@@ -500,7 +539,7 @@ RUN `publish-state`
 SET STATE_EVENT := "PROGRESS" (from "Agent Inference")
 SET STATE_STATUS := "running" (from "Agent Inference")
 SET STATE_EVIDENCE := <VALIDATED_STAGE_ARTIFACT_PATHS_AND_HANDOFF> (from "Agent Inference")
-SET STATE_EVIDENCE := <HANDOFF_AND_PENDING_REVIEW_CORRECTION_STAGE_PROGRESS> (from Agent Inference)
+SET STATE_EVIDENCE := <HANDOFF_AND_PENDING_REVIEW> (from Agent Inference)
 RUN `publish-state`
 </process>
 
@@ -513,7 +552,7 @@ SET STATE_EVENT := <FAILED_OR_BLOCKED_OR_NEEDS_DECISION_BY_FAILURE_CATEGORY> (fr
 SET STATE_STATUS := <MATCHING_FAILED_BLOCKED_OR_NEEDS_HUMAN_STATUS> (from Agent Inference)
 SET STATE_REASON := <FAILURE_REASON_AND_RESPONSIBLE_OWNER> (from Agent Inference)
 SET STATE_EVIDENCE := <FAILURE_CATEGORY_AND_MATCHING_OWNER_FROM_OBSERVABILITY_CONTRACT> (from Agent Inference)
-SET STATE_EVIDENCE := <FAILURE_EVIDENCE_WITH_PENDING_REVIEW_ID_AND_PROGRESS_IF_ANY> (from Agent Inference)
+SET STATE_EVIDENCE := <FAILURE_AND_REVIEW_CONTEXT> (from Agent Inference)
 RUN `publish-state`
 </process>
 
@@ -522,7 +561,17 @@ USE `glob` where: pattern="<WORK_ITEM_PATH>/events/<ATTEMPT_ID>/*.json"
 CAPTURE EVENT_FILES from `glob`
 SET PREVIOUS_EVENTS := <READ_CURRENT_ATTEMPT_EVENTS_AND_SNAPSHOT> (from Agent Inference)
 ASSERT identity, attempt, sequence, prior snapshot, and requested transition are consistent
+IF STATE_EVENT is "PROGRESS", "BLOCKED", "FAILED", "NEEDS_DECISION", or "COMPLETED":
+  SET WORKER_RESULT := <BOUNDED_WORKER_RESULT> (from Agent Inference)
+  SET STATE_EVIDENCE := <EVIDENCE_WITH_WORKER_RESULT> (from Agent Inference)
+  ASSERT STATE_EVIDENCE preserves prior command acknowledgement, review context, exception reason, and verified PR head where applicable
 SET EVENT_CONTENT := <COMPLETE_JSON_EVENT_WITH_STABLE_REQUEST_ID_AND_NEXT_SEQUENCE> (from Agent Inference)
+IF FOREMAN_ROOT is not empty:
+  ASSERT EVENT_CONTENT carries ASSIGNMENT.revision and ASSIGNMENT_DIGEST with the reserved issue, worker, and attempt
+IF STATE_EVENT is "PROGRESS", "BLOCKED", "FAILED", "NEEDS_DECISION", or "COMPLETED":
+  ASSERT WORKER_RESULT matches the typed RPIV Observability schema with work_item equal to ISSUE_NUMBER and status matching STATE_EVENT
+  ASSERT every completed result has concrete passing evidence for each assigned AC or every issue AC in standalone mode
+  ASSERT BLOCKED, FAILED, and NEEDS_DECISION carry a reason and owner in STATE_EVIDENCE
 SET EVENT_PATH := <WORK_ITEM_ATTEMPT_AND_PADDED_SEQUENCE_PATH> (from Agent Inference)
 USE `glob` where: pattern=EVENT_PATH
 CAPTURE EXISTING_EVENT from `glob`
@@ -553,13 +602,26 @@ FOREACH message IN MESSAGE_FILES:
   CAPTURE INBOX_MESSAGE from `view`
   ASSERT message identity, attempt, command, reason, and timestamp match the worker contract
 SET REVIEW_MESSAGES := <CURRENT_ATTEMPT_REVIEW_MESSAGES_WITHOUT_PROCESSED_REPLAYS> (from Agent Inference)
-SET NEW_COMMANDS := <VALID_UNACKNOWLEDGED_PAUSE_RESUME_CANCEL_REFRESH_COMMANDS_ONLY> (from Agent Inference)
+SET NEW_COMMANDS := <UNACKNOWLEDGED_COMMANDS> (from Agent Inference)
 FOREACH message IN NEW_COMMANDS:
   SET STATE_EVENT := "PROGRESS" (from "Agent Inference")
   SET STATE_EVIDENCE := <COMMAND_ACKNOWLEDGEMENT_ID> (from "Agent Inference")
-  SET STATE_EVIDENCE := <COMMAND_ACK_WITH_PRESERVED_PR_REVIEW_CONTEXT_IF_ANY> (from Agent Inference)
-  SET WORKER_PAUSED := <PAUSE_OR_CANCEL_UNLESS_EXPLICITLY_RESUMED> (from "Agent Inference")
-  SET STATE_STATUS := <WAITING_IF_PAUSED_OTHERWISE_RUNNING> (from "Agent Inference")
+  SET STATE_EVIDENCE := <COMMAND_ACK_WITH_REVIEW_CONTEXT> (from Agent Inference)
+  IF message.command = "clarify":
+    IF the worker can answer from its bounded context:
+      SET STATE_EVIDENCE := <ANSWERED_CLARIFICATION> (from Agent Inference)
+    ELSE:
+      SET STATE_EVENT := "NEEDS_DECISION" (from Agent Inference)
+      SET STATE_EVIDENCE := <UNRESOLVED_QUESTION> (from Agent Inference)
+      ASSERT STATE_EVIDENCE includes the question, command ID, reason, and human owner
+  IF message.command = "update":
+    ASSERT information does not expand scope; require a Foreman-approved revised assignment and cooperative pause for scope changes
+  ASSERT STATE_EVIDENCE retains the acknowledged command ID and any pending review context
+  SET WORKER_PAUSED := <PAUSED_CANCELLED_OR_AWAITING_HUMAN_DECISION> (from Agent Inference)
+  IF STATE_EVENT = "NEEDS_DECISION":
+    SET STATE_STATUS := "needs-human" (from Agent Inference)
+  ELSE:
+    SET STATE_STATUS := <WAITING_IF_PAUSED_OTHERWISE_RUNNING> (from Agent Inference)
   SET STATE_REASON := <COMMAND_REASON> (from "Agent Inference")
   RUN `publish-state`
 RETURN: WORKER_PAUSED
@@ -568,8 +630,12 @@ RETURN: WORKER_PAUSED
 <process id="resume-pipeline" name="Continue the existing attempt without skipping uncompleted stages">
 SET ISSUE_NUMBER := <NUMBER_FROM_EXISTING_WORKER_INPUT> (from Agent Inference)
 SET FOREMAN_ROOT := <EXISTING_BOOTSTRAP_CONTROLLER_ROOT> (from Agent Inference)
+IF FOREMAN_ROOT is not empty:
+  SET ASSIGNMENT_PATH := <EXISTING_BOOTSTRAP_ASSIGNMENT_PATH> (from Agent Inference)
 SET WORKER_ID := <EXISTING_BOOTSTRAP_WORKER_ID> (from Agent Inference)
 SET ATTEMPT_ID := <EXISTING_BOOTSTRAP_ATTEMPT_ID> (from Agent Inference)
+SET ISSUE_JSON := "" (from Agent Inference)
+RUN `validate-assignment`
 USE `glob` where: pattern="project/work-items/<ISSUE_NUMBER>-*/**"
 CAPTURE SAVED_ARTIFACTS from `glob`
 SET STATE_PATH := <UNIQUE_EXISTING_WORK_ITEM_STATE_PATH> (from Agent Inference)
@@ -578,6 +644,8 @@ CAPTURE SAVED_STATE from `view`
 SET SAVED_EVENTS := <READ_IMMUTABLE_EVENTS_FOR_THE_SAVED_ATTEMPT> (from Agent Inference)
 ASSERT snapshot matches the last complete valid event and no sequence or identity conflict exists
 ASSERT saved issue, worker, attempt, checkout, and branch match the current bootstrap
+IF FOREMAN_ROOT is not empty:
+  ASSERT saved assignment revision and digest match ASSIGNMENT and RESERVED_STATE
 ASSERT a paused reason was explicitly resolved, or interrupted pending correction has no live writer and is authorized to continue
 SET WORK_ITEM_PATH := <UNIQUE_EXISTING_WORK_ITEM_PATH> (from Agent Inference)
 SET RESUME_STAGE := <FIRST_STAGE_WITHOUT_A_VALIDATED_COMPLETE_HANDOFF> (from Agent Inference)
@@ -629,7 +697,7 @@ RETURN: VERIFY_RESULT
 
 <input>
 USER_INPUT is a GitHub issue number or URL with structured acceptance criteria.
-Managed launch additionally supplies ISSUE_NUMBER, WORKER_ID, ATTEMPT_ID, WORKTREE, FOREMAN_ROOT.
+Managed launch additionally supplies ISSUE_NUMBER, WORKER_ID, ATTEMPT_ID, WORKTREE, FOREMAN_ROOT, ASSIGNMENT_PATH.
 Standalone runs use the current checkout, worker rpiv-<ISSUE_NUMBER>, a fresh attempt, and no Foreman root.
 RESUME is optional; true continues an explicitly paused existing attempt and revalidates its saved handoffs.
 Stage workers receive normal RPIV inputs/handoffs plus this identity context and return to this coordinator.

@@ -29,6 +29,9 @@ Product direction -> Foreman -> issue dependency graph
 
 Foreman is optional: use `rpiv` directly for a single issue. Each worker exposes
 structured state/events; a delivered PR is not treated as merged integration.
+Foreman passes a bounded, versioned assignment to each issue worker and
+requires typed status/results; after integrating the delivered issues it runs
+the project's full verification before declaring the mission complete.
 The template ships no scheduler runtime and does not start workers automatically.
 Enabling managed execution approves `--yolo` for the controller and all managed
 Copilot launches/resumes. Foreman reviews each delivered PR against expected
