@@ -6,7 +6,7 @@ Bootstrap and onboarding MUST establish the consuming project's stack and comman
 Validation and PR delivery MUST remain activities inside Verify.
 New or changed agents MUST use the installed APS skill and the applicable host adapter.
 Every issue delivery MUST flow through exactly five stages in order: Research, Plan, Implement, Review, Verify.
-Review MUST be an independent, read-only code review of the committed diff, capped at two rounds.
+Review MUST be an independent, read-only code review of the committed diff, capped at two rounds per Implement handoff cycle.
 You MUST classify scope_type as exactly one of: issue, architecture_decision, core_component.
 You MUST NOT create an architectural decision outside of an ADR document.
 You MUST NOT create reusable cross-cutting behavior outside of a core-component document.
@@ -181,9 +181,11 @@ rpiv:
     - must verify the root justfile exposes verify-focused and verify before Research
     - must execute Research, Plan, Implement, Review, and Verify in strict order
     - must run Review in a fresh task without Implement's reasoning and cap it at two rounds
-    - must delegate stage work to rpiv-research, rpiv-planner, rpiv-implementer, and rpiv-verifier
+    - must delegate stage work to rpiv-research, rpiv-planner, rpiv-implementer, rpiv-reviewer, and rpiv-verifier
     - must validate each stage artifact before proceeding
     - Plan to Implement handoff must include the exact work-item path, acceptance criteria, tasks, test plan, and relevant ADRs
+    - Implement to Review handoff must include only the issue number, branch, implementation commit SHA, work-item path, and round
+    - Review to Verify handoff must include the review verdict, reviewed commit, and review commit
     - Implement to Verify handoff must include the exact work-item path, branch, commit SHA, clean-tree proof, implementation evidence, documentation evidence, and test results
     - verification code, test, or application documentation failures return to Implement
     - verification plan, architecture, scope, or acceptance coverage failures return to Plan

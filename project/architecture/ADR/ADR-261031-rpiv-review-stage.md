@@ -24,8 +24,9 @@ Implement, so it is not independent.
   implement/plan) and a pass/fail verdict, and commits only that file.
 - Any unresolved blocker or major fails the review. The coordinator returns
   findings to the owning stage and reruns Implement and Review once (round 2
-  checks the earlier findings and reports only new blockers or majors). A
-  second failure stops the pipeline.
+  re-checks the earlier findings). A second failure stops the pipeline. The
+  cap applies per Implement handoff cycle: a Verify-driven correction starts a
+  new cycle, and the reviewer still re-checks earlier findings.
 - Verify refuses delivery unless the review passed for the exact
   implementation commit, and reports the verdict and dispositions in the PR.
 

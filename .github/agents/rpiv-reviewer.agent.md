@@ -26,9 +26,9 @@ You MUST report at most 15 findings, ordered by severity, keeping only findings 
 You MUST give every finding a stable ID (R-1, R-2, ...), severity (blocker, major, minor, nit), file and line, the problem, and a concrete suggested fix.
 You MUST assign each finding an owner: implement for code, tests, or documentation; plan for scope, architecture, or acceptance-coverage problems.
 You MUST set verdict fail when any blocker or major finding is unresolved, otherwise pass.
-You MUST, on a second round, check each earlier finding against the new commit, mark it resolved or unresolved with evidence, and report only new blocker or major findings.
+You MUST, when a previous review exists, check each earlier finding against the new commit and mark it resolved or unresolved with evidence; carry unresolved minor and nit findings forward and add new findings of any severity within the 15-finding cap.
 You MUST NOT modify application source code, tests, documentation, ADRs, core-components, or plan artifacts.
-You MUST write only REVIEW_PATH and commit only that file with a Conventional Commits message following CORE-COMPONENT-260505-commit-standards.
+You MUST write only REVIEW_PATH and commit only that file using REVIEW_COMMIT_MESSAGE and the CO_AUTHOR_TRAILER, as CORE-COMPONENT-260505-commit-standards requires.
 You MUST NOT push, open a PR, or update the GitHub issue.
 You MUST follow the REVIEW_REPORT format.
 </instructions>
@@ -36,6 +36,8 @@ You MUST follow the REVIEW_REPORT format.
 <constants>
 WORK_ITEM_PATTERN: "project/work-items/<ISSUE_NUMBER>-*"
 COMMIT_STANDARDS_PATH: "project/architecture/core-components/CORE-COMPONENT-260505-commit-standards.md"
+CO_AUTHOR_TRAILER: "Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>"
+REVIEW_COMMIT_MESSAGE: "docs(review): record review round <ROUND> for #<ISSUE_NUMBER>"
 MAX_FINDINGS: 15
 SEVERITIES: YAML<<
 - blocker
@@ -115,7 +117,7 @@ USE `bash` where: command="git branch --show-current && git rev-parse HEAD && gi
 CAPTURE CHECKOUT_STATE from `bash`
 IF CHECKOUT_STATE does not match BRANCH_NAME, REVIEWED_COMMIT, and a clean tree:
   RETURN: error="Checkout does not match the review handoff.", owner="implement"
-USE `bash` where: command="git merge-base HEAD origin/HEAD 2>/dev/null || git merge-base HEAD origin/main"
+USE `bash` where: command="git merge-base HEAD origin/main"
 CAPTURE BASE_COMMIT from `bash`
 </process>
 
@@ -131,7 +133,9 @@ CAPTURE ACTION_PLAN from `view`
 SET RELEVANT_ARCHITECTURE := <FILES> (from "Agent Inference" using ACTION_PLAN; ADR and core-component files the plan references)
 USE `view` where: path=RELEVANT_ARCHITECTURE
 CAPTURE ARCHITECTURE from `view`
-IF ROUND > 1:
+USE `glob` where: pattern=REVIEW_PATH
+CAPTURE PRIOR_REVIEW_FILES from `glob`
+IF PRIOR_REVIEW_FILES is not empty:
   USE `view` where: path=REVIEW_PATH
   CAPTURE PREVIOUS_REVIEW from `view`
 </process>
@@ -145,10 +149,13 @@ SET VERDICT := <VERDICT> (from "Agent Inference" using FINDINGS; fail if any unr
 
 <process id="write-review" name="Write and commit the review artifact">
 SET REVIEW_CONTENT := <CONTENT> (from "Agent Inference" using REVIEW_REPORT, ISSUE_NUMBER, ROUND, BRANCH_NAME, REVIEWED_COMMIT, BASE_COMMIT, VERDICT, FINDINGS, PREVIOUS_REVIEW)
-USE `create` where: content=REVIEW_CONTENT, path=REVIEW_PATH
-USE `view` where: path=COMMIT_STANDARDS_PATH
-CAPTURE COMMIT_STANDARDS from `view`
-USE `bash` where: command="git add <REVIEW_PATH> && git commit -m <MESSAGE_FROM_COMMIT_STANDARDS> && git status --porcelain"
+USE `glob` where: pattern=REVIEW_PATH
+CAPTURE EXISTING_REVIEW from `glob`
+IF EXISTING_REVIEW is empty:
+  USE `create` where: content=REVIEW_CONTENT, path=REVIEW_PATH
+ELSE:
+  USE `edit` where: content=REVIEW_CONTENT, path=REVIEW_PATH
+USE `bash` where: command="git add <REVIEW_PATH> && git commit -m '<REVIEW_COMMIT_MESSAGE>' -m '' -m '<CO_AUTHOR_TRAILER>' && git status --porcelain"
 CAPTURE COMMIT_RESULT from `bash`
 </process>
 </processes>

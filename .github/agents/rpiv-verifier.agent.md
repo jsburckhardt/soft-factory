@@ -377,7 +377,7 @@ ASSERT expected existing PR is open and matches this repository and branch; ambi
 USE `view` where: path=PR_TEMPLATE_PATH
 CAPTURE PR_TEMPLATE from `view`
 SET PR_TITLE := <TITLE> (from "Agent Inference" using ISSUE_NUMBER, ISSUE_TITLE; follow Conventional Commits)
-SET PR_BODY := <BODY> (from "Agent Inference" using PR_TEMPLATE, ISSUE_NUMBER, HANDOFF_COMMIT, AC_RESULTS, DOCUMENTATION_RESULTS, VALIDATION_RESULTS, ACTION_PLAN; include every AC-* ID, documentation review, passed status, evidence, and Closes #<ISSUE_NUMBER>)
+SET PR_BODY := <BODY> (from "Agent Inference" using PR_TEMPLATE, REVIEW_REPORT, ISSUE_NUMBER, HANDOFF_COMMIT, AC_RESULTS, DOCUMENTATION_RESULTS, VALIDATION_RESULTS, ACTION_PLAN; include every AC-* ID, documentation review, passed status, evidence, the Independent Review verdict with every finding disposition, and Closes #<ISSUE_NUMBER>)
 SET FINDING_RESULTS := <VERIFIED_FINDING_DISPOSITIONS_AND_EVIDENCE> (from Agent Inference)
 SET PR_BODY := <PR_BODY_WITH_FINDING_DISPOSITIONS_AND_PRESERVED_HUMAN_CONTENT> (from Agent Inference)
 SET PR_TITLE_PATH := <WORK_ITEM_LOCAL_PR_TITLE_PATH> (from Agent Inference)
@@ -400,8 +400,8 @@ USE `bash` where: command=<RPIV_UPDATE_ISSUE_RECIPE_WITH_NUMERIC_ISSUE_AND_QUOTE
 </process>
 
 <process id="write-verification-summary" name="Write and publish verification metadata only">
-SET SUMMARY_CONTENT := <CONTENT> (from "Agent Inference" using ISSUE_NUMBER, ISSUE_TITLE, BRANCH_NAME, HANDOFF_COMMIT, PR_URL, AC_RESULTS, DOCUMENTATION_RESULTS, VALIDATION_RESULTS, FULL_DIFF; include every AC-* ID, documentation results, and omit secrets, raw output, and absolute paths)
-SET SUMMARY_CONTENT := <SUMMARY_WITH_REVIEW_IDS_FINDING_DISPOSITIONS_AND_EVIDENCE> (from Agent Inference)
+SET SUMMARY_CONTENT := <CONTENT> (from "Agent Inference" using ISSUE_NUMBER, ISSUE_TITLE, BRANCH_NAME, HANDOFF_COMMIT, PR_URL, AC_RESULTS, DOCUMENTATION_RESULTS, VALIDATION_RESULTS, FULL_DIFF; include every AC-* ID, documentation results, the review verdict and finding dispositions, and omit secrets, raw output, and absolute paths)
+SET SUMMARY_CONTENT := <SUMMARY_WITH_REVIEW_IDS_FINDING_DISPOSITIONS_AND_EVIDENCE> (from "Agent Inference" using SUMMARY_CONTENT, REVIEW_REPORT; include the review verdict, rounds, and every review finding disposition)
 USE `glob` where: pattern=VERIFY_SUMMARY_PATH
 CAPTURE EXISTING_SUMMARY from `glob`
 IF EXISTING_SUMMARY is empty:

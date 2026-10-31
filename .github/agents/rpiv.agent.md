@@ -46,7 +46,7 @@ You MUST enforce this boundary: Implement builds, tests, records evidence, and c
 You MUST enforce this boundary: Review independently judges the committed diff and changes no code.
 You MUST run Review in a fresh rpiv-reviewer task that receives only the issue, branch, implementation commit, work-item path, and round, not Implement's reasoning.
 You MUST return failed Review findings to their owning stage (implement or plan), then rerun Implement and Review as round 2.
-You MUST stop with PIPELINE_ERROR when round 2 of Review still fails.
+You MUST stop with PIPELINE_ERROR when round 2 of Review still fails; the two-round cap applies per Implement handoff cycle, so a Verify-driven correction starts a new cycle while the reviewer still checks earlier findings.
 You MUST provide Verify with the review verdict, reviewed commit, and review commit.
 You MUST enforce this boundary: Verify decides acceptance, pushes, and creates the pull request.
 You MUST validate every stage artifact and handoff before proceeding.
@@ -189,7 +189,7 @@ IF PIPELINE_STATUS = "error":
   RETURN: format="PIPELINE_ERROR", details=IMPLEMENT_RESULT, error_message="Implement failed", failed_stage=CURRENT_STAGE, issue_number=ISSUE_NUMBER, return_stage="implement"
 RUN `review-loop`
 IF PIPELINE_STATUS = "error":
-  RETURN: format="PIPELINE_ERROR", details=REVIEW_RESULT, error_message="Review failed after the final round", failed_stage=CURRENT_STAGE, issue_number=ISSUE_NUMBER, return_stage=FAILURE_OWNER
+  RETURN: format="PIPELINE_ERROR", details=REVIEW_RESULT, error_message="<CURRENT_STAGE> failed during the review cycle", failed_stage=CURRENT_STAGE, issue_number=ISSUE_NUMBER, return_stage=FAILURE_OWNER
 RUN `dispatch-verify`
 IF PIPELINE_STATUS = "error":
   RUN `route-verification-failure`
@@ -327,6 +327,10 @@ SET REVIEW_ROUND := REVIEW_ROUND + 1 (from "Agent Inference")
 SET REVIEW_PROMPT := <PROMPT> (from "Agent Inference" using ISSUE_NUMBER, BRANCH_NAME, IMPLEMENT_HANDOFF.commit_sha, WORK_ITEM_PATH, REVIEW_ROUND; exclude Implement's reasoning and self-assessment)
 USE `task` where: agent_type="rpiv-reviewer", description="Review one issue", name="review", prompt=REVIEW_PROMPT
 CAPTURE REVIEW_RESULT from `task`
+IF REVIEW_RESULT contains an error:
+  SET FAILURE_OWNER := <OWNER> (from "Agent Inference" using REVIEW_RESULT; plan or implement, default implement)
+  SET PIPELINE_STATUS := "error" (from "Agent Inference")
+  RETURN
 SET REVIEW_PATH := <PATH> (from "Agent Inference" using WORK_ITEM_PATH; append /review/00-review.md)
 USE `view` where: path=REVIEW_PATH
 CAPTURE REVIEW_REPORT from `view`
@@ -341,6 +345,7 @@ SET FAILURE_OWNER := <OWNER> (from "Agent Inference" using REVIEW_HANDOFF; plan 
 RUN `dispatch-review`
 IF PIPELINE_STATUS = "error" AND REVIEW_ROUND < MAX_REVIEW_ROUNDS:
   SET VERIFY_RESULT := <REVIEW_FINDINGS_FOR_CORRECTION> (from "Agent Inference" using REVIEW_HANDOFF; pass finding IDs, locations, and suggested fixes)
+  SET PIPELINE_STATUS := "running" (from "Agent Inference"; clear the review failure so the correction stages run)
   IF FAILURE_OWNER = "plan":
     RUN `dispatch-plan`
   IF PIPELINE_STATUS != "error":

@@ -52,7 +52,7 @@ You MUST include the phase, status, inference, missing proof, and evidence in ea
 You MUST make friction list and friction add support --json.
 You MUST support `./harness friction add --phase <phase> --file <path> --json`.
 You MUST redact secrets and personal data from friction records.
-You MUST verify all four RPIV stage agents contain friction read and write hooks.
+You MUST verify all five RPIV stage agents (including rpiv-reviewer) contain friction read and write hooks.
 You MUST run ./harness verify before claiming completion.
 You SHOULD keep the harness implementation dependency-light.
 You SHOULD prefer portable shell or existing repo runtime tooling.

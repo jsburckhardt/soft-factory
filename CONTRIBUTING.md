@@ -18,7 +18,7 @@ to discover and preserve an existing application's setup.
 ## How to Start Work on an Issue
 
 1. **Create a GitHub Issue** describing the work to be done.
-2. **Run the `rpiv` pipeline** — the full-pipeline coordinator handles each stage in order, starting from the issue number. Research creates `project/work-items/<ISSUE_NUMBER>-<SHORT_DESCRIPTION>/`, and later stages preserve that path. Use individual stage workflows as needed: `rpiv-research`, `rpiv-planner`, `rpiv-implementer`, and `rpiv-verifier`.
+2. **Run the `rpiv` pipeline** — the full-pipeline coordinator handles each stage in order, starting from the issue number. Research creates `project/work-items/<ISSUE_NUMBER>-<SHORT_DESCRIPTION>/`, and later stages preserve that path. Use individual stage workflows as needed: `rpiv-research`, `rpiv-planner`, `rpiv-implementer`, `rpiv-reviewer`, and `rpiv-verifier`.
 
 ## Stage 1 — Research
 
