@@ -10,7 +10,7 @@ Define durable ownership, evidence, validation, and handoff boundaries across th
 
 ## Scope
 
-This contract applies to the RPIV coordinator, all four RPIV stage agents, their work-item artifacts, and pull requests.
+This contract applies to the RPIV coordinator, all five RPIV stage agents, their work-item artifacts, and pull requests.
 
 ## Definition
 
@@ -22,7 +22,10 @@ This contract applies to the RPIV coordinator, all four RPIV stage agents, their
 - Research MUST create `project/work-items/<ISSUE_NUMBER>-<SHORT_DESCRIPTION>/` only when no matching directory exists.
 - Research MUST derive `<SHORT_DESCRIPTION>` as lowercase ASCII kebab-case from the GitHub Issue title when creating the directory.
 - Research MUST fail when more than one work-item directory matches the issue-number prefix.
-- Plan, Implement, and Verify MUST require exactly one existing work-item directory.
+- Plan, Implement, Review, and Verify MUST require exactly one existing work-item directory.
+- Review MUST run after Implement in a fresh context, review the exact implementation commit, change no code, and write only `review/00-review.md`.
+- Review findings MUST carry severity, location, fix, and owner; any unresolved blocker or major fails the review, and Review runs at most two rounds per Implement handoff cycle.
+- Verify MUST NOT deliver without a passing review of the exact implementation commit.
 - Research MUST record constraints, risks, relevant architecture, acceptance criteria, and repository findings only.
 - Plan MUST assign stable `AC-*` IDs and map each criterion to tasks, validation, and expected evidence.
 - Implement MUST execute dependency-ordered tasks, maintain tests and affected application documentation, run configured validation, record evidence, and commit.
@@ -85,3 +88,4 @@ Behavior change -> Documentation requirement -> Committed documentation -> Verif
 ## Related ADRs
 
 - [ADR-261031-standalone-rpiv](../ADR/ADR-261031-standalone-rpiv.md)
+- [ADR-261031-rpiv-review-stage](../ADR/ADR-261031-rpiv-review-stage.md)

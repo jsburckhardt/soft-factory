@@ -5,7 +5,7 @@ This project uses a staged pipeline to move from idea to production code. Every 
 ## Pipeline Overview (RPIV)
 
 ```
-Research → Plan → Implement → Verify
+Research → Plan → Implement → Review → Verify
 ```
 
 Each stage has clear inputs, outputs, and artifact locations. No stage may be skipped.
@@ -18,7 +18,7 @@ to discover and preserve an existing application's setup.
 ## How to Start Work on an Issue
 
 1. **Create a GitHub Issue** describing the work to be done.
-2. **Run the `rpiv` pipeline** — the full-pipeline coordinator handles each stage in order, starting from the issue number. Research creates `project/work-items/<ISSUE_NUMBER>-<SHORT_DESCRIPTION>/`, and later stages preserve that path. Use individual stage workflows as needed: `rpiv-research`, `rpiv-planner`, `rpiv-implementer`, and `rpiv-verifier`.
+2. **Run the `rpiv` pipeline** — the full-pipeline coordinator handles each stage in order, starting from the issue number. Research creates `project/work-items/<ISSUE_NUMBER>-<SHORT_DESCRIPTION>/`, and later stages preserve that path. Use individual stage workflows as needed: `rpiv-research`, `rpiv-planner`, `rpiv-implementer`, `rpiv-reviewer`, and `rpiv-verifier`.
 
 ## Stage 1 — Research
 
@@ -47,7 +47,14 @@ to discover and preserve an existing application's setup.
 - Documents implementation notes in `project/work-items/<ISSUE_NUMBER>-<SHORT_DESCRIPTION>/implementation/00-implementation.md`
 - Deviations from ADRs or core-components require returning to the Plan stage
 
-## Stage 4 — Verify
+## Stage 4 — Review
+
+- The `rpiv-reviewer` workflow runs in a fresh context and reviews the full committed diff of the implementation commit
+- Looks for defects, unhandled errors, security problems, weak tests, ADR/core-component violations, and needless complexity
+- Writes `project/work-items/<ISSUE_NUMBER>-<SHORT_DESCRIPTION>/review/00-review.md` (at most 15 findings with severity, file:line, fix, owner, and a pass/fail verdict) and commits only that file
+- Never edits code; failed reviews go back to Implement (or Plan for scope/architecture) and Review runs a second, final round
+
+## Stage 5 — Verify
 
 - The `rpiv-verifier` workflow runs the full test suite and confirms all tests pass
 - Independently verifies affected application documentation matches the committed behavior
@@ -65,6 +72,7 @@ to discover and preserve an existing application's setup.
 | Task breakdowns | `project/work-items/<ISSUE_NUMBER>-<SHORT_DESCRIPTION>/plan/02-task-breakdown.md` |
 | Test plans | `project/work-items/<ISSUE_NUMBER>-<SHORT_DESCRIPTION>/plan/03-test-plan.md` |
 | Implementation notes | `project/work-items/<ISSUE_NUMBER>-<SHORT_DESCRIPTION>/implementation/00-implementation.md` |
+| Code reviews | `project/work-items/<ISSUE_NUMBER>-<SHORT_DESCRIPTION>/review/00-review.md` |
 | ADRs | `project/architecture/ADR/` (global, not issue-scoped) |
 | Core-Components | `project/architecture/core-components/` (global, not issue-scoped) |
 | Decision log | `project/architecture/ADR/DECISION-LOG.md` |

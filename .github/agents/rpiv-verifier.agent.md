@@ -22,6 +22,10 @@ You MUST independently verify every PR review finding after correction and updat
 You MUST recheck branch/PR identity before updating an existing PR and fail on ambiguity, a closed PR, or an unexpected head.
 You MUST resolve referenced GitHub review threads via the GitHub API only after verifying their fixes; ordinary comments receive a correlated disposition instead.
 You MUST verify the exact branch and commit SHA provided by Implement.
+You MUST require review/00-review.md in the work item with verdict pass, a reviewed commit equal to the Implement handoff commit, and no unresolved blocker or major finding.
+You MUST accept HEAD only when it equals the Implement handoff commit, or when its single parent is exactly that commit and it changes only review/00-review.md.
+You MUST return review gate failures to the owner recorded on the unresolved findings, defaulting to implement.
+You MUST list the review verdict and finding dispositions in the PR description and verification summary.
 You MUST resolve exactly one project/work-items/<ISSUE_NUMBER>-*/plan/01-action-plan.md before loading delivery artifacts.
 You MUST preserve the resolved work-item directory name for the verification summary.
 You MUST require a clean working tree before verification.
@@ -184,6 +188,9 @@ PR_NUMBER: ""
 REPOSITORY: ""
 HEAD_SHA: ""
 FINDING_RESULTS: ""
+REVIEW_PATH: ""
+REVIEW_REPORT: ""
+REVIEW_PASSED: false
 </runtime>
 
 <triggers>
@@ -196,6 +203,9 @@ RUN `load-handoff`
 RUN `verify-exact-commit`
 IF FAILURE_OWNER is not empty:
   RETURN: format="VERIFY_ERROR", ac_results=AC_RESULTS, details="The branch, commit, or working tree does not match the Implement handoff.", error_message="Implementation handoff mismatch", issue_number=ISSUE_NUMBER, return_stage=FAILURE_OWNER, validation_results=VALIDATION_RESULTS
+RUN `check-review`
+IF REVIEW_PASSED is false:
+  RETURN: format="VERIFY_ERROR", ac_results=AC_RESULTS, details=REVIEW_REPORT, error_message="Independent review is missing, stale, or has unresolved blocker or major findings", issue_number=ISSUE_NUMBER, return_stage=FAILURE_OWNER, validation_results=VALIDATION_RESULTS
 RUN `inspect-full-diff`
 IF FAILURE_OWNER is not empty:
   RETURN: format="VERIFY_ERROR", ac_results=AC_RESULTS, details=FULL_DIFF, error_message="Diff or commit contract verification failed", issue_number=ISSUE_NUMBER, return_stage=FAILURE_OWNER, validation_results=VALIDATION_RESULTS
@@ -271,10 +281,28 @@ USE `bash` where: command="git rev-parse HEAD"
 CAPTURE CURRENT_COMMIT from `bash`
 USE `bash` where: command="git status --porcelain"
 CAPTURE WORKTREE_STATUS from `bash`
-IF BRANCH_NAME != HANDOFF_BRANCH or CURRENT_COMMIT != HANDOFF_COMMIT:
+USE `bash` where: command="git rev-parse HEAD^@ && git diff --name-only <HANDOFF_COMMIT> HEAD"
+CAPTURE POST_HANDOFF_CHANGES from `bash`
+SET HEAD_ACCEPTABLE := <ACCEPTABLE> (from "Agent Inference" using CURRENT_COMMIT, HANDOFF_COMMIT, POST_HANDOFF_CHANGES; true only when HEAD equals HANDOFF_COMMIT, or HEAD has exactly one parent, that parent equals HANDOFF_COMMIT, and the only changed path is <WORK_ITEM_PATH>/review/00-review.md)
+IF BRANCH_NAME != HANDOFF_BRANCH or HEAD_ACCEPTABLE is false:
   SET FAILURE_OWNER := "implement" (from "Agent Inference")
 IF WORKTREE_STATUS is not empty:
   SET FAILURE_OWNER := "implement" (from "Agent Inference")
+</process>
+
+<process id="check-review" name="Gate delivery on the independent review">
+SET REVIEW_PATH := <PATH> (from "Agent Inference" using WORK_ITEM_PATH; append /review/00-review.md)
+USE `glob` where: pattern=REVIEW_PATH
+CAPTURE REVIEW_FILES from `glob`
+IF REVIEW_FILES is empty:
+  SET FAILURE_OWNER := "implement" (from "Agent Inference")
+  SET REVIEW_REPORT := "review/00-review.md is missing; Review must run before Verify." (from "Agent Inference")
+ELSE:
+  USE `view` where: path=REVIEW_PATH
+  CAPTURE REVIEW_REPORT from `view`
+  SET REVIEW_PASSED := <PASSED> (from "Agent Inference" using REVIEW_REPORT, HANDOFF_COMMIT; require verdict pass, reviewed commit equal to HANDOFF_COMMIT, and no unresolved blocker or major finding)
+  IF REVIEW_PASSED is false:
+    SET FAILURE_OWNER := <OWNER> (from "Agent Inference" using REVIEW_REPORT; plan or implement, default implement)
 </process>
 
 <process id="inspect-full-diff" name="Inspect scope and architecture across the complete branch diff">
@@ -349,7 +377,7 @@ ASSERT expected existing PR is open and matches this repository and branch; ambi
 USE `view` where: path=PR_TEMPLATE_PATH
 CAPTURE PR_TEMPLATE from `view`
 SET PR_TITLE := <TITLE> (from "Agent Inference" using ISSUE_NUMBER, ISSUE_TITLE; follow Conventional Commits)
-SET PR_BODY := <BODY> (from "Agent Inference" using PR_TEMPLATE, ISSUE_NUMBER, HANDOFF_COMMIT, AC_RESULTS, DOCUMENTATION_RESULTS, VALIDATION_RESULTS, ACTION_PLAN; include every AC-* ID, documentation review, passed status, evidence, and Closes #<ISSUE_NUMBER>)
+SET PR_BODY := <BODY> (from "Agent Inference" using PR_TEMPLATE, REVIEW_REPORT, ISSUE_NUMBER, HANDOFF_COMMIT, AC_RESULTS, DOCUMENTATION_RESULTS, VALIDATION_RESULTS, ACTION_PLAN; include every AC-* ID, documentation review, passed status, evidence, the Independent Review verdict with every finding disposition, and Closes #<ISSUE_NUMBER>)
 SET FINDING_RESULTS := <VERIFIED_FINDING_DISPOSITIONS_AND_EVIDENCE> (from Agent Inference)
 SET PR_BODY := <PR_BODY_WITH_FINDING_DISPOSITIONS_AND_PRESERVED_HUMAN_CONTENT> (from Agent Inference)
 SET PR_TITLE_PATH := <WORK_ITEM_LOCAL_PR_TITLE_PATH> (from Agent Inference)
@@ -372,8 +400,8 @@ USE `bash` where: command=<RPIV_UPDATE_ISSUE_RECIPE_WITH_NUMERIC_ISSUE_AND_QUOTE
 </process>
 
 <process id="write-verification-summary" name="Write and publish verification metadata only">
-SET SUMMARY_CONTENT := <CONTENT> (from "Agent Inference" using ISSUE_NUMBER, ISSUE_TITLE, BRANCH_NAME, HANDOFF_COMMIT, PR_URL, AC_RESULTS, DOCUMENTATION_RESULTS, VALIDATION_RESULTS, FULL_DIFF; include every AC-* ID, documentation results, and omit secrets, raw output, and absolute paths)
-SET SUMMARY_CONTENT := <SUMMARY_WITH_REVIEW_IDS_FINDING_DISPOSITIONS_AND_EVIDENCE> (from Agent Inference)
+SET SUMMARY_CONTENT := <CONTENT> (from "Agent Inference" using ISSUE_NUMBER, ISSUE_TITLE, BRANCH_NAME, HANDOFF_COMMIT, PR_URL, AC_RESULTS, DOCUMENTATION_RESULTS, VALIDATION_RESULTS, FULL_DIFF; include every AC-* ID, documentation results, the review verdict and finding dispositions, and omit secrets, raw output, and absolute paths)
+SET SUMMARY_CONTENT := <SUMMARY_WITH_REVIEW_IDS_FINDING_DISPOSITIONS_AND_EVIDENCE> (from "Agent Inference" using SUMMARY_CONTENT, REVIEW_REPORT; include the review verdict, rounds, and every review finding disposition)
 USE `glob` where: pattern=VERIFY_SUMMARY_PATH
 CAPTURE EXISTING_SUMMARY from `glob`
 IF EXISTING_SUMMARY is empty:

@@ -16,6 +16,8 @@ project/work-items/42-improve-cache-invalidation/
     03-test-plan.md         ← Full test coverage requirements
   implementation/
     00-implementation.md    ← Implementation notes and decisions made during coding
+  review/
+    00-review.md            ← Independent code review (findings, verdict)
   verify/
     summary.md              ← Feature delivery summary (commits, AC status, verification)
 ```

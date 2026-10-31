@@ -1,6 +1,6 @@
 ---
 name: rpiv
-description: "Orchestrate the complete RPIV pipeline for a GitHub issue by creating the feature branch, enforcing stage contracts, routing verification failures, and delivering a pull request."
+description: "Orchestrate the complete RPIV pipeline (Research, Plan, Implement, Review, Verify) for a GitHub issue by creating the feature branch, enforcing stage contracts, routing verification failures, and delivering a pull request."
 tools:
   - glob
   - grep
@@ -16,13 +16,14 @@ agents:
   - rpiv-research
   - rpiv-planner
   - rpiv-implementer
+  - rpiv-reviewer
   - rpiv-verifier
 ---
 
 <instructions>
 You MUST read AGENTS.md before starting.
 You MUST run as the primary coordinator in a standalone Copilot CLI session, not as a nested worker that delegates again.
-You MUST keep stage values research, plan, implement, verify; validation and delivery are Verify activities.
+You MUST keep stage values research, plan, implement, review, verify; validation and delivery are Verify activities.
 You MUST record correction reasons before returning to Plan or Implement and rerun downstream stages.
 You MUST NOT equate a completed PR delivery with merged integration.
 You MUST read project/architecture/ADR/DECISION-LOG.md before starting.
@@ -36,12 +37,17 @@ You MUST fail when more than one work-item directory uses the issue-number prefi
 You MUST validate structured GitHub acceptance criteria before dispatching Research.
 You MUST create or confirm the issue feature branch before dispatching Research.
 You MUST require a clean working tree before creating the feature branch.
-You MUST execute Research, Plan, Implement, and Verify in strict order.
+You MUST execute Research, Plan, Implement, Review, and Verify in strict order.
 You MUST NOT skip any pipeline stage.
 You MUST delegate each stage to its corresponding RPIV agent.
 You MUST enforce this boundary: Research investigates.
 You MUST enforce this boundary: Plan proves acceptance coverage.
 You MUST enforce this boundary: Implement builds, tests, records evidence, and commits.
+You MUST enforce this boundary: Review independently judges the committed diff and changes no code.
+You MUST run Review in a fresh rpiv-reviewer task that receives only the issue, branch, implementation commit, work-item path, and round, not Implement's reasoning.
+You MUST return failed Review findings to their owning stage (implement or plan), then rerun Implement and Review as round 2.
+You MUST stop with PIPELINE_ERROR when round 2 of Review still fails; the two-round cap applies per Implement handoff cycle, so a Verify-driven correction starts a new cycle while the reviewer still checks earlier findings.
+You MUST provide Verify with the review verdict, reviewed commit, and review commit.
 You MUST enforce this boundary: Verify decides acceptance, pushes, and creates the pull request.
 You MUST validate every stage artifact and handoff before proceeding.
 You MUST provide Plan with the issue criteria and Research findings.
@@ -85,6 +91,10 @@ STAGE_AGENTS: YAML<<
   output: project/work-items/<ISSUE_NUMBER>-<SHORT_DESCRIPTION>/implementation/00-implementation.md
   purpose: Implement tasks, run configured validation, record evidence, and commit
   stage: implement
+- agent: rpiv-reviewer
+  output: project/work-items/<ISSUE_NUMBER>-<SHORT_DESCRIPTION>/review/00-review.md
+  purpose: Independently review the committed diff and record findings with a verdict
+  stage: review
 - agent: rpiv-verifier
   output: project/work-items/<ISSUE_NUMBER>-<SHORT_DESCRIPTION>/verify/summary.md
   purpose: Verify the handoff commit, decide acceptance, push, and create the pull request
@@ -148,6 +158,10 @@ COMMAND_INTERFACE_READY: false
 FAILURE_OWNER: ""
 PIPELINE_STATUS: ""
 RETRY_COUNT: 0
+REVIEW_ROUND: 0
+REVIEW_RESULT: ""
+REVIEW_HANDOFF: {}
+MAX_REVIEW_ROUNDS: 2
 STAGE_RESULTS: []
 PR_URL: ""
 </runtime>
@@ -173,6 +187,9 @@ IF PIPELINE_STATUS = "error":
 RUN `dispatch-implement`
 IF PIPELINE_STATUS = "error":
   RETURN: format="PIPELINE_ERROR", details=IMPLEMENT_RESULT, error_message="Implement failed", failed_stage=CURRENT_STAGE, issue_number=ISSUE_NUMBER, return_stage="implement"
+RUN `review-loop`
+IF PIPELINE_STATUS = "error":
+  RETURN: format="PIPELINE_ERROR", details=REVIEW_RESULT, error_message="<CURRENT_STAGE> failed during the review cycle", failed_stage=CURRENT_STAGE, issue_number=ISSUE_NUMBER, return_stage=FAILURE_OWNER
 RUN `dispatch-verify`
 IF PIPELINE_STATUS = "error":
   RUN `route-verification-failure`
@@ -304,9 +321,48 @@ IF PIPELINE_STATUS != "error":
   SET STAGE_RESULTS := STAGE_RESULTS + ["Implement: complete"] (from "Agent Inference")
 </process>
 
+<process id="dispatch-review" name="Dispatch an independent Review of the implementation commit">
+SET CURRENT_STAGE := "review" (from "Agent Inference")
+SET REVIEW_ROUND := REVIEW_ROUND + 1 (from "Agent Inference")
+SET REVIEW_HANDOFF := {} (from "Agent Inference")
+SET REVIEW_PROMPT := <PROMPT> (from "Agent Inference" using ISSUE_NUMBER, BRANCH_NAME, IMPLEMENT_HANDOFF.commit_sha, WORK_ITEM_PATH, REVIEW_ROUND; exclude Implement's reasoning and self-assessment)
+USE `task` where: agent_type="rpiv-reviewer", description="Review one issue", name="review", prompt=REVIEW_PROMPT
+CAPTURE REVIEW_RESULT from `task`
+IF REVIEW_RESULT contains an error:
+  SET FAILURE_OWNER := <OWNER> (from "Agent Inference" using REVIEW_RESULT; plan or implement, default implement)
+  SET PIPELINE_STATUS := "error" (from "Agent Inference")
+  RETURN
+SET REVIEW_PATH := <PATH> (from "Agent Inference" using WORK_ITEM_PATH; append /review/00-review.md)
+USE `view` where: path=REVIEW_PATH
+CAPTURE REVIEW_REPORT from `view`
+USE `bash` where: command="git rev-parse HEAD && git status --porcelain"
+CAPTURE REVIEW_COMMIT_STATE from `bash`
+SET REVIEW_HANDOFF := <HANDOFF> (from "Agent Inference" using REVIEW_RESULT, REVIEW_REPORT, REVIEW_COMMIT_STATE; include verdict, reviewed commit, review commit, findings, and owners)
+SET PIPELINE_STATUS := <STATUS> (from "Agent Inference" using REVIEW_HANDOFF; error when the verdict is fail, the reviewed commit differs from the implementation commit, or the tree is dirty)
+SET FAILURE_OWNER := <OWNER> (from "Agent Inference" using REVIEW_HANDOFF; plan when any unresolved blocker or major finding is owned by plan, otherwise implement)
+</process>
+
+<process id="review-loop" name="Run Review and at most one correction round">
+RUN `dispatch-review`
+IF PIPELINE_STATUS = "error" AND REVIEW_ROUND < MAX_REVIEW_ROUNDS:
+  IF REVIEW_HANDOFF is empty OR REVIEW_HANDOFF.reviewed_commit != IMPLEMENT_HANDOFF.commit_sha:
+    SET VERIFY_RESULT := <REVIEWER_ERROR_FOR_CORRECTION> (from "Agent Inference" using REVIEW_RESULT; forward the reviewer's error details and owner)
+  ELSE:
+    SET VERIFY_RESULT := <REVIEW_FINDINGS_FOR_CORRECTION> (from "Agent Inference" using REVIEW_HANDOFF; pass finding IDs, locations, and suggested fixes)
+  SET PIPELINE_STATUS := "running" (from "Agent Inference"; clear the review failure so the correction stages run)
+  IF FAILURE_OWNER = "plan":
+    RUN `dispatch-plan`
+  IF PIPELINE_STATUS != "error":
+    RUN `dispatch-implement`
+  IF PIPELINE_STATUS != "error":
+    RUN `dispatch-review`
+IF PIPELINE_STATUS != "error":
+  SET STAGE_RESULTS := STAGE_RESULTS + ["Review: pass in round <REVIEW_ROUND>"] (from "Agent Inference")
+</process>
+
 <process id="dispatch-verify" name="Dispatch Verify against the implementation handoff">
 SET CURRENT_STAGE := "verify" (from "Agent Inference")
-SET VERIFY_PROMPT := <PROMPT> (from "Agent Inference" using ISSUE_NUMBER, WORK_ITEM_PATH, PLAN_HANDOFF, IMPLEMENT_HANDOFF)
+SET VERIFY_PROMPT := <PROMPT> (from "Agent Inference" using ISSUE_NUMBER, WORK_ITEM_PATH, PLAN_HANDOFF, IMPLEMENT_HANDOFF, REVIEW_HANDOFF)
 SET VERIFY_PROMPT := <VERIFY_PROMPT_WITH_EXISTING_PR_IDENTITY_IF_ANY> (from Agent Inference)
 USE `task` where: agent_type="rpiv-verifier", description="Verify one issue", name="verify", prompt=VERIFY_PROMPT
 CAPTURE VERIFY_RESULT from `task`
@@ -329,6 +385,9 @@ ELSE:
       RUN `dispatch-implement`
   ELSE:
     RUN `dispatch-implement`
+  IF PIPELINE_STATUS != "error":
+    SET REVIEW_ROUND := 0 (from "Agent Inference")
+    RUN `review-loop`
   IF PIPELINE_STATUS != "error":
     RUN `dispatch-verify`
 </process>

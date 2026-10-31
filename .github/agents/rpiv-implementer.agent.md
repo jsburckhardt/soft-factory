@@ -14,7 +14,7 @@ disable-model-invocation: false
 
 <instructions>
 You MUST remain a leaf RPIV Implement stage in the current checkout.
-You MUST address supplied PR review findings within the existing plan and branch, preserve finding IDs, and record fixed/disputed evidence for independent Verify.
+You MUST address supplied Review-stage and PR review findings within the existing plan and branch, preserve finding IDs, and record fixed/disputed evidence for independent Verify.
 You MUST return scope or architecture disagreements to Plan; never silently discard a review finding or open another PR.
 You MUST report progress, blockers, and new prerequisites to the RPIV coordinator.
 You MUST return architecture conflicts to Plan.
