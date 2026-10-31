@@ -23,7 +23,7 @@ You MUST recheck branch/PR identity before updating an existing PR and fail on a
 You MUST resolve referenced GitHub review threads via the GitHub API only after verifying their fixes; ordinary comments receive a correlated disposition instead.
 You MUST verify the exact branch and commit SHA provided by Implement.
 You MUST require review/00-review.md in the work item with verdict pass, a reviewed commit equal to the Implement handoff commit, and no unresolved blocker or major finding.
-You MUST accept HEAD only when it equals the Implement handoff commit or a single Review commit on top of it that changes only review/00-review.md.
+You MUST accept HEAD only when it equals the Implement handoff commit, or when its single parent is exactly that commit and it changes only review/00-review.md.
 You MUST return review gate failures to the owner recorded on the unresolved findings, defaulting to implement.
 You MUST list the review verdict and finding dispositions in the PR description and verification summary.
 You MUST resolve exactly one project/work-items/<ISSUE_NUMBER>-*/plan/01-action-plan.md before loading delivery artifacts.
@@ -281,9 +281,9 @@ USE `bash` where: command="git rev-parse HEAD"
 CAPTURE CURRENT_COMMIT from `bash`
 USE `bash` where: command="git status --porcelain"
 CAPTURE WORKTREE_STATUS from `bash`
-USE `bash` where: command="git diff --name-only <HANDOFF_COMMIT> HEAD && git rev-list --count <HANDOFF_COMMIT>..HEAD"
+USE `bash` where: command="git rev-parse HEAD^@ && git diff --name-only <HANDOFF_COMMIT> HEAD"
 CAPTURE POST_HANDOFF_CHANGES from `bash`
-SET HEAD_ACCEPTABLE := <ACCEPTABLE> (from "Agent Inference" using CURRENT_COMMIT, HANDOFF_COMMIT, POST_HANDOFF_CHANGES; true when HEAD equals the handoff commit or is one commit on top changing only <WORK_ITEM_PATH>/review/00-review.md)
+SET HEAD_ACCEPTABLE := <ACCEPTABLE> (from "Agent Inference" using CURRENT_COMMIT, HANDOFF_COMMIT, POST_HANDOFF_CHANGES; true only when HEAD equals HANDOFF_COMMIT, or HEAD has exactly one parent, that parent equals HANDOFF_COMMIT, and the only changed path is <WORK_ITEM_PATH>/review/00-review.md)
 IF BRANCH_NAME != HANDOFF_BRANCH or HEAD_ACCEPTABLE is false:
   SET FAILURE_OWNER := "implement" (from "Agent Inference")
 IF WORKTREE_STATUS is not empty:

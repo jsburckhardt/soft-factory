@@ -90,6 +90,9 @@ ROUND: 1
 WORK_ITEM_PATH: ""
 REVIEW_PATH: ""
 PREVIOUS_REVIEW: ""
+ACTION_PLAN_PATH: ""
+RELEVANT_ARCHITECTURE: []
+ARCHITECTURE: []
 FULL_DIFF: ""
 FINDINGS: []
 VERDICT: ""
@@ -126,13 +129,17 @@ USE `glob` where: pattern="project/work-items/<ISSUE_NUMBER>-*/plan/01-action-pl
 CAPTURE PLAN_FILES from `glob`
 IF PLAN_FILES count != 1:
   RETURN: error="Expected exactly one work item for the issue.", owner="plan"
-SET WORK_ITEM_PATH := <PATH> (from "Agent Inference" using PLAN_FILES)
+SET ACTION_PLAN_PATH := <PATH> (from "Agent Inference" using PLAN_FILES; the single matched file)
+SET WORK_ITEM_PATH := <PATH> (from "Agent Inference" using ACTION_PLAN_PATH; remove /plan/01-action-plan.md)
 SET REVIEW_PATH := <PATH> (from "Agent Inference" using WORK_ITEM_PATH; append /review/00-review.md)
-USE `view` where: path=PLAN_FILES
+USE `view` where: path=ACTION_PLAN_PATH
 CAPTURE ACTION_PLAN from `view`
-SET RELEVANT_ARCHITECTURE := <FILES> (from "Agent Inference" using ACTION_PLAN; ADR and core-component files the plan references)
-USE `view` where: path=RELEVANT_ARCHITECTURE
-CAPTURE ARCHITECTURE from `view`
+SET RELEVANT_ARCHITECTURE := <FILES> (from "Agent Inference" using ACTION_PLAN; ADR and core-component file paths the plan references)
+SET ARCHITECTURE := [] (from "Agent Inference")
+FOREACH ARCH_FILE IN RELEVANT_ARCHITECTURE:
+  USE `view` where: path=ARCH_FILE
+  CAPTURE ARCH_CONTENT from `view`
+  SET ARCHITECTURE := ARCHITECTURE + [ARCH_CONTENT] (from "Agent Inference")
 USE `glob` where: pattern=REVIEW_PATH
 CAPTURE PRIOR_REVIEW_FILES from `glob`
 IF PRIOR_REVIEW_FILES is not empty:

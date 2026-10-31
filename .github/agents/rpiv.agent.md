@@ -324,6 +324,7 @@ IF PIPELINE_STATUS != "error":
 <process id="dispatch-review" name="Dispatch an independent Review of the implementation commit">
 SET CURRENT_STAGE := "review" (from "Agent Inference")
 SET REVIEW_ROUND := REVIEW_ROUND + 1 (from "Agent Inference")
+SET REVIEW_HANDOFF := {} (from "Agent Inference")
 SET REVIEW_PROMPT := <PROMPT> (from "Agent Inference" using ISSUE_NUMBER, BRANCH_NAME, IMPLEMENT_HANDOFF.commit_sha, WORK_ITEM_PATH, REVIEW_ROUND; exclude Implement's reasoning and self-assessment)
 USE `task` where: agent_type="rpiv-reviewer", description="Review one issue", name="review", prompt=REVIEW_PROMPT
 CAPTURE REVIEW_RESULT from `task`
@@ -344,7 +345,10 @@ SET FAILURE_OWNER := <OWNER> (from "Agent Inference" using REVIEW_HANDOFF; plan 
 <process id="review-loop" name="Run Review and at most one correction round">
 RUN `dispatch-review`
 IF PIPELINE_STATUS = "error" AND REVIEW_ROUND < MAX_REVIEW_ROUNDS:
-  SET VERIFY_RESULT := <REVIEW_FINDINGS_FOR_CORRECTION> (from "Agent Inference" using REVIEW_HANDOFF; pass finding IDs, locations, and suggested fixes)
+  IF REVIEW_HANDOFF is empty OR REVIEW_HANDOFF.reviewed_commit != IMPLEMENT_HANDOFF.commit_sha:
+    SET VERIFY_RESULT := <REVIEWER_ERROR_FOR_CORRECTION> (from "Agent Inference" using REVIEW_RESULT; forward the reviewer's error details and owner)
+  ELSE:
+    SET VERIFY_RESULT := <REVIEW_FINDINGS_FOR_CORRECTION> (from "Agent Inference" using REVIEW_HANDOFF; pass finding IDs, locations, and suggested fixes)
   SET PIPELINE_STATUS := "running" (from "Agent Inference"; clear the review failure so the correction stages run)
   IF FAILURE_OWNER = "plan":
     RUN `dispatch-plan`
