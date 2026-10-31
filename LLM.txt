@@ -2,15 +2,8 @@ AGENTS.md                                                   — Agent definition
 CONTRIBUTING.md                                             — Human contribution guide
 LLM.txt                                                     — This file; repo map for AI agents
 README.md                                                   — Project overview
-.github/agents/foreman.agent.md                              — APS repository mission coordinator above RPIV
-.foreman/README.md                                          — Consumer profile and local agent-owned context/graph data
-docs/foreman.md                                             — Project initialization, optional host operations, and APS Foreman workflow
-justfile                                                   — Thin yolo session launcher, PR inspection/publication, and starter validation
-tests/foreman-contract.sh                                   — Inert CLI fixtures for managed launch and PR primitives
+justfile                                                    — Starter validation and GitHub issue/PR recipes
 .devcontainer/devcontainer.json                             — Dev container configuration
-.devcontainer/post-create.sh                                — One-time container setup for tmux config and GitHub CLI aliases
-.devcontainer/post-start.sh                                 — Per-start shared tmux session and dynamic environment setup
-.devcontainer/tmux-attach.sh                                — VS Code terminal attachment to the shared tmux socket
 .github/agents/aps-v1.2.2.agent.md                         — APS prompt generator agent
 .github/agents/bootstrap.agent.md                           — Bootstrap agent (new project scaffolding)
 .github/agents/excali.agent.md                              — Excalidraw diagram agent
@@ -29,9 +22,7 @@ project/README.md                                             — Project docume
 project/architecture/README.md                                 — Architecture documentation index
 project/architecture/ADR/ADR-260101-template.md                — ADR template (read-only, copy to create date-based artifacts)
 project/architecture/ADR/DECISION-LOG.md                       — Registry of all ADR and core-component decisions
-project/architecture/ADR/ADR-260906-foreman-control-plane.md   — Foreman above RPIV; CLI/worktree/tmux architecture
-project/architecture/core-components/CORE-COMPONENT-260906-foreman-orchestration.md — Mission scheduling and worker ownership
-project/architecture/core-components/CORE-COMPONENT-260906-rpiv-observability.md — State/events and communication contract
+project/architecture/ADR/ADR-261031-standalone-rpiv.md — Standalone RPIV; supersedes the removed mission coordinator
 project/architecture/core-components/CORE-COMPONENT-260101-template.md — Core-component template (read-only, copy to create date-based artifacts)
 project/architecture/core-components/CORE-COMPONENT-260505-commit-standards.md — Commit standards (Conventional Commits, Co-authored-by)
 project/architecture/core-components/CORE-COMPONENT-260806-rpiv-stage-contract.md — RPIV stage ownership and handoff contract

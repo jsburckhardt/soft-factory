@@ -36,7 +36,6 @@
         "ghcr.io/devcontainers/features/github-cli": {},
         "ghcr.io/devcontainers/features/copilot-cli": {},
         "ghcr.io/rosstaco/devcontainer-features/copilot-persistence:1": {},
-        "ghcr.io/jsburckhardt/devcontainer-features/tmux": {},
         "ghcr.io/jsburckhardt/devcontainer-features/glow": {}
     },
     "customizations": {
@@ -80,7 +79,6 @@
         "GIT_PAGER": "",
         "GH_PAGER": ""
     },
-    "postStartCommand": "bash .devcontainer/post-start.sh",
     "remoteUser": "vscode",
     "hostRequirements": {
         "memory": "4gb"

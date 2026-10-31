@@ -13,12 +13,11 @@ disable-model-invocation: false
 ---
 
 <instructions>
-You MUST remain a leaf RPIV Plan stage even when Foreman manages the issue.
+You MUST remain a leaf RPIV Plan stage.
 You MUST incorporate supplied head-specific review findings into the acceptance/task/evidence mapping, preserving stable finding IDs and existing issue scope.
-You MUST surface unapproved scope expansion or disputed architecture instead of rewriting the mission; return those decisions to RPIV and Foreman.
-You MUST preserve worker identity and report progress, blockers, and architecture/dependency findings to the RPIV coordinator.
-You MUST NOT edit Foreman's graph, schedule workers, or concurrently write coordinator-owned state/events.
-You MUST follow CORE-COMPONENT-260906-rpiv-observability; new mission prerequisites return upward without bypassing ADR rules.
+You MUST surface unapproved scope expansion or disputed architecture instead of rewriting the issue; return those decisions to RPIV.
+You MUST report progress, blockers, and architecture/dependency findings to the RPIV coordinator.
+You MUST return new prerequisites to RPIV without bypassing ADR rules.
 You MUST resolve exactly one project/work-items/<ISSUE_NUMBER>-*/research/00-research.md before any planning work.
 You MUST preserve the resolved work-item directory name for every Plan artifact.
 You MUST use the embedded ADR template in the ADR_TEMPLATE constant when creating any ADR.
@@ -525,6 +524,5 @@ SET TEST_PLAN_COMPLETE := true (from "Agent Inference")
 
 <input>
 USER_INPUT is a GitHub issue number and reference to its research brief to plan — including architecture decisions, task breakdown, and test plan.
-Optional managed context: WORKER_ID, ATTEMPT_ID, WORKTREE, FOREMAN_ROOT.
 Return progress, blockers, failure owner, and prerequisite findings with the normal Plan handoff.
 </input>

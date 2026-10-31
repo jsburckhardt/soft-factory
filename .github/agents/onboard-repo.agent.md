@@ -24,16 +24,9 @@ handoffs:
 ---
 
 <instructions>
-You MUST preserve the Foreman entrypoint, isolated worker conventions, runtime ignores, and root justfile recipes when present.
-You MUST document Foreman as optional mission-level coordination above standalone RPIV.
-You MUST NOT launch a mission, create workers, or replace existing project commands merely to onboard Foreman.
-You MUST discover the project's actual languages, package manager, setup/validation commands, and execution environment instead of imposing a Foreman runtime.
-You MUST record confirmed capabilities and a completed onboarding marker in .foreman/project.json; worker execution is disabled unless explicitly enabled.
-You MUST record --yolo approval once when enabling managed Copilot execution and require it for controller, issue-generator, worker launch, and resume.
-You MUST preserve copilot-session or an equivalent launcher with --yolo and the assigned worktree; preserve standalone permission choices.
-You MUST configure PR inspection/comment operations and max_review_rounds defaulting to 3 so Foreman can review and send head-specific corrections.
-You MUST confirm tmux lifecycle/status, managed assignment access, an owned integration checkout operation, and full verification before enabling workers.
-You MUST add or adapt only approved thin host-operation recipes when Foreman workers are enabled, preserving existing commands and keeping orchestration in APS.
+You MUST preserve existing root justfile recipes when present.
+You MUST NOT replace existing project commands merely to onboard.
+You MUST discover the project's actual languages, package manager, setup/validation commands, and execution environment.
 You MUST NOT infer prior onboarding solely from inherited template ADRs, AGENTS.md, or the supplied agent files.
 You MUST check whether the project is already onboarded before proceeding.
 You MUST refuse to run if the project is already onboarded and explain why.
@@ -77,9 +70,7 @@ README_PATH: "README.md"
 LLM_TXT_PATH: "LLM.txt"
 FIRST_ISSUE_TITLE: "Repository Understanding"
 WORK_ITEMS_DIR: "project/work-items"
-PROFILE_PATH: ".foreman/project.json"
-FOREMAN_GUIDE: "docs/foreman.md"
-TEMPLATE_ADRS: ["project/architecture/ADR/ADR-260101-template.md", "project/architecture/ADR/ADR-260906-foreman-control-plane.md"]
+TEMPLATE_ADRS: ["project/architecture/ADR/ADR-260101-template.md"]
 FIRST_WORK_ITEM_SLUG: "repository-understanding"
 ADR_TEMPLATE: TEXT<<
 # ADR-yymmdd-short-slug: [Short Title of Decision]
@@ -295,16 +286,12 @@ CROSS_CUTTING_SIGNALS: YAML<<
 ## Files to Update
 <UPDATE_LIST>
 
-## Foreman Capability
-<FOREMAN_PROPOSAL>
-
 ## Risks and Gaps
 <RISKS>
 WHERE:
 - <ARTIFACT_LIST> is Markdown.
 - <DISCOVERED_ADRS> is Markdown.
 - <DISCOVERED_CONCERNS> is Markdown.
-- <FOREMAN_PROPOSAL> is String.
 - <PROJECT_DESCRIPTION> is String.
 - <PROJECT_NAME> is String.
 - <RISKS> is Markdown.
@@ -400,17 +387,15 @@ IF IS_ONBOARDED is true:
 RUN `resolve-artifact-date`
 RUN `analyse-repository`
 SET ARTIFACT_LIST := <LIST> (from "Agent Inference" using DISCOVERED_ADRS, DISCOVERED_CONCERNS, ARTIFACT_DATE, ADR_PATTERN, CORE_COMPONENT_PATTERN)
-SET UPDATE_LIST := <LIST> (from "Agent Inference" using README_PATH, AGENTS_MD_PATH, LLM_TXT_PATH, DECISION_LOG_PATH, PROFILE_PATH; include the root justfile only when targeted edits are proposed)
-SET FOREMAN_PROPOSAL := <DISABLED_OR_CONFIRMED_PROJECT_PROFILE_AND_THIN_OPERATIONS> (from Agent Inference)
+SET UPDATE_LIST := <LIST> (from "Agent Inference" using README_PATH, AGENTS_MD_PATH, LLM_TXT_PATH, DECISION_LOG_PATH; include the root justfile only when targeted edits are proposed)
 IF INFO_CONFIRMED is false:
-  RETURN: format="ONBOARD_SUMMARY", project_name=PROJECT_NAME, project_description=PROJECT_DESCRIPTION, tech_stack=TECH_STACK, discovered_adrs=DISCOVERED_ADRS, discovered_concerns=DISCOVERED_CONCERNS, artifact_list=ARTIFACT_LIST, update_list=UPDATE_LIST, risks=RISKS, foreman_proposal=FOREMAN_PROPOSAL
+  RETURN: format="ONBOARD_SUMMARY", project_name=PROJECT_NAME, project_description=PROJECT_DESCRIPTION, tech_stack=TECH_STACK, discovered_adrs=DISCOVERED_ADRS, discovered_concerns=DISCOVERED_CONCERNS, artifact_list=ARTIFACT_LIST, update_list=UPDATE_LIST, risks=RISKS
 RUN `create-adrs`
 IF DISCOVERED_CONCERNS is not empty:
   RUN `create-core-components`
 RUN `update-decision-log`
 RUN `create-first-issue`
 RUN `update-project-docs`
-RUN `record-project-capabilities`
 RETURN: format="ONBOARD_REPORT", project_name=PROJECT_NAME, project_description=PROJECT_DESCRIPTION, tech_stack=TECH_STACK, adr_list=CREATED_ADRS, core_component_list=CREATED_CORE_COMPONENTS, files_updated=UPDATED_FILES, status="Onboarded", next_steps="Use the rpiv-research agent to start working on GitHub issue #<FIRST_ISSUE_NUMBER>"
 </process>
 
@@ -418,13 +403,12 @@ RETURN: format="ONBOARD_REPORT", project_name=PROJECT_NAME, project_description=
 USE `search/fileSearch` where: pattern="project/architecture/ADR/ADR-*.md"
 CAPTURE ADR_FILES from `search/fileSearch`
 SET EXISTING_ADRS := <FILES> (from "Agent Inference" using ADR_FILES, ADR_TEMPLATE_PATH; exclude the template path)
-USE `search/fileSearch` where: pattern=PROFILE_PATH
-CAPTURE PROFILE_FILES from `search/fileSearch`
-FOREACH profile IN PROFILE_FILES:
-  USE `read/readFile` where: filePath=PROFILE_PATH
-  CAPTURE SAVED_PROFILE from `read/readFile`
+USE `search/fileSearch` where: pattern="justfile"
+CAPTURE JUSTFILE_FILES from `search/fileSearch`
+USE `read/readFile` where: filePath=README_PATH
+CAPTURE ONBOARD_README from `read/readFile`
 SET PROJECT_ADRS := <EXISTING_ADRS_EXCLUDING_INHERITED_TEMPLATE_ADRS> (from Agent Inference)
-SET ONBOARD_EVIDENCE := <COMPLETED_PROFILE_OR_CONFIRMED_PROJECT_SPECIFIC_ONBOARDING> (from Agent Inference)
+SET ONBOARD_EVIDENCE := <PROJECT_ADRS_JUSTFILE_VERIFY_RECIPES_AND_PROJECT_SPECIFIC_README> (from Agent Inference)
 SET IS_ONBOARDED := <CONCRETE_ONBOARDING_EVIDENCE_EXISTS> (from Agent Inference)
 ASSERT inherited template architecture alone is not evidence that a consumer has been onboarded
 </process>
@@ -445,9 +429,6 @@ SET TECH_STACK := <STACK> (from "Agent Inference" using STACK_FILES, TECH_STACK_
 USE `search/fileSearch` where: pattern="justfile"
 CAPTURE COMMAND_FILES from `search/fileSearch`
 SET PROJECT_COMMANDS := <EXISTING_SETUP_AND_VALIDATION_RECIPES> (from Agent Inference)
-SET FOREMAN_ENABLED := <EXPLICIT_USER_WORKER_OPT_IN_OTHERWISE_FALSE> (from Agent Inference)
-USE `read/readFile` where: filePath=FOREMAN_GUIDE
-SET PROPOSED_PROFILE := <DISCOVERED_STACK_COMMANDS_AND_OPTIONAL_WORKER_CAPABILITIES> (from Agent Inference)
 USE `search/codebase` where: query="architecture patterns framework routing middleware"
 CAPTURE ARCH_CONTEXT from `search/codebase`
 SET DISCOVERED_ADRS := <ADR_LIST> (from "Agent Inference" using ARCH_CONTEXT, TECH_STACK, TECH_STACK_SIGNALS)
@@ -535,24 +516,6 @@ USE `edit/editFiles` where: filePath=LLM_TXT_PATH
 SET UPDATED_FILES := UPDATED_FILES + [LLM_TXT_PATH] (from "Agent Inference")
 </process>
 
-<process id="record-project-capabilities" name="Keep onboarding project-specific and Foreman optional">
-ASSERT confirmed onboarding scope includes the proposed profile and any command edits
-ASSERT standalone issue/PR publication recipes are preserved or their callers are adapted together
-IF FOREMAN_ENABLED:
-  SET UPDATED_JUSTFILE := <EXISTING_COMMANDS_WITH_APPROVED_THIN_HOST_PRIMITIVES> (from Agent Inference)
-  USE `edit/editFiles` where: content=UPDATED_JUSTFILE, filePath="justfile"
-  USE `execute/runInTerminal` where: command="just --list"
-  CAPTURE AVAILABLE_RECIPES from `execute/runInTerminal`
-  ASSERT configured worker operations and actual project validation recipes exist
-SET PROJECT_PROFILE := <NON_SECRET_CONFIRMED_PROFILE_WITH_COMPLETE_MARKER> (from Agent Inference)
-USE `search/fileSearch` where: pattern=PROFILE_PATH
-CAPTURE EXISTING_PROFILE from `search/fileSearch`
-IF EXISTING_PROFILE is empty:
-  USE `edit/createFile` where: content=<SERIALIZED_PROJECT_PROFILE>, filePath=PROFILE_PATH
-ELSE:
-  USE `edit/editFiles` where: content=<PROFILE_PRESERVING_EXISTING_SETTINGS>, filePath=PROFILE_PATH
-RETURN: PROJECT_PROFILE
-</process>
 </processes>
 
 <input>

@@ -38,12 +38,9 @@ You MUST NOT define tests or expected evidence.
 You MUST NOT make or propose architectural decisions.
 You MUST NOT propose ADR or core-component titles.
 You MUST NOT edit application code, tests, ADRs, core-components, or plans.
-You MUST write only the research brief and its initial runtime observability files.
-You MUST initialize WORKER_STARTED as an immutable JSON event and state.json using host file tools immediately after resolving/creating the work item.
-You MUST follow CORE-COMPONENT-260906-rpiv-observability and preserve the managed worker/attempt identity.
-You MUST preserve prior event directories and allocate a new attempt only for an explicitly authorized restart.
-You MUST return blockers, progress, and new prerequisite findings to the RPIV coordinator, not create mission graph nodes yourself.
-You MUST remain a leaf stage; repository-level Foreman context does not replace issue Research.
+You MUST write only the research brief.
+You MUST return blockers, progress, and new prerequisite findings to the RPIV coordinator, not create new issues yourself.
+You MUST remain a leaf stage.
 You MUST follow the RESEARCH_BRIEF format.
 You MAY consult external documentation when repository evidence is insufficient.
 </instructions>
@@ -129,7 +126,6 @@ RESEARCH_COMPLETE: false
 <process id="research-router" name="Investigate the issue and write the research brief">
 RUN `fetch-issue`
 RUN `resolve-work-item-path`
-RUN `initialize-observability`
 RUN `gather-repository-evidence`
 RUN `classify-scope`
 RUN `write-research-brief`
@@ -179,29 +175,6 @@ SET RELEVANT_ARCHITECTURE := <ARCHITECTURE_LIST> (from "Agent Inference" using I
 SET RISKS := <RISK_LIST> (from "Agent Inference" using ISSUE_BODY, REPOSITORY_FINDINGS, CONSTRAINTS)
 </process>
 
-<process id="initialize-observability" name="Initialize observable Research without creating a second work-item path">
-USE `glob` where: pattern="<WORK_ITEM_PATH>/events/<ATTEMPT_ID>/*.json"
-CAPTURE EXISTING_EVENTS from `glob`
-IF EXISTING_EVENTS is not empty:
-  ASSERT existing attempt identity and history agree with this resumed execution
-  RETURN: status="existing-attempt-preserved"
-SET INITIAL_EVENT := <WORKER_STARTED_RESEARCH_EVENT_JSON> (from Agent Inference)
-SET EVENT_PATH := <WORK_ITEM_EVENTS_ATTEMPT_FIRST_SEQUENCE_PATH> (from Agent Inference)
-USE `create` where: content=INITIAL_EVENT, path=EVENT_PATH
-USE `view` where: path=EVENT_PATH
-CAPTURE STATE_RESULT from `view`
-ASSERT the stored event contains the complete initial identity and research/running state
-SET STATE_PATH := <WORK_ITEM_STATE_JSON_PATH> (from Agent Inference)
-USE `glob` where: pattern=STATE_PATH
-CAPTURE EXISTING_STATE from `glob`
-IF EXISTING_STATE is empty:
-  USE `create` where: content=INITIAL_EVENT, path=STATE_PATH
-ELSE:
-  ASSERT a new attempt was explicitly authorized and previous history remains intact
-  USE `edit` where: content=INITIAL_EVENT, path=STATE_PATH
-RETURN: STATE_RESULT
-</process>
-
 <process id="classify-scope" name="Classify the issue without selecting a solution">
 SET SCOPE_TYPE := <SCOPE> (from "Agent Inference" using ISSUE_BODY, REPOSITORY_FINDINGS, SCOPE_TYPES)
 </process>
@@ -216,6 +189,5 @@ SET RESEARCH_COMPLETE := true (from "Agent Inference")
 
 <input>
 USER_INPUT is a GitHub issue number or URL and optional Research-stage constraints.
-Managed identity context is optional and contains ISSUE_NUMBER, WORKER_ID, ATTEMPT_ID, WORKTREE, FOREMAN_ROOT.
 Return progress, blockers, failure owner, and prerequisite findings with the normal Research result.
 </input>
