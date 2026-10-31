@@ -29,9 +29,20 @@ Closes #<!-- ISSUE_NUMBER -->
 |----|-------|
 |    |       |
 
+## Independent Review
+
+<!-- From review/00-review.md: rounds, verdict, and each finding's disposition -->
+
+- Verdict: <!-- pass / fail --> after round <!-- 1 / 2 -->
+
+| ID | Severity | Disposition |
+|----|----------|-------------|
+|    |          |             |
+
 ## Verification
 
 - [ ] Implement handoff branch and commit SHA verified exactly
+- [ ] Independent review passed for that commit with no unresolved blocker or major findings
 - [ ] Full branch diff reviewed for scope and architecture compliance
 - [ ] Affected application documentation is complete and matches the committed behavior
 - [ ] `just verify` passes

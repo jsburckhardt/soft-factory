@@ -10,7 +10,7 @@ This repository is a **template**. Start a new project with `bootstrap`, or use
 each GitHub issue with the `rpiv` agent:
 
 ```text
-GitHub issue -> rpiv -> Research -> Plan -> Implement -> Verify -> pull request
+GitHub issue -> rpiv -> Research -> Plan -> Implement -> Review -> Verify -> pull request
 ```
 
 ## Documentation

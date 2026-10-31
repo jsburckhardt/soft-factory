@@ -5,7 +5,8 @@ Inherited template ADRs and agent files MUST NOT be mistaken for completed proje
 Bootstrap and onboarding MUST establish the consuming project's stack and command capabilities without imposing an application language.
 Validation and PR delivery MUST remain activities inside Verify.
 New or changed agents MUST use the installed APS skill and the applicable host adapter.
-Every issue delivery MUST flow through exactly four stages in order: Research, Plan, Implement, Verify.
+Every issue delivery MUST flow through exactly five stages in order: Research, Plan, Implement, Review, Verify.
+Review MUST be an independent, read-only code review of the committed diff, capped at two rounds.
 You MUST classify scope_type as exactly one of: issue, architecture_decision, core_component.
 You MUST NOT create an architectural decision outside of an ADR document.
 You MUST NOT create reusable cross-cutting behavior outside of a core-component document.
@@ -16,7 +17,7 @@ You MUST allow Research to create a work-item directory only when no directory m
 You MUST derive SHORT_DESCRIPTION as lowercase ASCII kebab-case from the GitHub Issue title when Research first creates a work item.
 You MUST preserve an existing work-item directory name after creation, including when the GitHub Issue title changes.
 You MUST prevent more than one work-item directory from using the same issue-number prefix.
-You MUST require Plan, Implement, and Verify to resolve exactly one existing work-item directory.
+You MUST require Plan, Implement, Review, and Verify to resolve exactly one existing work-item directory.
 You MUST treat ADRs as global artifacts stored in project/architecture/ADR/ — never inside a work-item documentation folder.
 You MUST treat core-components as global artifacts stored in project/architecture/core-components/ — never inside a work-item documentation folder.
 You MUST NOT edit template files directly — copy them within the same directory and rename.
@@ -30,7 +31,7 @@ You MUST NOT skip any stage in the pipeline.
 You MUST keep raw project operating commands in the root justfile.
 You MUST treat root justfile recipes as the default validation source for Implement and Verify.
 You MUST require the root justfile to expose verify-focused and verify before RPIV.
-You MUST enforce this RPIV boundary: RPIV orchestrates, Research investigates, Plan proves coverage, Implement builds and provides evidence, Verify decides acceptance and creates the PR.
+You MUST enforce this RPIV boundary: RPIV orchestrates, Research investigates, Plan proves coverage, Implement builds and provides evidence, Review independently finds defects, Verify decides acceptance and creates the PR.
 You MUST require Implement to maintain affected application documentation and Verify to inspect it independently.
 You MUST keep issue acceptance criteria bounded, observable, and executable by configured agents with repository capabilities.
 You MUST update the APS version badge in README.md and the APS_BADGE constant when the APS skill is upgraded.
@@ -52,6 +53,10 @@ PIPELINE_STAGES: YAML<<
   name: Implement
   agent: rpiv-implementer
   purpose: Execute dependency-ordered tasks, maintain tests and application documentation, validate, record evidence, and commit
+- id: review
+  name: Review
+  agent: rpiv-reviewer
+  purpose: Independently review the committed diff for defects, security, tests, and architecture compliance and record a verdict
 - id: verify
   name: Verify
   agent: rpiv-verifier
@@ -154,7 +159,7 @@ bootstrap:
     - must not make feature-level decisions
 rpiv:
   file: .github/agents/rpiv.agent.md
-  purpose: Create the issue feature branch and coordinate Research, Plan, Implement, and Verify with validated handoffs.
+  purpose: Create the issue feature branch and coordinate Research, Plan, Implement, Review, and Verify with validated handoffs.
   tools:
     - subagent dispatch
     - codebase exploration and reading
@@ -171,10 +176,11 @@ rpiv:
   templates: []
   guardrails:
     - must create or confirm the issue feature branch before Research
-    - must run as a primary CLI coordinator with four leaf stage agents
+    - must run as a primary CLI coordinator with five leaf stage agents
     - must route PR review findings to the owning stage and report corrections on the same PR
     - must verify the root justfile exposes verify-focused and verify before Research
-    - must execute Research, Plan, Implement, and Verify in strict order
+    - must execute Research, Plan, Implement, Review, and Verify in strict order
+    - must run Review in a fresh task without Implement's reasoning and cap it at two rounds
     - must delegate stage work to rpiv-research, rpiv-planner, rpiv-implementer, and rpiv-verifier
     - must validate each stage artifact before proceeding
     - Plan to Implement handoff must include the exact work-item path, acceptance criteria, tasks, test plan, and relevant ADRs
@@ -287,6 +293,31 @@ rpiv-implementer:
     - record concrete implementation evidence for every AC ID
     - commit the implementation and hand off a clean working tree
     - must not check GitHub acceptance criteria or claim final verification
+rpiv-reviewer:
+  file: .github/agents/rpiv-reviewer.agent.md
+  purpose: Independently review the committed implementation diff for defects, security, tests, and architecture compliance, and record findings with a pass/fail verdict.
+  tools:
+    - codebase exploration and reading
+    - terminal execution (git)
+    - file creation
+  read_paths:
+    - project/work-items/<ISSUE_NUMBER>-<SHORT_DESCRIPTION>/plan/
+    - project/work-items/<ISSUE_NUMBER>-<SHORT_DESCRIPTION>/review/00-review.md
+    - project/architecture/ADR/
+    - project/architecture/core-components/
+    - application source code and test files
+    - docs/
+  write_paths:
+    - project/work-items/<ISSUE_NUMBER>-<SHORT_DESCRIPTION>/review/00-review.md
+  templates: []
+  guardrails:
+    - must review the exact implementation commit and full branch diff
+    - must judge the code itself, not Implement's notes or self-assessment
+    - must report at most 15 findings with ID, severity, file and line, problem, suggested fix, and owner
+    - must fail the verdict on any unresolved blocker or major finding
+    - must on round 2 mark each earlier finding resolved or unresolved with evidence
+    - must not modify application source code, tests, documentation, ADRs, core-components, or plans
+    - must commit only the review artifact and must not push or open a PR
 rpiv-verifier:
   file: .github/agents/rpiv-verifier.agent.md
   purpose: Verify the exact committed implementation and documentation, decide acceptance, update GitHub criteria, push, and open a PR for review.
@@ -312,6 +343,7 @@ rpiv-verifier:
     - .github/PULL_REQUEST_TEMPLATE.md
   guardrails:
     - must verify the exact branch and commit SHA received from Implement
+    - must refuse delivery when the review is missing, stale, or has unresolved blocker or major findings
     - must inspect the full branch diff for issue scope and architecture compliance
     - must independently inspect every application documentation category affected by the implementation
     - must fail missing, stale, inaccurate, or inconclusive documentation and return it to Implement
@@ -400,6 +432,7 @@ ACTION_PLAN: ""
 TASK_BREAKDOWN: ""
 TEST_PLAN: ""
 RESULT: ""
+REVIEW_RESULT: ""
 VERIFY_RESULT: ""
 </runtime>
 
@@ -412,6 +445,7 @@ VERIFY_RESULT: ""
 RUN `research`
 RUN `plan`
 RUN `implement`
+RUN `review`
 RUN `verify`
 RETURN: SCOPE_TYPE, ISSUE_NUMBER
 </process>
@@ -433,6 +467,10 @@ SET TEST_PLAN := <TESTS> (from "Agent Inference" using ISSUE_NUMBER, WORK_ITEM_P
 
 <process id="implement" name="Implement stage">
 SET RESULT := <OUTCOME> (from "Agent Inference" using ISSUE_NUMBER, WORK_ITEM_PATH, TASK_BREAKDOWN, TEST_PLAN)
+</process>
+
+<process id="review" name="Review stage">
+SET REVIEW_RESULT := <OUTCOME> (from "Agent Inference" using ISSUE_NUMBER, WORK_ITEM_PATH)
 </process>
 
 <process id="verify" name="Verify stage">

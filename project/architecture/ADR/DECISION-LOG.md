@@ -8,6 +8,7 @@ This file is the single registry of all architectural decisions and core-compone
 |----|-------|--------|------|
 | ADR-260906-foreman-control-plane | Foreman Control Plane | Superseded by ADR-261031-standalone-rpiv | 2026-09-06 |
 | ADR-261031-standalone-rpiv | Standalone RPIV without Foreman or tmux | Accepted | 2026-10-31 |
+| ADR-261031-rpiv-review-stage | Independent Review Stage in RPIV | Accepted | 2026-10-31 |
 
 ## Core-Components
 
@@ -73,3 +74,6 @@ Short, actionable statements derived from ADRs and core-components. More than on
 | 33 | Remove Foreman mission orchestration; RPIV delivers one issue standalone | ADR-261031-standalone-rpiv | 2026-10-31 |
 | 34 | Stop persisting RPIV state.json and lifecycle events; work-item markdown is the record | ADR-261031-standalone-rpiv | 2026-10-31 |
 | 35 | Remove tmux from the devcontainer and project recipes | ADR-261031-standalone-rpiv | 2026-10-31 |
+| 36 | Add an independent, read-only Review stage between Implement and Verify | ADR-261031-rpiv-review-stage | 2026-10-31 |
+| 37 | Cap Review at two rounds and fail on any unresolved blocker or major finding | ADR-261031-rpiv-review-stage | 2026-10-31 |
+| 38 | Block Verify delivery without a passing review of the exact implementation commit | CORE-COMPONENT-260806-rpiv-stage-contract | 2026-10-31 |
