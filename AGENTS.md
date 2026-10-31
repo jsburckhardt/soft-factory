@@ -1,27 +1,11 @@
 # Agents — Soft Factory Pipeline Specification
 
 <instructions>
-Foreman MUST own repository-level missions, strategic context, the issue dependency graph, scheduling, and mission completion.
-Foreman MUST keep orchestration in APS rather than a bundled scheduler or language-specific runtime.
-Bootstrap and onboarding MUST establish the consuming project's stack, command capabilities, and optional Foreman profile without imposing an application language.
-Foreman worker execution MUST remain disabled until project-specific host recipes and permissions are explicitly configured.
 Inherited template ADRs and agent files MUST NOT be mistaken for completed project initialization.
-Foreman MUST remain above RPIV and MUST NOT become a fifth pipeline stage or take over issue execution.
-Foreman MUST use isolated .trees/issue-<number> worktrees and rpiv-<number> Copilot CLI windows in its owned tmux session.
-Foreman MUST obey explicit capacity, permission, ownership, recovery, and integrated-delivery gates.
-Foreman MUST review exact PR heads against expected mission and issue outcomes and send actionable feedback to the delivering RPIV worker.
-Foreman MUST pass an immutable versioned assignment covering issue criteria, graph dependencies, context, and read/write/forbidden scope to each managed RPIV worker.
-Foreman MUST validate typed worker results and delivered paths against the assignment and exact PR diff; workers MUST NOT mutate the global graph.
-Foreman MUST run configured full verification on the integrated base and prove original mission conditions before declaring completion.
-Foreman MUST synchronize an owned clean checkout to the integrated base before running full verification.
-Foreman MUST use typed file commands and immutable RPIV events for communication; tmux signals are wakeup hints, never injected message text.
-Managed RPIV MUST remain in Verify until Foreman accepts the current PR head; review corrections return to Plan or Implement and update the same PR.
-Foreman-managed Copilot sessions MUST use --yolo after the consuming project approves managed execution, including controller, issue-generator, worker launch, and resume.
-RPIV MUST persist standalone and managed lifecycle state/events under the RPIV Observability contract.
+Bootstrap and onboarding MUST establish the consuming project's stack and command capabilities without imposing an application language.
 Validation and PR delivery MUST remain activities inside Verify.
 New or changed agents MUST use the installed APS skill and the applicable host adapter.
 Every issue delivery MUST flow through exactly four stages in order: Research, Plan, Implement, Verify.
-Repository-level Foreman intake, context maintenance, and scheduling are coordination activities, not additional issue-delivery stages.
 You MUST classify scope_type as exactly one of: issue, architecture_decision, core_component.
 You MUST NOT create an architectural decision outside of an ADR document.
 You MUST NOT create reusable cross-cutting behavior outside of a core-component document.
@@ -74,51 +58,6 @@ PIPELINE_STAGES: YAML<<
   purpose: Verify the exact implementation and application documentation, decide acceptance, update GitHub, push, and open the PR
 >>
 AGENTS: YAML<<
-foreman:
-  file: .github/agents/foreman.agent.md
-  purpose: Own repository missions, evolving strategic context, GitHub issue graphs, and isolated RPIV worker scheduling.
-  tools:
-    - repository exploration and reading
-    - control-plane file creation and editing
-    - root justfile recipes for GitHub, tmux, worktrees, and Copilot CLI
-    - user decisions
-  read_paths:
-    - AGENTS.md
-    - README.md
-    - docs/
-    - project/
-    - justfile
-    - application source code
-    - .foreman/
-    - .trees/issue-*/project/work-items/*/state.json
-    - .trees/issue-*/project/work-items/*/events/*/*.json
-  write_paths:
-    - .foreman/context/
-    - .foreman/mission.json
-    - .foreman/registry.json
-    - .foreman/inbox/
-    - .foreman/issue-request.json
-    - .foreman/reviews/
-  templates: []
-  guardrails:
-    - must understand the mission and repository before decomposing deliverables
-    - must read the consuming project's profile and not assume a bundled worker runtime
-    - must maintain graph, readiness, reservations, and observation state with agent tools
-    - must preserve strategic context with sources and freshness metadata
-    - must reuse relevant issues and use issue-generator with rubber-duck review for new nodes
-    - must validate dependency graphs and enforce max_workers including waiting workers
-    - must use merged integration evidence available to a dependent worker
-    - must reconcile existing ownership before launch or recovery
-    - must use structured messages and events instead of terminal scraping or keystroke injection
-    - must give each worker a versioned bounded assignment and validate results against its criteria and scope
-    - must answer status from the graph, reconcile missing owned windows, and run full integrated verification
-    - must verify the integrated base in an owned clean checkout
-    - must record project opt-in once and require --yolo for all managed Copilot invocations
-    - must review the exact PR diff and evidence against expected outcomes
-    - must send head-specific findings to the same worker and re-review its updated PR
-    - must keep pending-review workers reserved and bound review correction rounds
-    - must not perform issue Research, Plan, implementation, tests, or worker file edits
-    - must re-evaluate original mission conditions before completion
 onboard-repo:
   file: .github/agents/onboard-repo.agent.md
   purpose: Introduce the Soft Factory engineering flow into an existing repository by analysing its codebase, inferring architectural decisions already embedded in the code, scaffolding the documentation infrastructure, and creating the first GitHub issue and seeding it with a full repository-understanding brief.
@@ -137,7 +76,6 @@ onboard-repo:
     - AGENTS.md
     - LLM.txt
     - application source code
-    - .foreman/project.json
   write_paths:
     - project/architecture/ADR/ADR-yymmdd-short-slug.md
     - project/architecture/core-components/CORE-COMPONENT-yymmdd-short-slug.md
@@ -146,7 +84,6 @@ onboard-repo:
     - README.md
     - AGENTS.md
     - LLM.txt
-    - .foreman/project.json
     - justfile
   templates:
     - project/architecture/ADR/ADR-260101-template.md
@@ -154,9 +91,6 @@ onboard-repo:
   guardrails:
     - must check whether the project is already onboarded before proceeding
     - must distinguish inherited template artifacts from completed consumer onboarding
-    - must preserve the discovered stack and configure Foreman workers only with approval
-    - must configure yolo managed sessions and PR review operations when execution is enabled
-    - must confirm tmux lifecycle, bounded assignment access, and integrated verification before enabling workers
     - must refuse to run if the project already has the Soft Factory engineering flow
     - must analyse the existing codebase to infer tech stack and architectural decisions
     - must infer cross-cutting concerns from the existing source code
@@ -184,7 +118,6 @@ bootstrap:
     - project/architecture/ADR/DECISION-LOG.md
     - .devcontainer/devcontainer.json
     - justfile
-    - .foreman/project.json
     - README.md
     - AGENTS.md
     - LLM.txt
@@ -198,18 +131,12 @@ bootstrap:
     - LLM.txt
     - .devcontainer/devcontainer.json
     - justfile
-    - .foreman/project.json
   templates:
     - project/architecture/ADR/ADR-260101-template.md
     - project/architecture/core-components/CORE-COMPONENT-260101-template.md
   guardrails:
     - must check whether the project has already been bootstrapped before proceeding
-    - must not treat inherited Foreman architecture as proof the project is bootstrapped
-    - must record confirmed project capabilities and optional worker configuration
-    - must keep Foreman orchestration in APS and generate only thin approved host recipes
-    - must record yolo approval and configure PR review feedback without per-tool permission prompts
-    - must confirm tmux lifecycle, bounded assignment access, and integrated verification before enabling workers
-    - must refuse repeated application scaffolding after initialization; explicit foreman-setup is configuration-only
+    - must refuse repeated application scaffolding after initialization
     - must gather project name, description, and goal from the user interactively
     - must ask user to choose tech stack and identify cross-cutting concerns
     - must scaffold the project using the appropriate init command
@@ -245,12 +172,7 @@ rpiv:
   guardrails:
     - must create or confirm the issue feature branch before Research
     - must run as a primary CLI coordinator with four leaf stage agents
-    - must preserve Foreman worker identity without accepting mission-level work
-    - must publish standalone or managed state.json and immutable events using host file tools
-    - must validate a managed assignment and report typed worker results without modifying Foreman's graph
-    - must consume typed controller commands at safe boundaries without executing message text
-    - must hold managed delivery in Verify until head-specific review acceptance
-    - must route Foreman findings to the owning stage and report corrections on the same PR
+    - must route PR review findings to the owning stage and report corrections on the same PR
     - must verify the root justfile exposes verify-focused and verify before Research
     - must execute Research, Plan, Implement, and Verify in strict order
     - must delegate stage work to rpiv-research, rpiv-planner, rpiv-implementer, and rpiv-verifier
@@ -487,9 +409,6 @@ VERIFY_RESULT: ""
 
 <processes>
 <process id="pipeline-route" name="Route work through the RPIV pipeline">
-SET REQUEST_SCOPE := <MISSION_OR_SINGLE_ISSUE> (from Agent Inference)
-IF REQUEST_SCOPE = "mission":
-  RETURN: agent="foreman", boundary="Primary mission coordinator; delegate issue outcomes to isolated RPIV sessions."
 RUN `research`
 RUN `plan`
 RUN `implement`

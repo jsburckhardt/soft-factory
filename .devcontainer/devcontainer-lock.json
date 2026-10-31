@@ -35,11 +35,6 @@
       "resolved": "ghcr.io/jsburckhardt/devcontainer-features/just@sha256:5c90013b36669270be21c69e7d8e5b6148b4b0b34fca9e104a599edf0d7c11af",
       "integrity": "sha256:5c90013b36669270be21c69e7d8e5b6148b4b0b34fca9e104a599edf0d7c11af"
     },
-    "ghcr.io/jsburckhardt/devcontainer-features/tmux": {
-      "version": "2.0.0",
-      "resolved": "ghcr.io/jsburckhardt/devcontainer-features/tmux@sha256:65d1809a7e1b03b3a5d272443b5ab1832ed795439aec0ed3c655c73856bc6c8a",
-      "integrity": "sha256:65d1809a7e1b03b3a5d272443b5ab1832ed795439aec0ed3c655c73856bc6c8a"
-    },
     "ghcr.io/rosstaco/devcontainer-features/copilot-persistence:1": {
       "version": "1.1.0",
       "resolved": "ghcr.io/rosstaco/devcontainer-features/copilot-persistence@sha256:6dd5cd9b007544b542d8aa71c09e5076ac0b81cae293ba59a8fb78c26119a610",

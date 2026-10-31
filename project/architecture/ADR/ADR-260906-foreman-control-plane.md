@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted
+Superseded by [ADR-261031-standalone-rpiv](ADR-261031-standalone-rpiv.md)
 
 ## Context
 

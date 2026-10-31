@@ -6,7 +6,8 @@ This file is the single registry of all architectural decisions and core-compone
 
 | ID | Title | Status | Date |
 |----|-------|--------|------|
-| ADR-260906-foreman-control-plane | Foreman Control Plane | Accepted | 2026-09-06 |
+| ADR-260906-foreman-control-plane | Foreman Control Plane | Superseded by ADR-261031-standalone-rpiv | 2026-09-06 |
+| ADR-261031-standalone-rpiv | Standalone RPIV without Foreman or tmux | Accepted | 2026-10-31 |
 
 ## Core-Components
 
@@ -17,8 +18,8 @@ This file is the single registry of all architectural decisions and core-compone
 | CORE-COMPONENT-260806-project-command-interface | Project Command Interface | Adopted | 2026-08-06 |
 | CORE-COMPONENT-260806-agent-executable-acceptance-criteria | Agent-Executable Acceptance Criteria | Adopted | 2026-08-06 |
 | CORE-COMPONENT-260806-architecture-artifact-naming | Architecture Artifact Naming | Adopted | 2026-08-06 |
-| CORE-COMPONENT-260906-foreman-orchestration | Foreman Orchestration | Adopted | 2026-09-06 |
-| CORE-COMPONENT-260906-rpiv-observability | RPIV Observability | Adopted | 2026-09-06 |
+| CORE-COMPONENT-260906-foreman-orchestration | Foreman Orchestration | Retired by ADR-261031-standalone-rpiv | 2026-09-06 |
+| CORE-COMPONENT-260906-rpiv-observability | RPIV Observability | Retired by ADR-261031-standalone-rpiv | 2026-09-06 |
 
 ## Decisions
 
@@ -69,3 +70,6 @@ Short, actionable statements derived from ADRs and core-components. More than on
 | 41 | Pass versioned bounded issue assignments to managed RPIV workers and check delivered paths | CORE-COMPONENT-260906-foreman-orchestration | 2026-09-30 |
 | 42 | Return typed worker results inside correlated lifecycle events without mutating Foreman's graph | CORE-COMPONENT-260906-rpiv-observability | 2026-09-30 |
 | 43 | Refresh only an owned integrated base checkout before configured full mission verification | CORE-COMPONENT-260906-foreman-orchestration | 2026-09-30 |
+| 33 | Remove Foreman mission orchestration; RPIV delivers one issue standalone | ADR-261031-standalone-rpiv | 2026-10-31 |
+| 34 | Stop persisting RPIV state.json and lifecycle events; work-item markdown is the record | ADR-261031-standalone-rpiv | 2026-10-31 |
+| 35 | Remove tmux from the devcontainer and project recipes | ADR-261031-standalone-rpiv | 2026-10-31 |

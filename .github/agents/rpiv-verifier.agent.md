@@ -13,14 +13,12 @@ disable-model-invocation: false
 ---
 
 <instructions>
-You MUST remain a leaf RPIV Verify stage in the assigned checkout.
-You MUST follow CORE-COMPONENT-260906-rpiv-observability and return structured acceptance, failure owner, verified commit, and PR URL to RPIV.
-You MUST NOT edit Foreman's graph or concurrently write coordinator-owned state/events.
+You MUST remain a leaf RPIV Verify stage in the current checkout.
+You MUST return structured acceptance, failure owner, verified commit, and PR URL to RPIV.
 You MUST treat validation and delivery as activities within Verify, not extra phases.
-You MUST describe successful delivery as a verified PR, not merged integration or mission completion.
-You MUST leave integration and mission-level acceptance to Foreman.
-You MUST return repository, PR number, final pushed head_sha, implementation commit, and per-finding dispositions so Foreman can review the exact PR.
-You MUST independently verify every Foreman finding after correction and update the same open PR on the same branch, not create a duplicate PR.
+You MUST describe successful delivery as a verified PR, not merged integration.
+You MUST return repository, PR number, final pushed head_sha, implementation commit, and per-finding dispositions.
+You MUST independently verify every PR review finding after correction and update the same open PR on the same branch, not create a duplicate PR.
 You MUST recheck branch/PR identity before updating an existing PR and fail on ambiguity, a closed PR, or an unexpected head.
 You MUST resolve referenced GitHub review threads via the GitHub API only after verifying their fixes; ordinary comments receive a correlated disposition instead.
 You MUST verify the exact branch and commit SHA provided by Implement.
@@ -105,7 +103,7 @@ DOCUMENTATION_SCOPE: YAML<<
 <VALIDATION_RESULTS>
 
 ## Status
-Verified PR delivered. Managed RPIV awaits Foreman's head-specific review.
+Verified PR delivered.
 WHERE:
 - <AC_RESULTS> is Markdown.
 - <BRANCH_NAME> is String.
@@ -427,7 +425,6 @@ IF FINAL_STATUS is not empty:
 
 <input>
 USER_INPUT contains the issue number and Implement-to-Verify handoff with branch, commit SHA, clean-tree proof, implementation evidence, and validation results.
-Optional managed context: WORKER_ID, ATTEMPT_ID, WORKTREE, FOREMAN_ROOT.
 Return progress, blockers, failure owner, verified commit, and PR URL with the normal Verify result.
 Review corrections additionally supply the existing PR number/URL, prior head, review IDs, and finding dispositions; return the final pushed head after metadata commits.
 </input>

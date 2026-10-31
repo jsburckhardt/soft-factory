@@ -2,8 +2,11 @@
 
 This directory contains all active core-component definitions for the project.
 
-- [Foreman Orchestration](CORE-COMPONENT-260906-foreman-orchestration.md): context, graph, capacity, isolation, recovery, and integration.
-- [RPIV Observability](CORE-COMPONENT-260906-rpiv-observability.md): standalone/managed lifecycle state and worker communication.
+- [Commit Standards](CORE-COMPONENT-260505-commit-standards.md)
+- [RPIV Stage Contract](CORE-COMPONENT-260806-rpiv-stage-contract.md)
+- [Project Command Interface](CORE-COMPONENT-260806-project-command-interface.md)
+- [Agent-Executable Acceptance Criteria](CORE-COMPONENT-260806-agent-executable-acceptance-criteria.md)
+- [Architecture Artifact Naming](CORE-COMPONENT-260806-architecture-artifact-naming.md)
 
 ## Creating a New Core-Component
 

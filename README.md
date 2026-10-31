@@ -5,41 +5,13 @@
 
 ## Engineering workflow
 
-This repository is a **template**, not a Foreman application. Start a new
-project with `bootstrap`, or use `onboard-repo` to discover an existing project's
-stack and commands. Those agents record the project's capabilities and can
-configure thin worker-operation recipes when explicitly requested. Foreman
-does not impose Python or another implementation language.
-
-**Foreman owns the mission; RPIV delivers one issue.** Give the `foreman` agent a
-PRD or product direction to build and maintain a dependency graph of GitHub
-issues, retain repository context, and schedule isolated RPIV workers within a
-configured capacity when that project has enabled worker execution.
+This repository is a **template**. Start a new project with `bootstrap`, or use
+`onboard-repo` to discover an existing project's stack and commands. Deliver
+each GitHub issue with the `rpiv` agent:
 
 ```text
-Product direction -> Foreman -> issue dependency graph
-                          -> tmux session: foreman
-                             foreman | rpiv-21 | rpiv-22
-                                        |         |
-                                  .trees/issue-21  .trees/issue-22
-                                        |         |
-                                  Copilot CLI + RPIV
-                                  Research -> Plan -> Implement -> Verify
+GitHub issue -> rpiv -> Research -> Plan -> Implement -> Verify -> pull request
 ```
-
-Foreman is optional: use `rpiv` directly for a single issue. Each worker exposes
-structured state/events; a delivered PR is not treated as merged integration.
-Foreman passes a bounded, versioned assignment to each issue worker and
-requires typed status/results; after integrating the delivered issues it runs
-the project's full verification before declaring the mission complete.
-The template ships no scheduler runtime and does not start workers automatically.
-Enabling managed execution approves `--yolo` for the controller and all managed
-Copilot launches/resumes. Foreman reviews each delivered PR against expected
-outcomes, sends findings to its RPIV worker, and re-reviews the updated PR.
-Mission context can be maintained before execution is configured; standalone
-RPIV remains available with its own permission policy.
-See [Foreman usage and operations](docs/foreman.md) for setup, graph format,
-permission modes, start/resume/pause, and worker communication.
 
 ## Documentation
 
@@ -47,4 +19,3 @@ permission modes, start/resume/pause, and worker communication.
 - [`AGENTS.md`](AGENTS.md) — agent definitions, guardrails, and pipeline specification
 - [`docs/`](docs/) — application-specific documentation (API docs, user guides, etc.)
 - [`project/`](project/) — architecture decisions, core-components, and human-readable work-item artifacts
-- [`.github/agents/foreman.agent.md`](.github/agents/foreman.agent.md) — APS mission coordinator for Copilot CLI
