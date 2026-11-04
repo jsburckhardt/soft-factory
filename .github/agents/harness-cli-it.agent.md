@@ -52,7 +52,8 @@ You MUST include the phase, status, inference, missing proof, and evidence in ea
 You MUST make friction list and friction add support --json.
 You MUST support `./harness friction add --phase <phase> --file <path> --json`.
 You MUST redact secrets and personal data from friction records.
-You MUST verify all four RPIV stage agents contain friction read and write hooks.
+You MUST verify all five RPIV stage agents contain the friction read hook, and that Research, Plan, Implement, and Verify contain the friction write hook.
+You MUST keep rpiv-reviewer friction access read-only: it returns friction notes to the RPIV coordinator, which records them with ./harness friction add --phase review.
 You MUST run ./harness verify before claiming completion.
 You SHOULD keep the harness implementation dependency-light.
 You SHOULD prefer portable shell or existing repo runtime tooling.
@@ -73,6 +74,7 @@ RPIV_PHASES: YAML<<
 - research
 - plan
 - implement
+- review
 - verify
 >>
 LEGACY_VERIFICATION_PATH: ".github/soft-factory/verification.yml"
@@ -85,7 +87,8 @@ AGENT_HARNESS_RULES: TEXT<<
 - Agents MUST treat .harness/contract.yml as the validation contract.
 - Agents MUST NOT read, create, or reference .github/soft-factory/verification.yml.
 - Every RPIV stage agent MUST run ./harness friction list --json before phase work.
-- Every RPIV stage agent MUST run ./harness friction add --phase <phase> --file <path> --json before every success or failure handoff.
+- Every RPIV stage agent except rpiv-reviewer MUST run ./harness friction add --phase <phase> --file <path> --json before every success or failure handoff.
+- rpiv-reviewer MUST NOT write friction; it returns friction notes and the RPIV coordinator records them with --phase review.
 - Friction entries MUST include phase, status, inference, missing proof, evidence, and KEY_QUESTION.
 - Agents MAY call direct project commands only when the harness contract lacks the needed verb or the harness reports unknown or degraded.
 - Agents MUST record gaps with ./harness friction add using KEY_QUESTION when bypassing the harness due to missing proof.
